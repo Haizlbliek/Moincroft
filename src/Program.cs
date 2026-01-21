@@ -1,0 +1,56 @@
+﻿using Silk.NET.Maths;
+using Silk.NET.Windowing;
+using Silk.NET.OpenGL;
+
+namespace Moincroft;
+
+public static class Program {
+	public static IWindow window;
+	public static GL gl;
+
+	public static void Main(string[] args) {
+		WindowOptions options = WindowOptions.Default with {
+			Size = new Vector2D<int>(800, 600),
+			Title = "Starship Revelation",
+			VideoMode = Monitor.GetMainMonitor(null).VideoMode,
+			WindowState = WindowState.Fullscreen,
+			API = new GraphicsAPI(ContextAPI.OpenGL, new APIVersion(3, 1)),
+		};
+		window = Window.Create(options);
+
+		window.Load += OnLoad;
+		window.Update += OnUpdate;
+		window.Render += OnRender;
+		window.Resize += Resize;
+
+		window.Run();
+
+		window.Dispose();
+	}
+
+	private static void OnLoad() {
+		gl = GL.GetApi(window);
+
+		gl.ClearColor(0f, 0f, 0f, 1f);
+
+		Moincroft.Main.Initialize();
+	}
+
+	private static double time = 0;
+	private static void OnUpdate(double delta) {
+		time += delta;
+		if (time >= 1.0 / 60.0) {
+			Moincroft.Main.Update();
+			time -= 1.0 / 60.0;
+		}
+	}
+
+	private static void Resize(Vector2D<int> d) {
+		gl.Viewport(0, 0, (uint) d.X, (uint) d.Y);
+		Moincroft.Main.Resize(d.X, d.Y);
+	}
+
+	private static void OnRender(double delta) {
+		Moincroft.Main.Render();
+	}
+}

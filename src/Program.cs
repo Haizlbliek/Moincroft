@@ -11,7 +11,7 @@ public static class Program {
 	public static void Main(string[] args) {
 		WindowOptions options = WindowOptions.Default with {
 			Size = new Vector2D<int>(800, 600),
-			Title = "Moincroft",
+			Title = "Minecraft",
 			VideoMode = Monitor.GetMainMonitor(null).VideoMode,
 			// WindowState = WindowState.Fullscreen,
 			API = new GraphicsAPI(ContextAPI.OpenGL, new APIVersion(3, 1)),
@@ -32,6 +32,8 @@ public static class Program {
 		gl = GL.GetApi(window);
 
 		gl.ClearColor(0f, 0f, 0f, 1f);
+
+		window.SetWindowIcon([ Texture.LoadRawImage("assets/icon.png") ]);
 
 		Moincroft.Main.Initialize();
 	}

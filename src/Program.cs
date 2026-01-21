@@ -11,9 +11,9 @@ public static class Program {
 	public static void Main(string[] args) {
 		WindowOptions options = WindowOptions.Default with {
 			Size = new Vector2D<int>(800, 600),
-			Title = "Starship Revelation",
+			Title = "Moincroft",
 			VideoMode = Monitor.GetMainMonitor(null).VideoMode,
-			WindowState = WindowState.Fullscreen,
+			// WindowState = WindowState.Fullscreen,
 			API = new GraphicsAPI(ContextAPI.OpenGL, new APIVersion(3, 1)),
 		};
 		window = Window.Create(options);
@@ -39,9 +39,9 @@ public static class Program {
 	private static double time = 0;
 	private static void OnUpdate(double delta) {
 		time += delta;
-		if (time >= 1.0 / 60.0) {
+		if (time >= 1.0 / Config.TicksPerSecond) {
 			Moincroft.Main.Update();
-			time -= 1.0 / 60.0;
+			time -= 1.0 / Config.TicksPerSecond;
 		}
 	}
 

@@ -36,4 +36,12 @@ public static class Mathf {
 	public static double Cos(double value) {
 		return Math.Cos(value);
 	}
+
+	public static int FloorDivide(int a, int b) {
+		return ((a < 0) ^ (b < 0)) && (a % b != 0) ? (a / b - 1) : (a / b);
+	}
+
+	public static int Mod(int x, int v) {
+		return ((x % v) + v) % v;
+	}
 }

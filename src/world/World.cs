@@ -18,4 +18,17 @@ public class World {
 	public void SetBlock(int x, int y, int z, BlockId block) {
 		this.GetChunkFromBlock(x, y, z).SetBlock(Mathf.Mod(x, 16), Mathf.Mod(y, 16), Mathf.Mod(z, 16), block);
 	}
+
+	public void LoadChunk(int cx, int cy, int cz) {
+		Chunk chunk = new Chunk(this, cx, cy, cz);
+		this.chunks.Add((cx, cy, cz), chunk);
+		for (int x = 0; x < 16; x++) {
+			for (int z = 0; z < 16; z++) {
+				for (int y = 0; y < 8; y++) {
+					chunk.SetBlock(x, y, z, 1);
+				}
+			}
+		}
+		chunk.GenerateMesh();
+	}
 }

@@ -42,6 +42,7 @@ public static class Program {
 	private static void OnUpdate(double delta) {
 		time += delta;
 		if (time >= 1.0 / Config.TicksPerSecond) {
+			window.Title = "Minecraft " + Math.Round(1.0 / delta);
 			Moincroft.Main.Update();
 			time -= 1.0 / Config.TicksPerSecond;
 		}

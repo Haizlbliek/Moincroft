@@ -19,12 +19,12 @@ public class ChunkData {
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void SetBlock(int x, int y, int z, BlockId block) {
-		this.blocks[x + y * 16 + z * 256] = block;
+		this.blocks[x << 8 | y << 4 | z] = block;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public BlockId GetBlock(int x, int y, int z) {
-		return this.blocks[x + y * 16 + z * 256];
+		return this.blocks[x << 8 | y << 4 | z];
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

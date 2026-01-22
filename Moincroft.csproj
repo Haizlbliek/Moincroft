@@ -19,5 +19,8 @@
 		<PackageReference Include="Silk.NET.Windowing" Version="2.22.0" />
 		<PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.22.0" />
 		<PackageReference Include="StbImageSharp" Version="2.30.15" />
+		<PackageReference Include="Stride.Core" Version="4.3.0.2507" />
+		<PackageReference Include="Stride.Core.Mathematics" Version="4.3.0.2507" />
+		<PackageReference Include="VL.FastNoiseLite" Version="1.0.1" />
 	</ItemGroup>
 </Project>

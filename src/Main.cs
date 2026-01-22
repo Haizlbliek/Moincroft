@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -131,9 +132,9 @@ public static class Main {
 		rayResult = new WorldRay(world, cameraPosition, cameraRotation.AngleToDirection, 1000f).Cast();
 
 		Vector3i offset = world.GetChunkPositionFromBlock((int) cameraPosition.x, (int) cameraPosition.y, (int) cameraPosition.z);
-		for (int x = -2; x <= 2; x++) {
-			for (int z = -2; z <= 2; z++) {
-				for (int y = -2; y <= 2; y++) {
+		for (int x = -Config.RenderDistance; x <= Config.RenderDistance; x++) {
+			for (int z = -Config.RenderDistance; z <= Config.RenderDistance; z++) {
+				for (int y = -Config.RenderDistance; y <= Config.RenderDistance; y++) {
 					world.VisibleChunk(offset.x + x, offset.y + y, offset.z + z);
 				}
 			}

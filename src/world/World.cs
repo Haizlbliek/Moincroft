@@ -3,7 +3,13 @@ namespace Moincroft.World;
 public class World {
 	public Dictionary<(int, int, int), Chunk> chunks = [];
 
+	public static FastNoiseLite.FastNoiseLite noise = new FastNoiseLite.FastNoiseLite();
 	public static ChunkData emptyChunk = new ChunkData(null, 0, 0, 0);
+
+	static World() {
+		noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2S);
+		noise.SetFrequency(0.02f);
+	}
 
 	public Chunk GetChunk(int cx, int cy, int cz) {
 		if (this.chunks.TryGetValue((cx, cy, cz), out Chunk chunk)) {
@@ -36,16 +42,18 @@ public class World {
 	public Chunk LoadChunk(int cx, int cy, int cz) {
 		Chunk chunk = new Chunk(this, cx, cy, cz);
 		this.chunks.Add((cx, cy, cz), chunk);
-		float s = 0.06f;
 		for (int x = 0; x < 16; x++) {
-			int bx = x + cx * 16;
+			int worldX = x + cx * 16;
+
 			for (int z = 0; z < 16; z++) {
-				int bz = z + cz * 16;
+				int worldZ = z + cz * 16;
+				int xzOffset = (x << 8) | z;
+
 				for (int y = 0; y <= 15; y++) {
-					int by = y + cy * 16;
-					float v = Noise.Perlin3(bx * s, by * s * 0.5f, bz * s) - (by / 64f);
+					int worldY = y + cy * 16;
+					float v = noise.GetNoise(worldX, worldY * 0.75f, worldZ) - (worldY * 0.03f);
 					
-					if (v >= 0f) chunk.SetBlock(x, y, z, 1);
+					if (v >= 0f) chunk.blocks[xzOffset | (y << 4)] = 1;
 				}
 			}
 		}

@@ -25,9 +25,11 @@ public class Texture {
 #pragma warning disable CS9193
 		Program.gl.TexParameterI(GLEnum.Texture2D, GLEnum.TextureWrapS, (int) TextureWrapMode.Repeat);
 		Program.gl.TexParameterI(GLEnum.Texture2D, GLEnum.TextureWrapT, (int) TextureWrapMode.Repeat);
-		Program.gl.TexParameterI(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int) TextureMinFilter.Nearest);
+		Program.gl.TexParameterI(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int) TextureMinFilter.Linear);
 		Program.gl.TexParameterI(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int) TextureMagFilter.Nearest);
 #pragma warning restore CS9193
+
+		// Program.gl.GenerateMipmap(TextureTarget.Texture2D);
 
 		Program.gl.BindTexture(TextureTarget.Texture2D, 0);
 

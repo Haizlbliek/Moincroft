@@ -1,9 +1,11 @@
 #version 330 core
 
-in vec4 col;
+uniform sampler2D uTexture;
+
+in vec2 texCoord;
 
 out vec4 out_color;
 
 void main() {
-	out_color = col;
+	out_color = texture(uTexture, (texCoord + vec2(1.0 / 18.0)) / vec2(32.0, 34.0) * (16.0 / 18.0));
 }

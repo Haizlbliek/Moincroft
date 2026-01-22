@@ -13,8 +13,7 @@ public static class Program {
 			Size = new Vector2D<int>(800, 600),
 			Title = "Minecraft",
 			VideoMode = Monitor.GetMainMonitor(null).VideoMode,
-			// WindowState = WindowState.Fullscreen,
-			API = new GraphicsAPI(ContextAPI.OpenGL, new APIVersion(3, 1)),
+			WindowState = WindowState.Fullscreen,
 		};
 		window = Window.Create(options);
 
@@ -38,7 +37,7 @@ public static class Program {
 		Moincroft.Main.Initialize();
 	}
 
-	private static double time = 0;
+	public static double time = 0;
 	private static void OnUpdate(double delta) {
 		time += delta;
 		if (time >= 1.0 / Config.TicksPerSecond) {

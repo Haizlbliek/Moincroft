@@ -46,7 +46,7 @@ public class Chunk : IRenderable {
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public BlockId GetBlockOutside(int x, int y, int z) {
-		if (x < 0 || x > 15 || y < 0 || y > 15 || z < 0 || z > 15) return this.world.GetBlock(x + this.cx, y + this.cy, z + this.cz);
+		if (x < 0 || x > 15 || y < 0 || y > 15 || z < 0 || z > 15) return this.world.GetBlock(x + this.cx * 16, y + this.cy * 16, z + this.cz * 16);
 
 		return this.GetBlock(x, y, z);
 	}
@@ -56,6 +56,7 @@ public class Chunk : IRenderable {
 	public uint _vao;
 	public uint _vbo;
 	public uint _ebo;
+	public bool meshed;
 	private float[] verticesArr;
 	private uint[] indicesArr;
 
@@ -74,36 +75,85 @@ public class Chunk : IRenderable {
 		List<float> vertices = [];
 		List<uint> indices = [];
 
+		void AddVertex(float x, float y, float z, float uvX, float uvY) {
+			vertices.Add(x);
+			vertices.Add(y);
+			vertices.Add(z);
+			vertices.Add(uvX);
+			vertices.Add(uvY);
+		}
+
+		const float uvMin = 0f;
+		const float uvMax = 1f;
+
 		for (int z = 0; z < 16; z++) {
 			for (int x = 0; x < 16; x++) {
 				for (int y = 0; y < 16; y++) {
 					BlockId type = this.GetBlock(x, y, z);
 					if (type == 0) continue;
 
-					uint i = (uint) vertices.Count / 3;
-					vertices.AddRange(
-						x, y, z,
-						x + 1, y, z,
-						x, y + 1, z,
-						x + 1, y + 1, z,
-						x, y, z + 1,
-						x + 1, y, z + 1,
-						x, y + 1, z + 1,
-						x + 1, y + 1, z + 1
-					);
-					indices.AddRange(0u + i, 1u + i, 2u + i, 1u + i, 2u + i, 3u + i);
-					indices.AddRange(4u + i, 5u + i, 6u + i, 5u + i, 6u + i, 7u + i);
-					indices.AddRange(0u + i, 4u + i, 1u + i, 4u + i, 1u + i, 5u + i);
-					indices.AddRange(2u + i, 3u + i, 6u + i, 3u + i, 6u + i, 7u + i);
-					indices.AddRange(0u + i, 2u + i, 4u + i, 2u + i, 4u + i, 6u + i);
-					indices.AddRange(1u + i, 5u + i, 3u + i, 5u + i, 3u + i, 7u + i);
+					BlockId bxm = this.GetBlockOutside(x - 1, y, z);
+					BlockId bxp = this.GetBlockOutside(x + 1, y, z);
+					BlockId bym = this.GetBlockOutside(x, y - 1, z);
+					BlockId byp = this.GetBlockOutside(x, y + 1, z);
+					BlockId bzm = this.GetBlockOutside(x, y, z - 1);
+					BlockId bzp = this.GetBlockOutside(x, y, z + 1);
 
-					// BlockId bxm = this.GetBlockOutside(x - 1, y, z);
-					// BlockId bxp = this.GetBlockOutside(x + 1, y, z);
-					// BlockId bym = this.GetBlockOutside(x, y - 1, z);
-					// BlockId byp = this.GetBlockOutside(x, y + 1, z);
-					// BlockId bzm = this.GetBlockOutside(x, y, z - 1);
-					// BlockId bzp = this.GetBlockOutside(x, y, z + 1);
+					uint i;
+
+					if (bzm == 0) {
+						i = (uint) vertices.Count / 5;
+						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
+						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin);
+						AddVertex(x + 1, y + 0, z + 0, uvMax, uvMin);
+						AddVertex(x + 0, y + 1, z + 0, uvMin, uvMax);
+						AddVertex(x + 1, y + 1, z + 0, uvMax, uvMax);
+					}
+
+					if (bzp == 0) {
+						i = (uint) vertices.Count / 5;
+						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
+						AddVertex(x + 1, y + 0, z + 1, uvMax, uvMin);
+						AddVertex(x + 0, y + 0, z + 1, uvMin, uvMin);
+						AddVertex(x + 1, y + 1, z + 1, uvMax, uvMax);
+						AddVertex(x + 0, y + 1, z + 1, uvMin, uvMax);
+					}
+
+					if (bym == 0) {
+						i = (uint) vertices.Count / 5;
+						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
+						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin);
+						AddVertex(x + 1, y + 0, z + 0, uvMax, uvMin);
+						AddVertex(x + 0, y + 0, z + 1, uvMin, uvMax);
+						AddVertex(x + 1, y + 0, z + 1, uvMax, uvMax);
+					}
+
+					if (byp == 0) {
+						i = (uint) vertices.Count / 5;
+						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
+						AddVertex(x + 1, y + 1, z + 0, uvMax, uvMin);
+						AddVertex(x + 0, y + 1, z + 0, uvMin, uvMin);
+						AddVertex(x + 1, y + 1, z + 1, uvMax, uvMax);
+						AddVertex(x + 0, y + 1, z + 1, uvMin, uvMax);
+					}
+
+					if (bxm == 0) {
+						i = (uint) vertices.Count / 5;
+						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
+						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin);
+						AddVertex(x + 0, y + 1, z + 0, uvMax, uvMin);
+						AddVertex(x + 0, y + 0, z + 1, uvMin, uvMax);
+						AddVertex(x + 0, y + 1, z + 1, uvMax, uvMax);
+					}
+
+					if (bxp == 0) {
+						i = (uint) vertices.Count / 5;
+						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
+						AddVertex(x + 1, y + 1, z + 0, uvMax, uvMin);
+						AddVertex(x + 1, y + 0, z + 0, uvMin, uvMin);
+						AddVertex(x + 1, y + 1, z + 1, uvMax, uvMax);
+						AddVertex(x + 1, y + 0, z + 1, uvMin, uvMax);
+					}
 				}
 			}
 		}
@@ -124,9 +174,16 @@ public class Chunk : IRenderable {
 			Program.gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint) (this.indicesArr.Length * sizeof(uint)), buf, BufferUsageARB.StaticDraw);
 		}
 
+		const uint stride = 5 * sizeof(float);
+		
 		uint positionLoc = Program.gl.GetAttribLocation(Preload.Basic, "aPosition");
 		Program.gl.EnableVertexAttribArray(positionLoc);
-		Program.gl.VertexAttribPointer(positionLoc, 3, VertexAttribPointerType.Float, false, 0, (void*)0);
+		Program.gl.VertexAttribPointer(positionLoc, 3, VertexAttribPointerType.Float, false, stride, (void*)0);
+		
+		uint texCoordLoc = Program.gl.GetAttribLocation(Preload.Basic, "aTexCoord");
+		Program.gl.EnableVertexAttribArray(texCoordLoc);
+		Program.gl.VertexAttribPointer(texCoordLoc, 2, VertexAttribPointerType.Float, false, stride, (void*)(3 * sizeof(float)));
+		
 		uint offsetLoc = Program.gl.GetAttribLocation(Preload.Basic, "offset");
 		Program.gl.DisableVertexAttribArray(offsetLoc);
 		Program.gl.VertexAttrib3(offsetLoc, this.cx * 16f, this.cy * 16f, this.cz * 16f);
@@ -134,11 +191,17 @@ public class Chunk : IRenderable {
 		Program.gl.BindVertexArray(0);
 		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
 		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
+
+		this.meshed = true;
 	}
 
 	public unsafe void Render() {
+		if (!this.meshed) return;
+
 		Program.gl.BindVertexArray(this._vao);
 		Program.gl.UseProgram(Preload.Basic);
+		Program.gl.ActiveTexture(Silk.NET.OpenGL.TextureUnit.Texture0);
+		Program.gl.BindTexture(TextureTarget.Texture2D, Preload.atlas._id);
 		uint offsetLoc = Program.gl.GetAttribLocation(Preload.Basic, "offset");
 		Program.gl.VertexAttrib3(offsetLoc, this.cx * 16f, this.cy * 16f, this.cz * 16f);
 		Program.gl.DrawElements(PrimitiveType.Triangles, (uint) this.indicesArr.Length, DrawElementsType.UnsignedInt, (void*) 0);

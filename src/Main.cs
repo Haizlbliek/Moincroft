@@ -43,21 +43,6 @@ public static class Main {
 		ViewMatrix = Matrix4X4.CreateTranslation(0f, 0f, 0f);
 		float fov = 70f * (Mathf.PI / 180f);
 		ProjectionMatrix = Matrix4X4.CreatePerspectiveFieldOfView(fov, 800f / 600f, 0.1f, 1000f);
-
-		for (int x = -3; x <= 3; x++) {
-			for (int z = -3; z <= 3; z++) {
-				for (int y = -3; y <= 3; y++) {
-					world.LoadChunk(x, y, z);
-				}
-			}
-		}
-		for (int x = -2; x <= 2; x++) {
-			for (int z = -2; z <= 2; z++) {
-				for (int y = -2; y <= 2; y++) {
-					world.GetChunk(x, y, z).GenerateMesh();
-				}
-			}
-		}
 	}
 
 	public static void Resize(int width, int height) {
@@ -144,6 +129,15 @@ public static class Main {
 		cameraPosition.z += -Mathf.Sin(-cameraRotation.y) * movement.x + Mathf.Cos(-cameraRotation.y) * movement.y;
 
 		rayResult = new WorldRay(world, cameraPosition, cameraRotation.AngleToDirection, 1000f).Cast();
+
+		Vector3i offset = world.GetChunkPositionFromBlock((int) cameraPosition.x, (int) cameraPosition.y, (int) cameraPosition.z);
+		for (int x = -2; x <= 2; x++) {
+			for (int z = -2; z <= 2; z++) {
+				for (int y = -2; y <= 2; y++) {
+					world.VisibleChunk(offset.x + x, offset.y + y, offset.z + z);
+				}
+			}
+		}
 	}
 
 	public static void Render() {

@@ -1,60 +1,30 @@
 using System.Runtime.CompilerServices;
+using Silk.NET.Core;
 using Silk.NET.OpenGL;
 
 namespace Moincroft.World;
 
-public class Chunk : IRenderable {
-	public World world;
-	public BlockId[] blocks;
-	public int cx;
-	public int cy;
-	public int cz;
-
-	public Chunk(World world, int cx, int cy, int cz) {
-		this.world = world;
-		this.blocks = new BlockId[16 * 16 * 16];
-		this.cx = cx;
-		this.cy = cy;
-		this.cz = cz;
-
+public class Chunk : ChunkData, IRenderable {
+	public unsafe Chunk(World world, int cx, int cy, int cz) : base(world, cx, cy, cz) {
 		this._vao = Program.gl.GenVertexArray();
-	}
+		this._vbo = Program.gl.GenBuffer();
+		this._ebo = Program.gl.GenBuffer();
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public void SetBlock(int x, int y, int z, BlockId block) {
-		this.blocks[x + y * 16 + z * 256] = block;
-	}
+		Program.gl.BindVertexArray(this._vao);
+		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._vbo);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public BlockId GetBlock(int x, int y, int z) {
-		return this.blocks[x + y * 16 + z * 256];
-	}
+		const uint stride = 6 * sizeof(float);
+		Program.gl.EnableVertexAttribArray( 0);
+		Program.gl.VertexAttribPointer( 0, 3, VertexAttribPointerType.Float, false, stride, (void*)0);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public void CarefulSetBlock(int x, int y, int z, BlockId block) {
-		if (x < 0 || x > 15 || y < 0 || y > 15 || z < 0 || z > 15) return;
+		Program.gl.EnableVertexAttribArray( 1);
+		Program.gl.VertexAttribPointer( 1, 2, VertexAttribPointerType.Float, false, stride, (void*)(3 * sizeof(float)));
 
-		this.SetBlock(x, y, z, block);
-	}
+		Program.gl.EnableVertexAttribArray( 2);
+		Program.gl.VertexAttribPointer( 2, 1, VertexAttribPointerType.Float, false, stride, (void*)(5 * sizeof(float)));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public BlockId CarefulGetBlock(int x, int y, int z) {
-		if (x < 0 || x > 15 || y < 0 || y > 15 || z < 0 || z > 15) return 0;
-
-		return this.GetBlock(x, y, z);
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public BlockId GetBlockOutside(int x, int y, int z) {
-		if (x < 0 || x > 15 || y < 0 || y > 15 || z < 0 || z > 15) return this.world.GetBlock(x + this.cx * 16, y + this.cy * 16, z + this.cz * 16);
-
-		return this.GetBlock(x, y, z);
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool IsVisiblySolid(int x, int y, int z) {
-		BlockId type = this.GetBlockOutside(x, y, z);
-		return type > 0; // && Blocks.Blocks.blocks[type].opaque;
+		Program.gl.BindVertexArray(0);
+		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
 	}
 
 
@@ -63,23 +33,12 @@ public class Chunk : IRenderable {
 	public uint _vbo;
 	public uint _ebo;
 	public bool meshed;
-	private float[] verticesArr;
-	private uint[] indicesArr;
+	public uint indices;
 
-	public unsafe void GenerateMesh() {
-		if (this._vbo != 0) {
-			Program.gl.DeleteBuffer(this._vbo);
-			this._vbo = 0;
-		}
-		if (this._ebo != 0) {
-			Program.gl.DeleteBuffer(this._ebo);
-			this._ebo = 0;
-		}
-
-		Program.gl.BindVertexArray(this._vao);
-
+	public (List<float>, List<uint>) MeshData() {
 		List<float> vertices = [];
 		List<uint> indices = [];
+		uint vertexIndex = 0;
 
 		void AddVertex(float x, float y, float z, float uvX, float uvY, byte ao) {
 			vertices.Add(x);
@@ -88,11 +47,18 @@ public class Chunk : IRenderable {
 			vertices.Add(uvX);
 			vertices.Add(uvY);
 			vertices.Add(ao);
+			vertexIndex++;
 		}
 
 		const float uvMin = 0f;
 		const float uvMax = 1f;
-		const int VERTEX_INDEX_COUNT = 6;
+
+		ChunkData neighbourXm = this.world.GetChunk(this.cx - 1, this.cy, this.cz) ?? World.emptyChunk;
+		ChunkData neighbourXp = this.world.GetChunk(this.cx + 1, this.cy, this.cz) ?? World.emptyChunk;
+		ChunkData neighbourYm = this.world.GetChunk(this.cx, this.cy - 1, this.cz) ?? World.emptyChunk;
+		ChunkData neighbourYp = this.world.GetChunk(this.cx, this.cy + 1, this.cz) ?? World.emptyChunk;
+		ChunkData neighbourZm = this.world.GetChunk(this.cx, this.cy, this.cz - 1) ?? World.emptyChunk;
+		ChunkData neighbourZp = this.world.GetChunk(this.cx, this.cy, this.cz + 1) ?? World.emptyChunk;
 
 		for (int z = 0; z < 16; z++) {
 			for (int x = 0; x < 16; x++) {
@@ -100,19 +66,17 @@ public class Chunk : IRenderable {
 					BlockId type = this.GetBlock(x, y, z);
 					if (type == 0) continue;
 
-					BlockId bxm = this.GetBlockOutside(x - 1, y, z);
-					BlockId bxp = this.GetBlockOutside(x + 1, y, z);
-					BlockId bym = this.GetBlockOutside(x, y - 1, z);
-					BlockId byp = this.GetBlockOutside(x, y + 1, z);
-					BlockId bzm = this.GetBlockOutside(x, y, z - 1);
-					BlockId bzp = this.GetBlockOutside(x, y, z + 1);
+					BlockId bxm = x > 0 ? this.GetBlock(x - 1, y, z) : neighbourXm.GetBlock(15, y, z);
+					BlockId bxp = x < 15 ? this.GetBlock(x + 1, y, z) : neighbourXp.GetBlock(0, y, z);
+					BlockId bym = y > 0 ? this.GetBlock(x, y - 1, z) : neighbourYm.GetBlock(x, 15, z);
+					BlockId byp = y < 15 ? this.GetBlock(x, y + 1, z) : neighbourYp.GetBlock(x, 0, z);
+					BlockId bzm = z > 0 ? this.GetBlock(x, y, z - 1) : neighbourZm.GetBlock(x, y, 15);
+					BlockId bzp = z < 15 ? this.GetBlock(x, y, z + 1) : neighbourZp.GetBlock(x, y, 0);
 
-					uint i;
 					byte ao0, ao1, ao2, ao3;
 
 					if (bzm == 0) {
-						i = (uint) vertices.Count / VERTEX_INDEX_COUNT;
-						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
+						indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
 						(ao0, ao1, ao2, ao3) = this.GetAO(x, y, z, 5);
 						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin, ao0);
 						AddVertex(x + 1, y + 0, z + 0, uvMax, uvMin, ao1);
@@ -121,8 +85,7 @@ public class Chunk : IRenderable {
 					}
 
 					if (bzp == 0) {
-						i = (uint) vertices.Count / VERTEX_INDEX_COUNT;
-						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
+						indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
 						(ao1, ao0, ao3, ao2) = this.GetAO(x, y, z, 4);
 						AddVertex(x + 1, y + 0, z + 1, uvMax, uvMin, ao0);
 						AddVertex(x + 0, y + 0, z + 1, uvMin, uvMin, ao1);
@@ -131,8 +94,7 @@ public class Chunk : IRenderable {
 					}
 
 					if (bym == 0) {
-						i = (uint) vertices.Count / VERTEX_INDEX_COUNT;
-						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
+						indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
 						(ao3, ao1, ao2, ao0) = this.GetAO(x, y, z, 3);
 						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin, ao0);
 						AddVertex(x + 1, y + 0, z + 0, uvMax, uvMin, ao1);
@@ -141,8 +103,7 @@ public class Chunk : IRenderable {
 					}
 
 					if (byp == 0) {
-						i = (uint) vertices.Count / VERTEX_INDEX_COUNT;
-						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
+						indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
 						(ao3, ao1, ao2, ao0) = this.GetAO(x, y, z, 2);
 						AddVertex(x + 1, y + 1, z + 0, uvMax, uvMin, ao1);
 						AddVertex(x + 0, y + 1, z + 0, uvMin, uvMin, ao0);
@@ -151,8 +112,7 @@ public class Chunk : IRenderable {
 					}
 
 					if (bxm == 0) {
-						i = (uint) vertices.Count / VERTEX_INDEX_COUNT;
-						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
+						indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
 						(ao0, ao2, ao1, ao3) = this.GetAO(x, y, z, 1);
 						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin, ao0);
 						AddVertex(x + 0, y + 1, z + 0, uvMax, uvMin, ao1);
@@ -161,8 +121,7 @@ public class Chunk : IRenderable {
 					}
 
 					if (bxp == 0) {
-						i = (uint) vertices.Count / VERTEX_INDEX_COUNT;
-						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
+						indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
 						(ao1, ao3, ao0, ao2) = this.GetAO(x, y, z, 0);
 						AddVertex(x + 1, y + 1, z + 0, uvMax, uvMin, ao0);
 						AddVertex(x + 1, y + 0, z + 0, uvMin, uvMin, ao1);
@@ -173,44 +132,33 @@ public class Chunk : IRenderable {
 			}
 		}
 
+		return (vertices, indices);
+	}
 
-		this.verticesArr = [..vertices];
-		this.indicesArr = [..indices];
+	public unsafe void GenerateMesh() {
+		Program.gl.BindVertexArray(this._vao);
 
-		this._vbo = Program.gl.GenBuffer();
+		(List<float> vertices, List<uint> indices) = this.MeshData();
+
 		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._vbo);
-		fixed (float* buf = this.verticesArr) {
-			Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (this.verticesArr.Length * sizeof(float)), buf, BufferUsageARB.StaticDraw);
+		Span<float> vertexSpan = CollectionsMarshal.AsSpan(vertices);
+		Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (vertexSpan.Length * sizeof(float)), (void*) 0, BufferUsageARB.StaticDraw);
+		fixed (float* buf = vertexSpan) {
+			Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (vertexSpan.Length * sizeof(float)), buf, BufferUsageARB.StaticDraw);
 		}
 
-		this._ebo = Program.gl.GenBuffer();
 		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, this._ebo);
-		fixed (uint* buf = this.indicesArr) {
-			Program.gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint) (this.indicesArr.Length * sizeof(uint)), buf, BufferUsageARB.StaticDraw);
+		Span<uint> indexSpan = CollectionsMarshal.AsSpan(indices);
+		Program.gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint) (indexSpan.Length * sizeof(uint)), (void*) 0, BufferUsageARB.StaticDraw);
+		fixed (uint* buf = indexSpan) {
+			Program.gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint) (indexSpan.Length * sizeof(uint)), buf, BufferUsageARB.StaticDraw);
 		}
-
-		const uint stride = 6 * sizeof(float);
-		
-		uint positionLoc = Program.gl.GetAttribLocation(Preload.Basic, "aPosition");
-		Program.gl.EnableVertexAttribArray(positionLoc);
-		Program.gl.VertexAttribPointer(positionLoc, 3, VertexAttribPointerType.Float, false, stride, (void*)0);
-		
-		uint texCoordLoc = Program.gl.GetAttribLocation(Preload.Basic, "aTexCoord");
-		Program.gl.EnableVertexAttribArray(texCoordLoc);
-		Program.gl.VertexAttribPointer(texCoordLoc, 2, VertexAttribPointerType.Float, false, stride, (void*)(3 * sizeof(float)));
-		
-		uint ambientOcclusionLoc = Program.gl.GetAttribLocation(Preload.Basic, "aAmbientOcclusion");
-		Program.gl.EnableVertexAttribArray(ambientOcclusionLoc);
-		Program.gl.VertexAttribPointer(ambientOcclusionLoc, 1, VertexAttribPointerType.Float, false, stride, (void*)(5 * sizeof(float)));
-		
-		uint offsetLoc = Program.gl.GetAttribLocation(Preload.Basic, "offset");
-		Program.gl.DisableVertexAttribArray(offsetLoc);
-		Program.gl.VertexAttrib3(offsetLoc, this.cx * 16f, this.cy * 16f, this.cz * 16f);
 
 		Program.gl.BindVertexArray(0);
 		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
 		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
 
+		this.indices = (uint) indexSpan.Length;
 		this.meshed = true;
 	}
 
@@ -237,9 +185,9 @@ public class Chunk : IRenderable {
 		Program.gl.UseProgram(Preload.Basic);
 		Program.gl.ActiveTexture(Silk.NET.OpenGL.TextureUnit.Texture0);
 		Program.gl.BindTexture(TextureTarget.Texture2D, Preload.atlas._id);
-		uint offsetLoc = Program.gl.GetAttribLocation(Preload.Basic, "offset");
+		uint offsetLoc = Program.gl.GetAttribLocation(Preload.Basic, "uChunkOffset");
 		Program.gl.VertexAttrib3(offsetLoc, this.cx * 16f, this.cy * 16f, this.cz * 16f);
-		Program.gl.DrawElements(PrimitiveType.Triangles, (uint) this.indicesArr.Length, DrawElementsType.UnsignedInt, (void*) 0);
+		Program.gl.DrawElements(PrimitiveType.Triangles, this.indices, DrawElementsType.UnsignedInt, (void*) 0);
 		Program.gl.UseProgram(0);
 		Program.gl.BindVertexArray(0);
 	}

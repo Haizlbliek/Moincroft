@@ -61,6 +61,7 @@ public static class Mathf {
 	public static int Mod(int x, int v) {
 		return ((x % v) + v) % v;
 	}
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static float Mod(float x, float v) {
 		return ((x % v) + v) % v;

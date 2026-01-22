@@ -3,6 +3,8 @@ namespace Moincroft.World;
 public class World {
 	public Dictionary<(int, int, int), Chunk> chunks = [];
 
+	public static ChunkData emptyChunk = new ChunkData(null, 0, 0, 0);
+
 	public Chunk GetChunk(int cx, int cy, int cz) {
 		if (this.chunks.TryGetValue((cx, cy, cz), out Chunk chunk)) {
 			return chunk;
@@ -11,19 +13,27 @@ public class World {
 		return null;
 	}
 
+	public Vector3i GetChunkPositionFromBlock(int bx, int by, int bz) {
+		return new Vector3i(Mathf.FloorDivide(bx, 16), Mathf.FloorDivide(by, 16), Mathf.FloorDivide(bz, 16));
+	}
+
 	public Chunk GetChunkFromBlock(int bx, int by, int bz) {
 		return this.GetChunk(Mathf.FloorDivide(bx, 16), Mathf.FloorDivide(by, 16), Mathf.FloorDivide(bz, 16));
 	}
 
 	public BlockId GetBlock(int x, int y, int z) {
-		return this.GetChunkFromBlock(x, y, z)?.GetBlock(Mathf.Mod(x, 16), Mathf.Mod(y, 16), Mathf.Mod(z, 16)) ?? 0; // TODO: 
+		if (this.chunks.TryGetValue((x >> 4, y >> 4, z >> 4), out Chunk chunk)) {
+			return chunk.GetBlock(x & 15, y & 15, z & 15);
+		}
+
+		return 0;
 	}
 
 	public void SetBlock(int x, int y, int z, BlockId block) {
-		this.GetChunkFromBlock(x, y, z)?.SetBlock(Mathf.Mod(x, 16), Mathf.Mod(y, 16), Mathf.Mod(z, 16), block); // TODO: 
+		this.GetChunkFromBlock(x, y, z)?.SetBlock(x & 15, y & 15, z & 15, block); // TODO: 
 	}
 
-	public void LoadChunk(int cx, int cy, int cz) {
+	public Chunk LoadChunk(int cx, int cy, int cz) {
 		Chunk chunk = new Chunk(this, cx, cy, cz);
 		this.chunks.Add((cx, cy, cz), chunk);
 		float s = 0.06f;
@@ -39,5 +49,51 @@ public class World {
 				}
 			}
 		}
+
+		return chunk;
+	}
+
+	public Chunk GetOrLoadChunk(int cx, int cy, int cz) {
+		if (this.chunks.TryGetValue((cx, cy, cz), out Chunk chunk)) {
+			return chunk;
+		}
+
+		return this.LoadChunk(cx, cy, cz);
+	}
+
+	public void VisibleChunk(int cx, int cy, int cz) {
+		Chunk chunk = this.GetOrLoadChunk(cx, cy, cz);
+		if (chunk.meshed) return;
+
+		this.GetOrLoadChunk(cx - 1, cy - 1, cz - 1);
+		this.GetOrLoadChunk(cx,     cy - 1, cz - 1);
+		this.GetOrLoadChunk(cx + 1, cy - 1, cz - 1);
+		this.GetOrLoadChunk(cx - 1, cy - 1, cz    );
+		this.GetOrLoadChunk(cx,     cy - 1, cz    );
+		this.GetOrLoadChunk(cx + 1, cy - 1, cz    );
+		this.GetOrLoadChunk(cx - 1, cy - 1, cz + 1);
+		this.GetOrLoadChunk(cx,     cy - 1, cz + 1);
+		this.GetOrLoadChunk(cx + 1, cy - 1, cz + 1);
+
+		this.GetOrLoadChunk(cx - 1, cy, cz - 1);
+		this.GetOrLoadChunk(cx,     cy, cz - 1);
+		this.GetOrLoadChunk(cx + 1, cy, cz - 1);
+		this.GetOrLoadChunk(cx - 1, cy, cz    );
+		this.GetOrLoadChunk(cx + 1, cy, cz    );
+		this.GetOrLoadChunk(cx - 1, cy, cz + 1);
+		this.GetOrLoadChunk(cx,     cy, cz + 1);
+		this.GetOrLoadChunk(cx + 1, cy, cz + 1);
+
+		this.GetOrLoadChunk(cx - 1, cy + 1, cz - 1);
+		this.GetOrLoadChunk(cx,     cy + 1, cz - 1);
+		this.GetOrLoadChunk(cx + 1, cy + 1, cz - 1);
+		this.GetOrLoadChunk(cx - 1, cy + 1, cz    );
+		this.GetOrLoadChunk(cx,     cy + 1, cz    );
+		this.GetOrLoadChunk(cx + 1, cy + 1, cz    );
+		this.GetOrLoadChunk(cx - 1, cy + 1, cz + 1);
+		this.GetOrLoadChunk(cx,     cy + 1, cz + 1);
+		this.GetOrLoadChunk(cx + 1, cy + 1, cz + 1);
+
+		chunk.GenerateMesh();
 	}
 }

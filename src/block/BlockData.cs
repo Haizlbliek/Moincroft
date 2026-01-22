@@ -17,7 +17,11 @@ public abstract class BlockData {
 	}
 }
 
-public class BlockData<T> : BlockData where T : class {
+public class BlockData<T> : BlockData where T : Block, new() {
+	public static T blockInstance = new T();
+
 	public BlockData(string id) : base(id) {
 	}
+
+	public T Block => blockInstance;
 }

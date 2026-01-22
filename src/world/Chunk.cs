@@ -51,6 +51,12 @@ public class Chunk : IRenderable {
 		return this.GetBlock(x, y, z);
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public bool IsVisiblySolid(int x, int y, int z) {
+		BlockId type = this.GetBlockOutside(x, y, z);
+		return type > 0; // && Blocks.Blocks.blocks[type].opaque;
+	}
+
 
 #region Rendering
 	public uint _vao;
@@ -75,16 +81,18 @@ public class Chunk : IRenderable {
 		List<float> vertices = [];
 		List<uint> indices = [];
 
-		void AddVertex(float x, float y, float z, float uvX, float uvY) {
+		void AddVertex(float x, float y, float z, float uvX, float uvY, byte ao) {
 			vertices.Add(x);
 			vertices.Add(y);
 			vertices.Add(z);
 			vertices.Add(uvX);
 			vertices.Add(uvY);
+			vertices.Add(ao);
 		}
 
 		const float uvMin = 0f;
 		const float uvMax = 1f;
+		const int VERTEX_INDEX_COUNT = 6;
 
 		for (int z = 0; z < 16; z++) {
 			for (int x = 0; x < 16; x++) {
@@ -100,59 +108,66 @@ public class Chunk : IRenderable {
 					BlockId bzp = this.GetBlockOutside(x, y, z + 1);
 
 					uint i;
+					byte ao0, ao1, ao2, ao3;
 
 					if (bzm == 0) {
-						i = (uint) vertices.Count / 5;
+						i = (uint) vertices.Count / VERTEX_INDEX_COUNT;
 						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
-						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin);
-						AddVertex(x + 1, y + 0, z + 0, uvMax, uvMin);
-						AddVertex(x + 0, y + 1, z + 0, uvMin, uvMax);
-						AddVertex(x + 1, y + 1, z + 0, uvMax, uvMax);
+						(ao0, ao1, ao2, ao3) = this.GetAO(x, y, z, 5);
+						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin, ao0);
+						AddVertex(x + 1, y + 0, z + 0, uvMax, uvMin, ao1);
+						AddVertex(x + 0, y + 1, z + 0, uvMin, uvMax, ao2);
+						AddVertex(x + 1, y + 1, z + 0, uvMax, uvMax, ao3);
 					}
 
 					if (bzp == 0) {
-						i = (uint) vertices.Count / 5;
+						i = (uint) vertices.Count / VERTEX_INDEX_COUNT;
 						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
-						AddVertex(x + 1, y + 0, z + 1, uvMax, uvMin);
-						AddVertex(x + 0, y + 0, z + 1, uvMin, uvMin);
-						AddVertex(x + 1, y + 1, z + 1, uvMax, uvMax);
-						AddVertex(x + 0, y + 1, z + 1, uvMin, uvMax);
+						(ao1, ao0, ao3, ao2) = this.GetAO(x, y, z, 4);
+						AddVertex(x + 1, y + 0, z + 1, uvMax, uvMin, ao0);
+						AddVertex(x + 0, y + 0, z + 1, uvMin, uvMin, ao1);
+						AddVertex(x + 1, y + 1, z + 1, uvMax, uvMax, ao2);
+						AddVertex(x + 0, y + 1, z + 1, uvMin, uvMax, ao3);
 					}
 
 					if (bym == 0) {
-						i = (uint) vertices.Count / 5;
+						i = (uint) vertices.Count / VERTEX_INDEX_COUNT;
 						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
-						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin);
-						AddVertex(x + 1, y + 0, z + 0, uvMax, uvMin);
-						AddVertex(x + 0, y + 0, z + 1, uvMin, uvMax);
-						AddVertex(x + 1, y + 0, z + 1, uvMax, uvMax);
+						(ao3, ao1, ao2, ao0) = this.GetAO(x, y, z, 3);
+						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin, ao0);
+						AddVertex(x + 1, y + 0, z + 0, uvMax, uvMin, ao1);
+						AddVertex(x + 0, y + 0, z + 1, uvMin, uvMax, ao2);
+						AddVertex(x + 1, y + 0, z + 1, uvMax, uvMax, ao3);
 					}
 
 					if (byp == 0) {
-						i = (uint) vertices.Count / 5;
+						i = (uint) vertices.Count / VERTEX_INDEX_COUNT;
 						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
-						AddVertex(x + 1, y + 1, z + 0, uvMax, uvMin);
-						AddVertex(x + 0, y + 1, z + 0, uvMin, uvMin);
-						AddVertex(x + 1, y + 1, z + 1, uvMax, uvMax);
-						AddVertex(x + 0, y + 1, z + 1, uvMin, uvMax);
+						(ao3, ao1, ao2, ao0) = this.GetAO(x, y, z, 2);
+						AddVertex(x + 1, y + 1, z + 0, uvMax, uvMin, ao1);
+						AddVertex(x + 0, y + 1, z + 0, uvMin, uvMin, ao0);
+						AddVertex(x + 1, y + 1, z + 1, uvMax, uvMax, ao3);
+						AddVertex(x + 0, y + 1, z + 1, uvMin, uvMax, ao2);
 					}
 
 					if (bxm == 0) {
-						i = (uint) vertices.Count / 5;
+						i = (uint) vertices.Count / VERTEX_INDEX_COUNT;
 						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
-						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin);
-						AddVertex(x + 0, y + 1, z + 0, uvMax, uvMin);
-						AddVertex(x + 0, y + 0, z + 1, uvMin, uvMax);
-						AddVertex(x + 0, y + 1, z + 1, uvMax, uvMax);
+						(ao0, ao2, ao1, ao3) = this.GetAO(x, y, z, 1);
+						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin, ao0);
+						AddVertex(x + 0, y + 1, z + 0, uvMax, uvMin, ao1);
+						AddVertex(x + 0, y + 0, z + 1, uvMin, uvMax, ao2);
+						AddVertex(x + 0, y + 1, z + 1, uvMax, uvMax, ao3);
 					}
 
 					if (bxp == 0) {
-						i = (uint) vertices.Count / 5;
+						i = (uint) vertices.Count / VERTEX_INDEX_COUNT;
 						indices.AddRange([ i, i + 1, i + 2, i + 1, i + 2, i + 3 ]);
-						AddVertex(x + 1, y + 1, z + 0, uvMax, uvMin);
-						AddVertex(x + 1, y + 0, z + 0, uvMin, uvMin);
-						AddVertex(x + 1, y + 1, z + 1, uvMax, uvMax);
-						AddVertex(x + 1, y + 0, z + 1, uvMin, uvMax);
+						(ao1, ao3, ao0, ao2) = this.GetAO(x, y, z, 0);
+						AddVertex(x + 1, y + 1, z + 0, uvMax, uvMin, ao0);
+						AddVertex(x + 1, y + 0, z + 0, uvMin, uvMin, ao1);
+						AddVertex(x + 1, y + 1, z + 1, uvMax, uvMax, ao2);
+						AddVertex(x + 1, y + 0, z + 1, uvMin, uvMax, ao3);
 					}
 				}
 			}
@@ -174,7 +189,7 @@ public class Chunk : IRenderable {
 			Program.gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint) (this.indicesArr.Length * sizeof(uint)), buf, BufferUsageARB.StaticDraw);
 		}
 
-		const uint stride = 5 * sizeof(float);
+		const uint stride = 6 * sizeof(float);
 		
 		uint positionLoc = Program.gl.GetAttribLocation(Preload.Basic, "aPosition");
 		Program.gl.EnableVertexAttribArray(positionLoc);
@@ -183,6 +198,10 @@ public class Chunk : IRenderable {
 		uint texCoordLoc = Program.gl.GetAttribLocation(Preload.Basic, "aTexCoord");
 		Program.gl.EnableVertexAttribArray(texCoordLoc);
 		Program.gl.VertexAttribPointer(texCoordLoc, 2, VertexAttribPointerType.Float, false, stride, (void*)(3 * sizeof(float)));
+		
+		uint ambientOcclusionLoc = Program.gl.GetAttribLocation(Preload.Basic, "aAmbientOcclusion");
+		Program.gl.EnableVertexAttribArray(ambientOcclusionLoc);
+		Program.gl.VertexAttribPointer(ambientOcclusionLoc, 1, VertexAttribPointerType.Float, false, stride, (void*)(5 * sizeof(float)));
 		
 		uint offsetLoc = Program.gl.GetAttribLocation(Preload.Basic, "offset");
 		Program.gl.DisableVertexAttribArray(offsetLoc);
@@ -193,6 +212,22 @@ public class Chunk : IRenderable {
 		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
 
 		this.meshed = true;
+	}
+
+	public (byte, byte, byte, byte) GetAO(int x, int y, int z, int faceIndex) {
+		sbyte[] offsets = Preload.FaceNeighbours_LOT[faceIndex];
+
+		int mask = 0;
+		if (this.IsVisiblySolid(x + offsets[0], y + offsets[1], z + offsets[2])) mask |= 2;
+		if (this.IsVisiblySolid(x + offsets[3], y + offsets[4], z + offsets[5])) mask |= 8;
+		if (this.IsVisiblySolid(x + offsets[6], y + offsets[7], z + offsets[8])) mask |= 32;
+		if (this.IsVisiblySolid(x + offsets[9], y + offsets[10], z + offsets[11])) mask |= 128;
+		if (this.IsVisiblySolid(x + offsets[12], y + offsets[13], z + offsets[14])) mask |= 1;
+		if (this.IsVisiblySolid(x + offsets[15], y + offsets[16], z + offsets[17])) mask |= 4;
+		if (this.IsVisiblySolid(x + offsets[18], y + offsets[19], z + offsets[20])) mask |= 16;
+		if (this.IsVisiblySolid(x + offsets[21], y + offsets[22], z + offsets[23])) mask |= 64;
+
+		return Preload.AO_LUT[mask];
 	}
 
 	public unsafe void Render() {
@@ -209,4 +244,16 @@ public class Chunk : IRenderable {
 		Program.gl.BindVertexArray(0);
 	}
 #endregion
+
+	const byte FACE_X_POS = 1;
+	const byte FACE_X_NEG = 2;
+	const byte FACE_Y_POS = 4;
+	const byte FACE_Y_NEG = 8;
+	const byte FACE_Z_POS = 16;
+	const byte FACE_Z_NEG = 32;
+	const byte FACE_X = 3;
+	const byte FACE_Y = 12;
+	const byte FACE_Z = 48;
+	const byte FACE_POS = 21;
+	const byte FACE_NEG = 42;
 }

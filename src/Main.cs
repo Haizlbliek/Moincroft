@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -19,7 +18,8 @@ public static class Main {
 	public static Vector2? lastMousePosition = null;
 
 	public static World.World world = new World.World();
-	public static WorldRayResult? rayResult = null;
+	public static WorldRayResult rayResult;
+	public static bool rayCollides;
 
 	public static void Initialize() {
 		Console.WriteLine("Initializing...");
@@ -72,17 +72,17 @@ public static class Main {
 	}
 
 	private static void MouseDown(IMouse mouse, MouseButton button) {
-		rayResult = new WorldRay(world, cameraPosition, cameraRotation.AngleToDirection, 1000f).Cast();
-		if (rayResult == null) return;
+		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, 1000f, out rayResult);
+		if (!rayCollides) return;
 
-		int x = rayResult.Value.blockPosition.x;
-		int y = rayResult.Value.blockPosition.y;
-		int z = rayResult.Value.blockPosition.z;
+		int x = rayResult.blockPosition.x;
+		int y = rayResult.blockPosition.y;
+		int z = rayResult.blockPosition.z;
 		if (button == MouseButton.Left) {}
 		else if (button == MouseButton.Right) {
-			x += rayResult.Value.normal.x;
-			y += rayResult.Value.normal.y;
-			z += rayResult.Value.normal.z;
+			x += rayResult.normal.x;
+			y += rayResult.normal.y;
+			z += rayResult.normal.z;
 		} else {
 			return;
 		}
@@ -100,6 +100,8 @@ public static class Main {
 		if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.GenerateMesh();
 		if (z == 0 ) world.GetChunk(chunk.cx, chunk.cy, chunk.cz - 1)?.GenerateMesh();
 		if (z == 15) world.GetChunk(chunk.cx, chunk.cy, chunk.cz + 1)?.GenerateMesh();
+
+		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, 1000f, out rayResult);
 	}
 
 	public static void Update() {
@@ -129,7 +131,7 @@ public static class Main {
 		cameraPosition.x += Mathf.Cos(-cameraRotation.y) * movement.x + Mathf.Sin(-cameraRotation.y) * movement.y;
 		cameraPosition.z += -Mathf.Sin(-cameraRotation.y) * movement.x + Mathf.Cos(-cameraRotation.y) * movement.y;
 
-		rayResult = new WorldRay(world, cameraPosition, cameraRotation.AngleToDirection, 1000f).Cast();
+		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, 1000f, out rayResult);
 
 		Vector3i offset = world.GetChunkPositionFromBlock((int) cameraPosition.x, (int) cameraPosition.y, (int) cameraPosition.z);
 		for (int x = -Config.RenderDistance; x <= Config.RenderDistance; x++) {
@@ -162,10 +164,9 @@ public static class Main {
 			chunk.Render();
 		}
 
-		if (rayResult != null) {
+		if (rayCollides) {
 			Program.gl.UseProgram(Preload.Selection);
-			Vector3 selectionPos = rayResult.Value.blockPosition;
-			Program.gl.Uniform3(Program.gl.GetUniformLocation(Preload.Selection, "offset"), selectionPos.x, selectionPos.y, selectionPos.z);
+			Program.gl.Uniform3(Program.gl.GetUniformLocation(Preload.Selection, "offset"), (float) rayResult.blockPosition.x, rayResult.blockPosition.y, rayResult.blockPosition.z);
 			Program.gl.UniformMatrix4(Program.gl.GetUniformLocation(Preload.Selection, "view"), false, [ ..Main.ViewMatrix ]);
 			Program.gl.UniformMatrix4(Program.gl.GetUniformLocation(Preload.Selection, "projection"), false, [ ..Main.ProjectionMatrix ]);
 			Program.gl.BindVertexArray(Program._anyVao);

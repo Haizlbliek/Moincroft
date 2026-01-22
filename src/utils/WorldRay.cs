@@ -1,53 +1,58 @@
 namespace Moincroft.Utils;
 
-public class WorldRay : Ray {
-	public World.World world;
+public class WorldRay {
+	public static bool Cast(World.World world, Vector3 origin, Vector3 direction, float maxDistance, out WorldRayResult result) {
+		result = default;
 
-	public WorldRay(World.World world, Vector3 origin, Vector3 endPoint) : base(origin, endPoint) {
-		this.world = world;
-	}
+		int x = Mathf.FloorToInt(origin.x);
+		int y = Mathf.FloorToInt(origin.y);
+		int z = Mathf.FloorToInt(origin.z);
 
-	public WorldRay(World.World world, Vector3 origin, Vector3 direction, float maxDistance) : base(origin, direction, maxDistance) {
-		this.world = world;
-	}
+		int stepX = direction.x > 0 ? 1 : -1;
+		int stepY = direction.y > 0 ? 1 : -1;
+		int stepZ = direction.z > 0 ? 1 : -1;
 
-	public WorldRayResult? Cast() {
-		float epsilon = 0f;
-		float maxX = ((this.direction.x < 0f ? 0f : 1f) - Mathf.Mod1(this.origin.x) + epsilon) / this.direction.x;
-		float maxY = ((this.direction.y < 0f ? 0f : 1f) - Mathf.Mod1(this.origin.y) + epsilon) / this.direction.y;
-		float maxZ = ((this.direction.z < 0f ? 0f : 1f) - Mathf.Mod1(this.origin.z) + epsilon) / this.direction.z;
+		float deltaX = Math.Abs(1f / direction.x);
+		float deltaY = Math.Abs(1f / direction.y);
+		float deltaZ = Math.Abs(1f / direction.z);
 
-		float deltaX = Math.Sign(this.direction.x) / this.direction.x;
-		float deltaY = Math.Sign(this.direction.y) / this.direction.y;
-		float deltaZ = Math.Sign(this.direction.z) / this.direction.z;
+		float maxT_X = ((direction.x > 0f) ? (x + 1 - origin.x) : (origin.x - x)) * deltaX;
+		float maxT_Y = ((direction.y > 0f) ? (y + 1 - origin.y) : (origin.y - y)) * deltaY;
+		float maxT_Z = ((direction.z > 0f) ? (z + 1 - origin.z) : (origin.z - z)) * deltaZ;
 
-		int blockX = Mathf.FloorToInt(this.origin.x);
-		int blockY = Mathf.FloorToInt(this.origin.y);
-		int blockZ = Mathf.FloorToInt(this.origin.z);
-
-		Vector3i normal = Vector3i.Zero;
-
-		for (int steps = 0; steps < 150; steps++) {
-			if (this.world.GetBlock(blockX, blockY, blockZ) != 0) {
-				return new WorldRayResult() { blockPosition = new Vector3i(blockX, blockY, blockZ), normal = normal };
+		while (true) {
+			float currentT;
+			if (maxT_X < maxT_Y) {
+				currentT = maxT_X < maxT_Z ? maxT_X : maxT_Z;
+			} else {
+				currentT = maxT_Y < maxT_Z ? maxT_Y : maxT_Z;
 			}
 
-			if (maxX < maxY && maxX < maxZ) {
-				blockX += Math.Sign(this.direction.x);
-				maxX += deltaX;
-				normal = new Vector3i(-Math.Sign(this.direction.x), 0, 0);
-			} else if (maxY < maxZ) {
-				blockY += Math.Sign(this.direction.y);
-				maxY += deltaY;
-				normal = new Vector3i(0, -Math.Sign(this.direction.y), 0);
-			} else {
-				blockZ += Math.Sign(this.direction.z);
-				maxZ += deltaZ;
-				normal = new Vector3i(0, 0, -Math.Sign(this.direction.z));
+			if (currentT > maxDistance) break;
+
+			if (maxT_X < maxT_Y && maxT_X < maxT_Z) {
+				x += stepX;
+				maxT_X += deltaX;
+				result.normal = new Vector3i(-stepX, 0, 0);
+			}
+			else if (maxT_Y < maxT_Z) {
+				y += stepY;
+				maxT_Y += deltaY;
+				result.normal = new Vector3i(0, -stepY, 0);
+			}
+			else {
+				z += stepZ;
+				maxT_Z += deltaZ;
+				result.normal = new Vector3i(0, 0, -stepZ);
+			}
+
+			if (world.GetBlock(x, y, z) != 0) {
+				result.blockPosition = new Vector3i(x, y, z);
+				return true;
 			}
 		}
 
-		return null;
+		return false;
 	}
 }
 

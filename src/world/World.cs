@@ -26,14 +26,16 @@ public class World {
 	public void LoadChunk(int cx, int cy, int cz) {
 		Chunk chunk = new Chunk(this, cx, cy, cz);
 		this.chunks.Add((cx, cy, cz), chunk);
+		float s = 0.06f;
 		for (int x = 0; x < 16; x++) {
+			int bx = x + cx * 16;
 			for (int z = 0; z < 16; z++) {
-				int bx = x + cx * 16;
 				int bz = z + cz * 16;
-
-				int height = 24 - cy * 16 + (int) (Mathf.Cos(bx * 0.125f) * 8f + Mathf.Sin(bz * 0.125f) * 8f);
-				for (int y = 0; y <= Math.Min(height, 15); y++) {
-					chunk.SetBlock(x, y, z, 1);
+				for (int y = 0; y <= 15; y++) {
+					int by = y + cy * 16;
+					float v = Noise.Perlin3(bx * s, by * s * 0.5f, bz * s) - (by / 64f);
+					
+					if (v >= 0f) chunk.SetBlock(x, y, z, 1);
 				}
 			}
 		}

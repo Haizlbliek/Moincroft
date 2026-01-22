@@ -46,16 +46,16 @@ public static class Main {
 
 		for (int x = -3; x <= 3; x++) {
 			for (int z = -3; z <= 3; z++) {
-				world.LoadChunk(x, 0, z);
-				world.LoadChunk(x, 1, z);
-				world.LoadChunk(x, 2, z);
+				for (int y = -3; y <= 3; y++) {
+					world.LoadChunk(x, y, z);
+				}
 			}
 		}
 		for (int x = -2; x <= 2; x++) {
 			for (int z = -2; z <= 2; z++) {
-				world.GetChunk(x, 0, z).GenerateMesh();
-				world.GetChunk(x, 1, z).GenerateMesh();
-				world.GetChunk(x, 2, z).GenerateMesh();
+				for (int y = -2; y <= 2; y++) {
+					world.GetChunk(x, y, z).GenerateMesh();
+				}
 			}
 		}
 	}

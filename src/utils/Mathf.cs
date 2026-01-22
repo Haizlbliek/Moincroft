@@ -41,7 +41,19 @@ public static class Mathf {
 		return ((a < 0) ^ (b < 0)) && (a % b != 0) ? (a / b - 1) : (a / b);
 	}
 
+	public static int FloorToInt(float a) {
+		return (int) MathF.Floor(a);
+	}
+
 	public static int Mod(int x, int v) {
 		return ((x % v) + v) % v;
+	}
+
+	public static float Mod(float x, float v) {
+		return ((x % v) + v) % v;
+	}
+
+	public static float Mod1(float x) {
+		return ((x % 1f) + 1f) % 1f;
 	}
 }

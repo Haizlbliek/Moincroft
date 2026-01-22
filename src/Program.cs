@@ -7,6 +7,7 @@ namespace Moincroft;
 public static class Program {
 	public static IWindow window;
 	public static GL gl;
+	public static uint _anyVao;
 
 	public static void Main(string[] args) {
 		WindowOptions options = WindowOptions.Default with {
@@ -33,6 +34,8 @@ public static class Program {
 		gl.ClearColor(0f, 0f, 0f, 1f);
 
 		window.SetWindowIcon([ Texture.LoadRawImage("assets/icon.png") ]);
+
+		_anyVao = gl.CreateVertexArray();
 
 		Moincroft.Main.Initialize();
 	}

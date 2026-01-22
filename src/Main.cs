@@ -5,7 +5,6 @@ using Silk.NET.OpenGL;
 namespace Moincroft;
 
 public static class Main {
-	private static GL Gl => Program.gl;
 	public static Random random = new Random();
 
 	public static Matrix4X4<float> ViewMatrix;
@@ -19,6 +18,7 @@ public static class Main {
 	public static Vector2? lastMousePosition = null;
 
 	public static World.World world = new World.World();
+	public static WorldRayResult? rayResult = null;
 
 	public static void Initialize() {
 		Console.WriteLine("Initializing...");
@@ -86,7 +86,34 @@ public static class Main {
 	}
 
 	private static void MouseDown(IMouse mouse, MouseButton button) {
-		
+		rayResult = new WorldRay(world, cameraPosition, cameraRotation.AngleToDirection, 1000f).Cast();
+		if (rayResult == null) return;
+
+		int x = rayResult.Value.blockPosition.x;
+		int y = rayResult.Value.blockPosition.y;
+		int z = rayResult.Value.blockPosition.z;
+		if (button == MouseButton.Left) {}
+		else if (button == MouseButton.Right) {
+			x += rayResult.Value.normal.x;
+			y += rayResult.Value.normal.y;
+			z += rayResult.Value.normal.z;
+		} else {
+			return;
+		}
+
+		Chunk chunk = world.GetChunkFromBlock(x, y, z);
+		if (chunk == null) return;
+		x = Mathf.Mod(x, 16);
+		y = Mathf.Mod(y, 16);
+		z = Mathf.Mod(z, 16);
+		chunk.SetBlock(x, y, z, button == MouseButton.Left ? 0u : 1u);
+		chunk.GenerateMesh();
+		if (x == 0 ) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz)?.GenerateMesh();
+		if (x == 15) world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz)?.GenerateMesh();
+		if (y == 0 ) world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz)?.GenerateMesh();
+		if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.GenerateMesh();
+		if (z == 0 ) world.GetChunk(chunk.cx, chunk.cy, chunk.cz - 1)?.GenerateMesh();
+		if (z == 15) world.GetChunk(chunk.cx, chunk.cy, chunk.cz + 1)?.GenerateMesh();
 	}
 
 	public static void Update() {
@@ -115,6 +142,8 @@ public static class Main {
 		}
 		cameraPosition.x += Mathf.Cos(-cameraRotation.y) * movement.x + Mathf.Sin(-cameraRotation.y) * movement.y;
 		cameraPosition.z += -Mathf.Sin(-cameraRotation.y) * movement.x + Mathf.Cos(-cameraRotation.y) * movement.y;
+
+		rayResult = new WorldRay(world, cameraPosition, cameraRotation.AngleToDirection, 1000f).Cast();
 	}
 
 	public static void Render() {
@@ -123,19 +152,31 @@ public static class Main {
 		ViewMatrix *= Matrix4X4.CreateRotationY(cameraRotation.y);
 		ViewMatrix *= Matrix4X4.CreateRotationX(cameraRotation.x);
 
-		Gl.StencilMask(0xFF);
-		Gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+		Program.gl.StencilMask(0xFF);
+		Program.gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-		Gl.UseProgram(Preload.Basic);
+		Program.gl.UseProgram(Preload.Basic);
 		Program.gl.UniformMatrix4(Program.gl.GetUniformLocation(Preload.Basic, "view"), false, [ ..Main.ViewMatrix ]);
 		Program.gl.UniformMatrix4(Program.gl.GetUniformLocation(Preload.Basic, "projection"), false, [ ..Main.ProjectionMatrix ]);
-		Gl.UseProgram(Preload.Basic);
+		Program.gl.UseProgram(Preload.Basic);
 
-		Gl.Enable(EnableCap.DepthTest);
-		Gl.Enable(EnableCap.Blend);
-		Gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+		Program.gl.Enable(EnableCap.DepthTest);
+		Program.gl.Enable(EnableCap.Blend);
+		Program.gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 		foreach (Chunk chunk in world.chunks.Values) {
 			chunk.Render();
+		}
+
+		if (rayResult != null) {
+			Program.gl.UseProgram(Preload.Selection);
+			Vector3 selectionPos = rayResult.Value.blockPosition;
+			Program.gl.Uniform3(Program.gl.GetUniformLocation(Preload.Selection, "offset"), selectionPos.x, selectionPos.y, selectionPos.z);
+			Program.gl.UniformMatrix4(Program.gl.GetUniformLocation(Preload.Selection, "view"), false, [ ..Main.ViewMatrix ]);
+			Program.gl.UniformMatrix4(Program.gl.GetUniformLocation(Preload.Selection, "projection"), false, [ ..Main.ProjectionMatrix ]);
+			Program.gl.BindVertexArray(Program._anyVao);
+			Program.gl.DrawArrays(PrimitiveType.Lines, 0, 24);
+			Program.gl.BindVertexArray(0);
+			Program.gl.UseProgram(0);
 		}
 	}
 }

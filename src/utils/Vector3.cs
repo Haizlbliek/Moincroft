@@ -9,6 +9,14 @@ public struct Vector3 {
 	public readonly float Length => Mathf.Sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
 	public readonly float SqrLength => this.x * this.x + this.y * this.y + this.z * this.z;
 
+	public readonly Vector3 Normalized => this / this.Length;
+
+	public readonly Vector3 AngleToDirection { get {
+		float rot = Mathf.Cos(-this.x);
+		return new Vector3(Mathf.Cos(this.y + Mathf.PI * -0.5f) * rot, Mathf.Sin(-this.x), Mathf.Sin(this.y + Mathf.PI * -0.5f) * rot);
+		//REVIEW - 
+	} }
+
 	public Vector3(float x, float y, float z) {
 		this.x = x;
 		this.y = y;
@@ -41,6 +49,10 @@ public struct Vector3 {
 
 	public static Vector3 operator -(Vector3 a) {
 		return new Vector3(-a.x, -a.y, -a.z);
+	}
+
+	public static implicit operator Vector3(Vector3i v) {
+		return new Vector3(v.x, v.y, v.z);
 	}
 
 	public static Vector3 Zero => new Vector3(0f, 0f, 0f);

@@ -23,8 +23,9 @@ public static class Main {
 
 	public static void Initialize() {
 		Console.WriteLine("Initializing...");
-		Blocks.Blocks.Initialize();
 		Preload.Initialize();
+		Atlas.Initialize();
+		Blocks.Blocks.Initialize();
 
 		input = Program.window.CreateInput();
 		for (int i = 0; i < input.Keyboards.Count; i++) {

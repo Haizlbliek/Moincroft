@@ -1,10 +1,8 @@
-using System.Runtime.CompilerServices;
-using Silk.NET.Core;
 using Silk.NET.OpenGL;
 
 namespace Moincroft.World;
 
-public class Chunk : ChunkData, IRenderable {
+public class Chunk : ChunkData {
 	public unsafe Chunk(World world, int cx, int cy, int cz) : base(world, cx, cy, cz) {
 		this._vao = Program.gl.GenVertexArray();
 		this._vbo = Program.gl.GenBuffer();
@@ -50,15 +48,12 @@ public class Chunk : ChunkData, IRenderable {
 			vertexIndex++;
 		}
 
-		const float uvMin = 0f;
-		const float uvMax = 1f;
-
-		ChunkData neighbourXm = this.world.GetChunk(this.cx - 1, this.cy, this.cz) ?? World.emptyChunk;
-		ChunkData neighbourXp = this.world.GetChunk(this.cx + 1, this.cy, this.cz) ?? World.emptyChunk;
-		ChunkData neighbourYm = this.world.GetChunk(this.cx, this.cy - 1, this.cz) ?? World.emptyChunk;
-		ChunkData neighbourYp = this.world.GetChunk(this.cx, this.cy + 1, this.cz) ?? World.emptyChunk;
-		ChunkData neighbourZm = this.world.GetChunk(this.cx, this.cy, this.cz - 1) ?? World.emptyChunk;
-		ChunkData neighbourZp = this.world.GetChunk(this.cx, this.cy, this.cz + 1) ?? World.emptyChunk;
+		ChunkData neighbourNX = this.world.GetChunk(this.cx - 1, this.cy, this.cz) ?? World.emptyChunk;
+		ChunkData neighbourPX = this.world.GetChunk(this.cx + 1, this.cy, this.cz) ?? World.emptyChunk;
+		ChunkData neighbourNY = this.world.GetChunk(this.cx, this.cy - 1, this.cz) ?? World.emptyChunk;
+		ChunkData neighbourPY = this.world.GetChunk(this.cx, this.cy + 1, this.cz) ?? World.emptyChunk;
+		ChunkData neighbourNZ = this.world.GetChunk(this.cx, this.cy, this.cz - 1) ?? World.emptyChunk;
+		ChunkData neighbourPZ = this.world.GetChunk(this.cx, this.cy, this.cz + 1) ?? World.emptyChunk;
 
 		for (int z = 0; z < 16; z++) {
 			for (int x = 0; x < 16; x++) {
@@ -66,67 +61,94 @@ public class Chunk : ChunkData, IRenderable {
 					BlockId type = this.GetBlock(x, y, z);
 					if (type == 0) continue;
 
-					BlockId bxm = x > 0 ? this.GetBlock(x - 1, y, z) : neighbourXm.GetBlock(15, y, z);
-					BlockId bxp = x < 15 ? this.GetBlock(x + 1, y, z) : neighbourXp.GetBlock(0, y, z);
-					BlockId bym = y > 0 ? this.GetBlock(x, y - 1, z) : neighbourYm.GetBlock(x, 15, z);
-					BlockId byp = y < 15 ? this.GetBlock(x, y + 1, z) : neighbourYp.GetBlock(x, 0, z);
-					BlockId bzm = z > 0 ? this.GetBlock(x, y, z - 1) : neighbourZm.GetBlock(x, y, 15);
-					BlockId bzp = z < 15 ? this.GetBlock(x, y, z + 1) : neighbourZp.GetBlock(x, y, 0);
+					Block block = Blocks.Blocks.blocks[type];
+					if (block.properties is not Block.VisibleProperties vis) continue;
+
+					BlockId bnx = x > 0 ? this.GetBlock(x - 1, y, z) : neighbourNX.GetBlock(15, y, z);
+					BlockId bpx = x < 15 ? this.GetBlock(x + 1, y, z) : neighbourPX.GetBlock(0, y, z);
+					BlockId bny = y > 0 ? this.GetBlock(x, y - 1, z) : neighbourNY.GetBlock(x, 15, z);
+					BlockId bpy = y < 15 ? this.GetBlock(x, y + 1, z) : neighbourPY.GetBlock(x, 0, z);
+					BlockId bnz = z > 0 ? this.GetBlock(x, y, z - 1) : neighbourNZ.GetBlock(x, y, 15);
+					BlockId bpz = z < 15 ? this.GetBlock(x, y, z + 1) : neighbourPZ.GetBlock(x, y, 0);
 
 					byte ao0, ao1, ao2, ao3;
 
-					if (bzm == 0) {
-						indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+					if (bnz == 0) {
 						(ao0, ao1, ao2, ao3) = this.GetAO(x, y, z, 5);
-						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin, ao0);
-						AddVertex(x + 1, y + 0, z + 0, uvMax, uvMin, ao1);
-						AddVertex(x + 0, y + 1, z + 0, uvMin, uvMax, ao2);
-						AddVertex(x + 1, y + 1, z + 0, uvMax, uvMax, ao3);
+						if (ao0 + ao3 < ao1 + ao2) {
+							indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+						} else {
+							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
+						}
+						AddVertex(x + 0, y + 0, z + 0, vis.nz.x + vis.nz.w, vis.nz.y + vis.nz.h, ao0);
+						AddVertex(x + 1, y + 0, z + 0, vis.nz.x, vis.nz.y + vis.nz.h, ao1);
+						AddVertex(x + 0, y + 1, z + 0, vis.nz.x + vis.nz.w, vis.nz.y, ao2);
+						AddVertex(x + 1, y + 1, z + 0, vis.nz.x, vis.nz.y, ao3);
 					}
 
-					if (bzp == 0) {
-						indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+					if (bpz == 0) {
 						(ao1, ao0, ao3, ao2) = this.GetAO(x, y, z, 4);
-						AddVertex(x + 1, y + 0, z + 1, uvMax, uvMin, ao0);
-						AddVertex(x + 0, y + 0, z + 1, uvMin, uvMin, ao1);
-						AddVertex(x + 1, y + 1, z + 1, uvMax, uvMax, ao2);
-						AddVertex(x + 0, y + 1, z + 1, uvMin, uvMax, ao3);
+						if (ao0 + ao3 < ao1 + ao2) {
+							indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+						} else {
+							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
+						}
+						AddVertex(x + 1, y + 0, z + 1, vis.pz.x + vis.pz.w, vis.pz.y + vis.pz.h, ao0);
+						AddVertex(x + 0, y + 0, z + 1, vis.pz.x, vis.pz.y + vis.pz.h, ao1);
+						AddVertex(x + 1, y + 1, z + 1, vis.pz.x + vis.pz.w, vis.pz.y, ao2);
+						AddVertex(x + 0, y + 1, z + 1, vis.pz.x, vis.pz.y, ao3);
 					}
 
-					if (bym == 0) {
-						indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+					if (bny == 0) {
 						(ao3, ao1, ao2, ao0) = this.GetAO(x, y, z, 3);
-						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin, ao0);
-						AddVertex(x + 1, y + 0, z + 0, uvMax, uvMin, ao1);
-						AddVertex(x + 0, y + 0, z + 1, uvMin, uvMax, ao2);
-						AddVertex(x + 1, y + 0, z + 1, uvMax, uvMax, ao3);
+						if (ao0 + ao3 < ao1 + ao2) {
+							indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+						} else {
+							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
+						}
+						AddVertex(x + 0, y + 0, z + 0, vis.ny.x, vis.ny.y, ao0);
+						AddVertex(x + 1, y + 0, z + 0, vis.ny.x + vis.ny.w, vis.ny.y, ao1);
+						AddVertex(x + 0, y + 0, z + 1, vis.ny.x, vis.ny.y + vis.ny.h, ao2);
+						AddVertex(x + 1, y + 0, z + 1, vis.ny.x + vis.ny.w, vis.ny.y + vis.ny.h, ao3);
 					}
 
-					if (byp == 0) {
-						indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
-						(ao3, ao1, ao2, ao0) = this.GetAO(x, y, z, 2);
-						AddVertex(x + 1, y + 1, z + 0, uvMax, uvMin, ao1);
-						AddVertex(x + 0, y + 1, z + 0, uvMin, uvMin, ao0);
-						AddVertex(x + 1, y + 1, z + 1, uvMax, uvMax, ao3);
-						AddVertex(x + 0, y + 1, z + 1, uvMin, uvMax, ao2);
+					if (bpy == 0) {
+						(ao2, ao0, ao3, ao1) = this.GetAO(x, y, z, 2);
+						if (ao0 + ao3 < ao1 + ao2) {
+							indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+						} else {
+							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
+						}
+						AddVertex(x + 1, y + 1, z + 0, vis.py.x, vis.py.y + vis.py.h, ao0);
+						AddVertex(x + 0, y + 1, z + 0, vis.py.x + vis.py.w, vis.py.y + vis.py.h, ao1);
+						AddVertex(x + 1, y + 1, z + 1, vis.py.x, vis.py.y, ao2);
+						AddVertex(x + 0, y + 1, z + 1, vis.py.x + vis.py.w, vis.py.y, ao3);
 					}
 
-					if (bxm == 0) {
-						indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+					if (bnx == 0) {
 						(ao0, ao2, ao1, ao3) = this.GetAO(x, y, z, 1);
-						AddVertex(x + 0, y + 0, z + 0, uvMin, uvMin, ao0);
-						AddVertex(x + 0, y + 1, z + 0, uvMax, uvMin, ao1);
-						AddVertex(x + 0, y + 0, z + 1, uvMin, uvMax, ao2);
-						AddVertex(x + 0, y + 1, z + 1, uvMax, uvMax, ao3);
+						if (ao0 + ao3 < ao1 + ao2) {
+							indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+						} else {
+							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
+						}
+						AddVertex(x + 0, y + 0, z + 0, vis.nx.x, vis.nx.y + vis.nx.h, ao0);
+						AddVertex(x + 0, y + 1, z + 0, vis.nx.x, vis.nx.y, ao1);
+						AddVertex(x + 0, y + 0, z + 1, vis.nx.x + vis.nx.w, vis.nx.y + vis.nx.h, ao2);
+						AddVertex(x + 0, y + 1, z + 1, vis.nx.x + vis.nx.w, vis.nx.y, ao3);
 					}
 
-					if (bxp == 0) {
-						indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+					if (bpx == 0) {
 						(ao1, ao3, ao0, ao2) = this.GetAO(x, y, z, 0);
-						AddVertex(x + 1, y + 1, z + 0, uvMax, uvMin, ao0);
-						AddVertex(x + 1, y + 0, z + 0, uvMin, uvMin, ao1);
-						AddVertex(x + 1, y + 1, z + 1, uvMax, uvMax, ao2);
-						AddVertex(x + 1, y + 0, z + 1, uvMin, uvMax, ao3);
+						if (ao0 + ao3 < ao1 + ao2) {
+							indices.AddRange([ vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+						} else {
+							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
+						}
+						AddVertex(x + 1, y + 1, z + 0, vis.px.x, vis.px.y, ao0);
+						AddVertex(x + 1, y + 0, z + 0, vis.px.x, vis.px.y + vis.px.h, ao1);
+						AddVertex(x + 1, y + 1, z + 1, vis.px.x + vis.px.w, vis.px.y, ao2);
+						AddVertex(x + 1, y + 0, z + 1, vis.px.x + vis.px.w, vis.px.y + vis.px.h, ao3);
 					}
 				}
 			}
@@ -184,7 +206,7 @@ public class Chunk : ChunkData, IRenderable {
 		Program.gl.BindVertexArray(this._vao);
 		Program.gl.UseProgram(Preload.Basic);
 		Program.gl.ActiveTexture(Silk.NET.OpenGL.TextureUnit.Texture0);
-		Program.gl.BindTexture(TextureTarget.Texture2D, Preload.atlas._id);
+		Program.gl.BindTexture(TextureTarget.Texture2D, Atlas.atlas._id);
 		uint offsetLoc = Program.gl.GetAttribLocation(Preload.Basic, "uChunkOffset");
 		Program.gl.VertexAttrib3(offsetLoc, this.cx * 16f, this.cy * 16f, this.cz * 16f);
 		Program.gl.DrawElements(PrimitiveType.Triangles, this.indices, DrawElementsType.UnsignedInt, (void*) 0);

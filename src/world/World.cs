@@ -56,13 +56,18 @@ public class World {
 				for (int y = 0; y < 16; y++) {
 					int worldY = y + cy * 16;
 					float terrainNoise = noise.GetNoise(worldX, worldY * 0.75f, worldZ) - (worldY * 0.03f);
-					
+
 					if (terrainNoise >= 0f) {
 						float n1 = noise2.GetNoise(worldX, worldY, worldZ);
 						float n2 = noise2.GetNoise(worldX + 1000, worldY + 1000, worldZ + 1000);
 						float cave = (n1 * n1) + (n2 * n2);
 						if (cave > 0.02f * noise.GetNoise(worldX * 0.6f - 1000, worldY * 0.6f - 1000, worldZ * 0.6f - 1000)) {
-							chunk.blocks[xzOffset | (y << 4)] = 1;
+							float height = noise.GetNoise(worldX, (worldY + 3) * 0.75f, worldZ) - ((worldY + 3) * 0.03f);
+							if (height >= 0f) {
+								chunk.blocks[xzOffset | (y << 4)] = Blocks.Blocks.STONE.index;
+							} else {
+								chunk.blocks[xzOffset | (y << 4)] = Blocks.Blocks.DIRT.index;
+							}
 						}
 					}
 				}

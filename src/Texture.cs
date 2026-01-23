@@ -7,16 +7,21 @@ namespace Moincroft;
 
 public class Texture {
 	public readonly uint _id;
+	public readonly uint width;
+	public readonly uint height;
 
-	private Texture(uint id) {
+	private Texture(uint id, uint width, uint height) {
 		this._id = id;
+		this.width = width;
+		this.height = height;
 	}
 
 	public static unsafe Texture Load(string path) {
-		Texture texture = new Texture(Program.gl.GenTexture());
+		ImageResult result = ImageResult.FromMemory(File.ReadAllBytes(path), ColorComponents.RedGreenBlueAlpha);
+
+		Texture texture = new Texture(Program.gl.GenTexture(), (uint) result.Width, (uint) result.Height);
 		Program.gl.ActiveTexture(TextureUnit.Texture0);
 		Program.gl.BindTexture(TextureTarget.Texture2D, texture._id);
-		ImageResult result = ImageResult.FromMemory(File.ReadAllBytes(path), ColorComponents.RedGreenBlueAlpha);
 
 		fixed (byte* ptr = result.Data) {
 			Program.gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba, (uint) result.Width, (uint) result.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, ptr);
@@ -25,7 +30,7 @@ public class Texture {
 #pragma warning disable CS9193
 		Program.gl.TexParameterI(GLEnum.Texture2D, GLEnum.TextureWrapS, (int) TextureWrapMode.Repeat);
 		Program.gl.TexParameterI(GLEnum.Texture2D, GLEnum.TextureWrapT, (int) TextureWrapMode.Repeat);
-		Program.gl.TexParameterI(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int) TextureMinFilter.Linear);
+		Program.gl.TexParameterI(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int) TextureMinFilter.Nearest);
 		Program.gl.TexParameterI(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int) TextureMagFilter.Nearest);
 #pragma warning restore CS9193
 

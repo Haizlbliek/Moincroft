@@ -2,4 +2,5 @@
 .VSCodeCounter
 bin
 obj
-texture_atlas.png
+assets/texture_atlas.png
+assets/atlas_order.txt

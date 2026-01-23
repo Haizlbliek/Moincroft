@@ -90,17 +90,41 @@ public static class Main {
 
 		Chunk chunk = world.GetChunkFromBlock(x, y, z);
 		if (chunk == null) return;
-		x = Mathf.Mod(x, 16);
-		y = Mathf.Mod(y, 16);
-		z = Mathf.Mod(z, 16);
+		x &= 15;
+		y &= 15;
+		z &= 15;
 		chunk.SetBlock(x, y, z, button == MouseButton.Left ? 0u : 1u);
-		chunk.GenerateMesh();
-		if (x == 0 ) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz)?.GenerateMesh();
-		if (x == 15) world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz)?.GenerateMesh();
-		if (y == 0 ) world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz)?.GenerateMesh();
-		if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.GenerateMesh();
-		if (z == 0 ) world.GetChunk(chunk.cx, chunk.cy, chunk.cz - 1)?.GenerateMesh();
-		if (z == 15) world.GetChunk(chunk.cx, chunk.cy, chunk.cz + 1)?.GenerateMesh();
+		if (!chunk.CalculateLight()) {
+			chunk.GenerateMesh();
+			if (x == 0 ) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz)?.GenerateMesh();
+			if (x == 15) world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz)?.GenerateMesh();
+			if (y == 0 ) world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz)?.GenerateMesh();
+			if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.GenerateMesh();
+			if (z == 0 ) world.GetChunk(chunk.cx, chunk.cy, chunk.cz - 1)?.GenerateMesh();
+			if (z == 15) world.GetChunk(chunk.cx, chunk.cy, chunk.cz + 1)?.GenerateMesh();
+		} else {
+			if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.GenerateMesh();
+
+			Chunk lightChunk = chunk;
+			while (true) {
+				lightChunk.GenerateMesh();
+				if (x == 0 ) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.GenerateMesh();
+				if (x == 15) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.GenerateMesh();
+				if (z == 0 ) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.GenerateMesh();
+				if (z == 15) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.GenerateMesh();
+
+				lightChunk = world.GetChunk(lightChunk.cx, lightChunk.cy - 1, lightChunk.cz);
+				if (lightChunk == null) break;
+				if (!lightChunk.CalculateLight()) {
+					lightChunk.GenerateMesh();
+					if (x == 0 ) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.GenerateMesh();
+					if (x == 15) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.GenerateMesh();
+					if (z == 0 ) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.GenerateMesh();
+					if (z == 15) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.GenerateMesh();
+					break;
+				}
+			}
+		}
 
 		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, 1000f, out rayResult);
 	}
@@ -137,8 +161,8 @@ public static class Main {
 		Vector3i offset = world.GetChunkPositionFromBlock((int) cameraPosition.x, (int) cameraPosition.y, (int) cameraPosition.z);
 		for (int x = -Config.RenderDistance; x <= Config.RenderDistance; x++) {
 			for (int z = -Config.RenderDistance; z <= Config.RenderDistance; z++) {
-				for (int y = -Config.RenderDistance; y <= Config.RenderDistance; y++) {
-					world.VisibleChunk(offset.x + x, offset.y + y, offset.z + z);
+				for (int y = 5; y >= -5; y--) {
+					world.VisibleChunk(offset.x + x, y, offset.z + z);
 				}
 			}
 		}

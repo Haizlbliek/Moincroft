@@ -13,13 +13,13 @@ public class Chunk : ChunkData {
 
 		const uint stride = 6 * sizeof(float);
 		Program.gl.EnableVertexAttribArray( 0);
-		Program.gl.VertexAttribPointer( 0, 3, VertexAttribPointerType.Float, false, stride, (void*)0);
+		Program.gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, stride, (void*)0);
 
 		Program.gl.EnableVertexAttribArray( 1);
-		Program.gl.VertexAttribPointer( 1, 2, VertexAttribPointerType.Float, false, stride, (void*)(3 * sizeof(float)));
+		Program.gl.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, stride, (void*)(3 * sizeof(float)));
 
 		Program.gl.EnableVertexAttribArray( 2);
-		Program.gl.VertexAttribPointer( 2, 1, VertexAttribPointerType.Float, false, stride, (void*)(5 * sizeof(float)));
+		Program.gl.VertexAttribIPointer(2, 1, VertexAttribIType.UnsignedInt, stride, (void*)(5 * sizeof(float)));
 
 		Program.gl.BindVertexArray(0);
 		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
@@ -33,18 +33,20 @@ public class Chunk : ChunkData {
 	public bool meshed;
 	public uint indices;
 
-	public (List<float>, List<uint>) MeshData() {
-		List<float> vertices = [];
+	[StructLayout(LayoutKind.Sequential)]
+	public struct Vertex {
+		public float x, y, z;
+		public float u, v;
+		public uint data;
+	}
+
+	public (List<Vertex>, List<uint>) MeshData() {
+		List<Vertex> vertices = [];
 		List<uint> indices = [];
 		uint vertexIndex = 0;
 
 		void AddVertex(float x, float y, float z, float uvX, float uvY, byte ao) {
-			vertices.Add(x);
-			vertices.Add(y);
-			vertices.Add(z);
-			vertices.Add(uvX);
-			vertices.Add(uvY);
-			vertices.Add(ao);
+			vertices.Add(new Vertex() { x=x, y=y, z=z, u=uvX, v=uvY, data=ao });
 			vertexIndex++;
 		}
 
@@ -80,10 +82,11 @@ public class Chunk : ChunkData {
 						} else {
 							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 						}
-						AddVertex(x + 0, y + 0, z + 0, vis.nz.x + vis.nz.w, vis.nz.y + vis.nz.h, ao0);
-						AddVertex(x + 1, y + 0, z + 0, vis.nz.x, vis.nz.y + vis.nz.h, ao1);
-						AddVertex(x + 0, y + 1, z + 0, vis.nz.x + vis.nz.w, vis.nz.y, ao2);
-						AddVertex(x + 1, y + 1, z + 0, vis.nz.x, vis.nz.y, ao3);
+						byte light = (byte) ((z > 0 ? this.GetBlockLight(x, y, z - 1) : neighbourNZ.GetBlockLight(x, y, 15)) << 4);
+						AddVertex(x + 0, y + 0, z + 0, vis.nz.x + vis.nz.w, vis.nz.y + vis.nz.h, (byte) (ao0 | light));
+						AddVertex(x + 1, y + 0, z + 0, vis.nz.x, vis.nz.y + vis.nz.h, (byte) (ao1 | light));
+						AddVertex(x + 0, y + 1, z + 0, vis.nz.x + vis.nz.w, vis.nz.y, (byte) (ao2 | light));
+						AddVertex(x + 1, y + 1, z + 0, vis.nz.x, vis.nz.y, (byte) (ao3 | light));
 					}
 
 					if (bpz == 0) {
@@ -93,10 +96,11 @@ public class Chunk : ChunkData {
 						} else {
 							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 						}
-						AddVertex(x + 1, y + 0, z + 1, vis.pz.x + vis.pz.w, vis.pz.y + vis.pz.h, ao0);
-						AddVertex(x + 0, y + 0, z + 1, vis.pz.x, vis.pz.y + vis.pz.h, ao1);
-						AddVertex(x + 1, y + 1, z + 1, vis.pz.x + vis.pz.w, vis.pz.y, ao2);
-						AddVertex(x + 0, y + 1, z + 1, vis.pz.x, vis.pz.y, ao3);
+						byte light = (byte) ((z < 15 ? this.GetBlockLight(x, y, z + 1) : neighbourPZ.GetBlockLight(x, y, 0)) << 4);
+						AddVertex(x + 1, y + 0, z + 1, vis.pz.x + vis.pz.w, vis.pz.y + vis.pz.h, (byte) (ao0 | light));
+						AddVertex(x + 0, y + 0, z + 1, vis.pz.x, vis.pz.y + vis.pz.h, (byte) (ao1 | light));
+						AddVertex(x + 1, y + 1, z + 1, vis.pz.x + vis.pz.w, vis.pz.y, (byte) (ao2 | light));
+						AddVertex(x + 0, y + 1, z + 1, vis.pz.x, vis.pz.y, (byte) (ao3 | light));
 					}
 
 					if (bny == 0) {
@@ -106,10 +110,11 @@ public class Chunk : ChunkData {
 						} else {
 							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 						}
-						AddVertex(x + 0, y + 0, z + 0, vis.ny.x, vis.ny.y, ao0);
-						AddVertex(x + 1, y + 0, z + 0, vis.ny.x + vis.ny.w, vis.ny.y, ao1);
-						AddVertex(x + 0, y + 0, z + 1, vis.ny.x, vis.ny.y + vis.ny.h, ao2);
-						AddVertex(x + 1, y + 0, z + 1, vis.ny.x + vis.ny.w, vis.ny.y + vis.ny.h, ao3);
+						byte light = (byte) ((y > 0 ? this.GetBlockLight(x, y - 1, z) : neighbourNY.GetBlockLight(x, 15, z)) << 4);
+						AddVertex(x + 0, y + 0, z + 0, vis.ny.x, vis.ny.y, (byte) (ao0 | light));
+						AddVertex(x + 1, y + 0, z + 0, vis.ny.x + vis.ny.w, vis.ny.y, (byte) (ao1 | light));
+						AddVertex(x + 0, y + 0, z + 1, vis.ny.x, vis.ny.y + vis.ny.h, (byte) (ao2 | light));
+						AddVertex(x + 1, y + 0, z + 1, vis.ny.x + vis.ny.w, vis.ny.y + vis.ny.h, (byte) (ao3 | light));
 					}
 
 					if (bpy == 0) {
@@ -119,10 +124,11 @@ public class Chunk : ChunkData {
 						} else {
 							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 						}
-						AddVertex(x + 1, y + 1, z + 0, vis.py.x, vis.py.y + vis.py.h, ao0);
-						AddVertex(x + 0, y + 1, z + 0, vis.py.x + vis.py.w, vis.py.y + vis.py.h, ao1);
-						AddVertex(x + 1, y + 1, z + 1, vis.py.x, vis.py.y, ao2);
-						AddVertex(x + 0, y + 1, z + 1, vis.py.x + vis.py.w, vis.py.y, ao3);
+						byte light = (byte) ((y < 15 ? this.GetBlockLight(x, y + 1, z) : neighbourPY.GetBlockLight(x, 0, z)) << 4);
+						AddVertex(x + 1, y + 1, z + 0, vis.py.x, vis.py.y + vis.py.h, (byte) (ao0 | light));
+						AddVertex(x + 0, y + 1, z + 0, vis.py.x + vis.py.w, vis.py.y + vis.py.h, (byte) (ao1 | light));
+						AddVertex(x + 1, y + 1, z + 1, vis.py.x, vis.py.y, (byte) (ao2 | light));
+						AddVertex(x + 0, y + 1, z + 1, vis.py.x + vis.py.w, vis.py.y, (byte) (ao3 | light));
 					}
 
 					if (bnx == 0) {
@@ -132,10 +138,11 @@ public class Chunk : ChunkData {
 						} else {
 							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 						}
-						AddVertex(x + 0, y + 0, z + 0, vis.nx.x, vis.nx.y + vis.nx.h, ao0);
-						AddVertex(x + 0, y + 1, z + 0, vis.nx.x, vis.nx.y, ao1);
-						AddVertex(x + 0, y + 0, z + 1, vis.nx.x + vis.nx.w, vis.nx.y + vis.nx.h, ao2);
-						AddVertex(x + 0, y + 1, z + 1, vis.nx.x + vis.nx.w, vis.nx.y, ao3);
+						byte light = (byte) ((x > 0 ? this.GetBlockLight(x - 1, y, z) : neighbourNX.GetBlockLight(15, y, z)) << 4);
+						AddVertex(x + 0, y + 0, z + 0, vis.nx.x, vis.nx.y + vis.nx.h, (byte) (ao0 | light));
+						AddVertex(x + 0, y + 1, z + 0, vis.nx.x, vis.nx.y, (byte) (ao1 | light));
+						AddVertex(x + 0, y + 0, z + 1, vis.nx.x + vis.nx.w, vis.nx.y + vis.nx.h, (byte) (ao2 | light));
+						AddVertex(x + 0, y + 1, z + 1, vis.nx.x + vis.nx.w, vis.nx.y, (byte) (ao3 | light));
 					}
 
 					if (bpx == 0) {
@@ -145,10 +152,11 @@ public class Chunk : ChunkData {
 						} else {
 							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 						}
-						AddVertex(x + 1, y + 1, z + 0, vis.px.x, vis.px.y, ao0);
-						AddVertex(x + 1, y + 0, z + 0, vis.px.x, vis.px.y + vis.px.h, ao1);
-						AddVertex(x + 1, y + 1, z + 1, vis.px.x + vis.px.w, vis.px.y, ao2);
-						AddVertex(x + 1, y + 0, z + 1, vis.px.x + vis.px.w, vis.px.y + vis.px.h, ao3);
+						byte light = (byte) ((x < 15 ? this.GetBlockLight(x + 1, y, z) : neighbourPX.GetBlockLight(0, y, z)) << 4);
+						AddVertex(x + 1, y + 1, z + 0, vis.px.x, vis.px.y, (byte) (ao0 | light));
+						AddVertex(x + 1, y + 0, z + 0, vis.px.x, vis.px.y + vis.px.h, (byte) (ao1 | light));
+						AddVertex(x + 1, y + 1, z + 1, vis.px.x + vis.px.w, vis.px.y, (byte) (ao2 | light));
+						AddVertex(x + 1, y + 0, z + 1, vis.px.x + vis.px.w, vis.px.y + vis.px.h, (byte) (ao3 | light));
 					}
 				}
 			}
@@ -160,13 +168,13 @@ public class Chunk : ChunkData {
 	public unsafe void GenerateMesh() {
 		Program.gl.BindVertexArray(this._vao);
 
-		(List<float> vertices, List<uint> indices) = this.MeshData();
+		(List<Vertex> vertices, List<uint> indices) = this.MeshData();
 
 		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._vbo);
-		Span<float> vertexSpan = CollectionsMarshal.AsSpan(vertices);
-		Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (vertexSpan.Length * sizeof(float)), (void*) 0, BufferUsageARB.StaticDraw);
-		fixed (float* buf = vertexSpan) {
-			Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (vertexSpan.Length * sizeof(float)), buf, BufferUsageARB.StaticDraw);
+		Span<Vertex> vertexSpan = CollectionsMarshal.AsSpan(vertices);
+		Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (vertexSpan.Length * sizeof(Vertex)), (void*) 0, BufferUsageARB.StaticDraw);
+		fixed (Vertex* buf = vertexSpan) {
+			Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (vertexSpan.Length * sizeof(Vertex)), buf, BufferUsageARB.StaticDraw);
 		}
 
 		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, this._ebo);

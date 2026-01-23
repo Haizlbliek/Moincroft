@@ -71,4 +71,9 @@ public static class Mathf {
 	public static float Mod1(float x) {
 		return ((x % 1f) + 1f) % 1f;
 	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static float Abs(float v) {
+		return Math.Abs(v);
+	}
 }

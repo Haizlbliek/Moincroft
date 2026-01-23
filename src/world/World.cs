@@ -4,11 +4,15 @@ public class World {
 	public Dictionary<(int, int, int), Chunk> chunks = [];
 
 	public static FastNoiseLite.FastNoiseLite noise = new FastNoiseLite.FastNoiseLite();
+	public static FastNoiseLite.FastNoiseLite noise2 = new FastNoiseLite.FastNoiseLite();
 	public static ChunkData emptyChunk = new ChunkData(null, 0, 0, 0);
 
 	static World() {
 		noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2S);
 		noise.SetFrequency(0.02f);
+
+		noise2.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
+		noise2.SetFrequency(0.025f);
 	}
 
 	public Chunk GetChunk(int cx, int cy, int cz) {
@@ -49,11 +53,18 @@ public class World {
 				int worldZ = z + cz * 16;
 				int xzOffset = (x << 8) | z;
 
-				for (int y = 0; y <= 15; y++) {
+				for (int y = 0; y < 16; y++) {
 					int worldY = y + cy * 16;
-					float v = noise.GetNoise(worldX, worldY * 0.75f, worldZ) - (worldY * 0.03f);
+					float terrainNoise = noise.GetNoise(worldX, worldY * 0.75f, worldZ) - (worldY * 0.03f);
 					
-					if (v >= 0f) chunk.blocks[xzOffset | (y << 4)] = 1;
+					if (terrainNoise >= 0f) {
+						float n1 = noise2.GetNoise(worldX, worldY, worldZ);
+						float n2 = noise2.GetNoise(worldX + 1000, worldY + 1000, worldZ + 1000);
+						float cave = (n1 * n1) + (n2 * n2);
+						if (cave > 0.02f * noise.GetNoise(worldX * 0.6f - 1000, worldY * 0.6f - 1000, worldZ * 0.6f - 1000)) {
+							chunk.blocks[xzOffset | (y << 4)] = 1;
+						}
+					}
 				}
 			}
 		}

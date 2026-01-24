@@ -5,7 +5,7 @@ public class World {
 
 	public static FastNoiseLite.FastNoiseLite noise = new FastNoiseLite.FastNoiseLite();
 	public static FastNoiseLite.FastNoiseLite noise2 = new FastNoiseLite.FastNoiseLite();
-	public static ChunkData emptyChunk = new ChunkData(null, 0, 0, 0);
+	public static ChunkData emptyChunk = new ChunkData(null!, 0, 0, 0);
 
 	static World() {
 		noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2S);
@@ -15,8 +15,8 @@ public class World {
 		noise2.SetFrequency(0.025f);
 	}
 
-	public Chunk GetChunk(int cx, int cy, int cz) {
-		if (this.chunks.TryGetValue((cx, cy, cz), out Chunk chunk)) {
+	public Chunk? GetChunk(int cx, int cy, int cz) {
+		if (this.chunks.TryGetValue((cx, cy, cz), out Chunk? chunk)) {
 			return chunk;
 		}
 
@@ -24,15 +24,15 @@ public class World {
 	}
 
 	public Vector3i GetChunkPositionFromBlock(int bx, int by, int bz) {
-		return new Vector3i(Mathf.FloorDivide(bx, 16), Mathf.FloorDivide(by, 16), Mathf.FloorDivide(bz, 16));
+		return new Vector3i(bx >> 4, by >> 4, bz >> 4);
 	}
 
-	public Chunk GetChunkFromBlock(int bx, int by, int bz) {
-		return this.GetChunk(Mathf.FloorDivide(bx, 16), Mathf.FloorDivide(by, 16), Mathf.FloorDivide(bz, 16));
+	public Chunk? GetChunkFromBlock(int bx, int by, int bz) {
+		return this.GetChunk(bx >> 4, by >> 4, bz >> 4);
 	}
 
 	public BlockId GetBlock(int x, int y, int z) {
-		if (this.chunks.TryGetValue((x >> 4, y >> 4, z >> 4), out Chunk chunk)) {
+		if (this.chunks.TryGetValue((x >> 4, y >> 4, z >> 4), out Chunk? chunk)) {
 			return chunk.GetBlock(x & 15, y & 15, z & 15);
 		}
 
@@ -64,9 +64,9 @@ public class World {
 						if (cave > 0.02f * noise.GetNoise(worldX * 0.6f - 1000, worldY * 0.6f - 1000, worldZ * 0.6f - 1000) * Mathf.Clamp(worldY - 64, 1f, 0f)) {
 							float height = noise.GetNoise(worldX, (worldY + 3) * 0.75f, worldZ) - ((worldY + 3) * 0.03f);
 							if (height >= 0f) {
-								chunk.blocks[xzOffset | (y << 4)] = Blocks.Blocks.STONE.index;
+								chunk.blocks[xzOffset | (y << 4)] = Blocks.STONE;
 							} else {
-								chunk.blocks[xzOffset | (y << 4)] = Blocks.Blocks.DIRT.index;
+								chunk.blocks[xzOffset | (y << 4)] = Blocks.DIRT;
 							}
 						}
 					}
@@ -79,7 +79,7 @@ public class World {
 	}
 
 	public Chunk GetOrLoadChunk(int cx, int cy, int cz) {
-		if (this.chunks.TryGetValue((cx, cy, cz), out Chunk chunk)) {
+		if (this.chunks.TryGetValue((cx, cy, cz), out Chunk? chunk)) {
 			return chunk;
 		}
 

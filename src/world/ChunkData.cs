@@ -83,7 +83,7 @@ public class ChunkData {
 	}
 
 	public bool CalculateLight() {
-		ChunkData chunkAbove = this.world.GetChunk(this.cx, this.cy + 1, this.cz);
+		ChunkData? chunkAbove = this.world.GetChunk(this.cx, this.cy + 1, this.cz);
 		ref byte lightBase = ref MemoryMarshal.GetArrayDataReference(this.light);
 		ref BlockId blockBase = ref MemoryMarshal.GetArrayDataReference(this.blocks);
 

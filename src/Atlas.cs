@@ -3,7 +3,7 @@ using System.IO;
 namespace Moincroft;
 
 public static class Atlas {
-	public static Texture atlas;
+	public static Texture atlas = null!;
 	public static float atlasWidth;
 	public static float atlasHeight;
 	public static Dictionary<string, (uint, uint)> order = [];

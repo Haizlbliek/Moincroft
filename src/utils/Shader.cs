@@ -14,7 +14,7 @@ public class Shader {
 		Program.gl.DeleteProgram(this.shader);
 	}
 
-	public static Shader Load(string vertexPath, string fragmentPath, string geometryPath = null) {
+	public static Shader Load(string vertexPath, string fragmentPath, string? geometryPath = null) {
 		uint vertexShader = Program.gl.CreateShader(ShaderType.VertexShader);
 		Program.gl.ShaderSource(vertexShader, File.ReadAllText(vertexPath));
 		Program.gl.CompileShader(vertexShader);

@@ -1,11 +1,11 @@
 namespace Moincroft;
 
 public static class Preload {
-	public static Shader Basic;
-	public static Shader Selection;
+	public static Shader Basic = null!;
+	public static Shader Selection = null!;
 
-	public static (byte, byte, byte, byte)[] AO_LUT;
-	public static sbyte[][] FaceNeighbours_LOT;
+	public static (byte, byte, byte, byte)[] AO_LUT = null!;
+	public static sbyte[][] FaceNeighbours_LOT = null!;
 
 	public static void Initialize() {
 		Basic = Shader.Load("assets/shaders/Basic.vert", "assets/shaders/Basic.frag");

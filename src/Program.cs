@@ -5,8 +5,8 @@ using Silk.NET.OpenGL;
 namespace Moincroft;
 
 public static class Program {
-	public static IWindow window;
-	public static GL gl;
+	public static IWindow window = null!;
+	public static GL gl = null!;
 	public static uint _anyVao;
 
 	public static void Main(string[] args) {

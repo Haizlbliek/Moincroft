@@ -63,8 +63,8 @@ public class Chunk : ChunkData {
 					BlockId type = this.GetBlock(x, y, z);
 					if (type == 0) continue;
 
-					Block block = Blocks.Blocks.blocks[type];
-					if (block.properties is not Block.VisibleProperties vis) continue;
+					BlockData data = BlockRegistry.Get(type);
+					if (!data.Visible) continue;
 
 					BlockId bnx = x > 0 ? this.GetBlock(x - 1, y, z) : neighbourNX.GetBlock(15, y, z);
 					BlockId bpx = x < 15 ? this.GetBlock(x + 1, y, z) : neighbourPX.GetBlock(0, y, z);
@@ -83,10 +83,10 @@ public class Chunk : ChunkData {
 							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 						}
 						byte light = (byte) ((z > 0 ? this.GetBlockLight(x, y, z - 1) : neighbourNZ.GetBlockLight(x, y, 15)) << 4);
-						AddVertex(x + 0, y + 0, z + 0, vis.nz.x + vis.nz.w, vis.nz.y + vis.nz.h, (byte) (ao0 | light));
-						AddVertex(x + 1, y + 0, z + 0, vis.nz.x, vis.nz.y + vis.nz.h, (byte) (ao1 | light));
-						AddVertex(x + 0, y + 1, z + 0, vis.nz.x + vis.nz.w, vis.nz.y, (byte) (ao2 | light));
-						AddVertex(x + 1, y + 1, z + 0, vis.nz.x, vis.nz.y, (byte) (ao3 | light));
+						AddVertex(x + 0, y + 0, z + 0, data.Nz.X + data.Nz.W, data.Nz.Y + data.Nz.H, (byte) (ao0 | light));
+						AddVertex(x + 1, y + 0, z + 0, data.Nz.X, data.Nz.Y + data.Nz.H, (byte) (ao1 | light));
+						AddVertex(x + 0, y + 1, z + 0, data.Nz.X + data.Nz.W, data.Nz.Y, (byte) (ao2 | light));
+						AddVertex(x + 1, y + 1, z + 0, data.Nz.X, data.Nz.Y, (byte) (ao3 | light));
 					}
 
 					if (bpz == 0) {
@@ -97,10 +97,10 @@ public class Chunk : ChunkData {
 							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 						}
 						byte light = (byte) ((z < 15 ? this.GetBlockLight(x, y, z + 1) : neighbourPZ.GetBlockLight(x, y, 0)) << 4);
-						AddVertex(x + 1, y + 0, z + 1, vis.pz.x + vis.pz.w, vis.pz.y + vis.pz.h, (byte) (ao0 | light));
-						AddVertex(x + 0, y + 0, z + 1, vis.pz.x, vis.pz.y + vis.pz.h, (byte) (ao1 | light));
-						AddVertex(x + 1, y + 1, z + 1, vis.pz.x + vis.pz.w, vis.pz.y, (byte) (ao2 | light));
-						AddVertex(x + 0, y + 1, z + 1, vis.pz.x, vis.pz.y, (byte) (ao3 | light));
+						AddVertex(x + 1, y + 0, z + 1, data.Pz.X + data.Pz.W, data.Pz.Y + data.Pz.H, (byte) (ao0 | light));
+						AddVertex(x + 0, y + 0, z + 1, data.Pz.X, data.Pz.Y + data.Pz.H, (byte) (ao1 | light));
+						AddVertex(x + 1, y + 1, z + 1, data.Pz.X + data.Pz.W, data.Pz.Y, (byte) (ao2 | light));
+						AddVertex(x + 0, y + 1, z + 1, data.Pz.X, data.Pz.Y, (byte) (ao3 | light));
 					}
 
 					if (bny == 0) {
@@ -111,10 +111,10 @@ public class Chunk : ChunkData {
 							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 						}
 						byte light = (byte) ((y > 0 ? this.GetBlockLight(x, y - 1, z) : neighbourNY.GetBlockLight(x, 15, z)) << 4);
-						AddVertex(x + 0, y + 0, z + 0, vis.ny.x, vis.ny.y, (byte) (ao0 | light));
-						AddVertex(x + 1, y + 0, z + 0, vis.ny.x + vis.ny.w, vis.ny.y, (byte) (ao1 | light));
-						AddVertex(x + 0, y + 0, z + 1, vis.ny.x, vis.ny.y + vis.ny.h, (byte) (ao2 | light));
-						AddVertex(x + 1, y + 0, z + 1, vis.ny.x + vis.ny.w, vis.ny.y + vis.ny.h, (byte) (ao3 | light));
+						AddVertex(x + 0, y + 0, z + 0, data.Ny.X, data.Ny.Y, (byte) (ao0 | light));
+						AddVertex(x + 1, y + 0, z + 0, data.Ny.X + data.Ny.W, data.Ny.Y, (byte) (ao1 | light));
+						AddVertex(x + 0, y + 0, z + 1, data.Ny.X, data.Ny.Y + data.Ny.H, (byte) (ao2 | light));
+						AddVertex(x + 1, y + 0, z + 1, data.Ny.X + data.Ny.W, data.Ny.Y + data.Ny.H, (byte) (ao3 | light));
 					}
 
 					if (bpy == 0) {
@@ -125,10 +125,10 @@ public class Chunk : ChunkData {
 							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 						}
 						byte light = (byte) ((y < 15 ? this.GetBlockLight(x, y + 1, z) : neighbourPY.GetBlockLight(x, 0, z)) << 4);
-						AddVertex(x + 1, y + 1, z + 0, vis.py.x, vis.py.y + vis.py.h, (byte) (ao0 | light));
-						AddVertex(x + 0, y + 1, z + 0, vis.py.x + vis.py.w, vis.py.y + vis.py.h, (byte) (ao1 | light));
-						AddVertex(x + 1, y + 1, z + 1, vis.py.x, vis.py.y, (byte) (ao2 | light));
-						AddVertex(x + 0, y + 1, z + 1, vis.py.x + vis.py.w, vis.py.y, (byte) (ao3 | light));
+						AddVertex(x + 1, y + 1, z + 0, data.Py.X, data.Py.Y + data.Py.H, (byte) (ao0 | light));
+						AddVertex(x + 0, y + 1, z + 0, data.Py.X + data.Py.W, data.Py.Y + data.Py.H, (byte) (ao1 | light));
+						AddVertex(x + 1, y + 1, z + 1, data.Py.X, data.Py.Y, (byte) (ao2 | light));
+						AddVertex(x + 0, y + 1, z + 1, data.Py.X + data.Py.W, data.Py.Y, (byte) (ao3 | light));
 					}
 
 					if (bnx == 0) {
@@ -139,10 +139,10 @@ public class Chunk : ChunkData {
 							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 						}
 						byte light = (byte) ((x > 0 ? this.GetBlockLight(x - 1, y, z) : neighbourNX.GetBlockLight(15, y, z)) << 4);
-						AddVertex(x + 0, y + 0, z + 0, vis.nx.x, vis.nx.y + vis.nx.h, (byte) (ao0 | light));
-						AddVertex(x + 0, y + 1, z + 0, vis.nx.x, vis.nx.y, (byte) (ao1 | light));
-						AddVertex(x + 0, y + 0, z + 1, vis.nx.x + vis.nx.w, vis.nx.y + vis.nx.h, (byte) (ao2 | light));
-						AddVertex(x + 0, y + 1, z + 1, vis.nx.x + vis.nx.w, vis.nx.y, (byte) (ao3 | light));
+						AddVertex(x + 0, y + 0, z + 0, data.Nx.X, data.Nx.Y + data.Nx.H, (byte) (ao0 | light));
+						AddVertex(x + 0, y + 1, z + 0, data.Nx.X, data.Nx.Y, (byte) (ao1 | light));
+						AddVertex(x + 0, y + 0, z + 1, data.Nx.X + data.Nx.W, data.Nx.Y + data.Nx.H, (byte) (ao2 | light));
+						AddVertex(x + 0, y + 1, z + 1, data.Nx.X + data.Nx.W, data.Nx.Y, (byte) (ao3 | light));
 					}
 
 					if (bpx == 0) {
@@ -153,10 +153,10 @@ public class Chunk : ChunkData {
 							indices.AddRange([ vertexIndex, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 						}
 						byte light = (byte) ((x < 15 ? this.GetBlockLight(x + 1, y, z) : neighbourPX.GetBlockLight(0, y, z)) << 4);
-						AddVertex(x + 1, y + 1, z + 0, vis.px.x, vis.px.y, (byte) (ao0 | light));
-						AddVertex(x + 1, y + 0, z + 0, vis.px.x, vis.px.y + vis.px.h, (byte) (ao1 | light));
-						AddVertex(x + 1, y + 1, z + 1, vis.px.x + vis.px.w, vis.px.y, (byte) (ao2 | light));
-						AddVertex(x + 1, y + 0, z + 1, vis.px.x + vis.px.w, vis.px.y + vis.px.h, (byte) (ao3 | light));
+						AddVertex(x + 1, y + 1, z + 0, data.Px.X, data.Px.Y, (byte) (ao0 | light));
+						AddVertex(x + 1, y + 0, z + 0, data.Px.X, data.Px.Y + data.Px.H, (byte) (ao1 | light));
+						AddVertex(x + 1, y + 1, z + 1, data.Px.X + data.Px.W, data.Px.Y, (byte) (ao2 | light));
+						AddVertex(x + 1, y + 0, z + 1, data.Px.X + data.Px.W, data.Px.Y + data.Px.H, (byte) (ao3 | light));
 					}
 				}
 			}

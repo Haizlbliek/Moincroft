@@ -75,11 +75,8 @@ public struct Vector2 {
 		return a + (b - a) * t;
 	}
 
-	public override readonly bool Equals(object obj) {
-		if (obj is Vector2 v) {
-			return this.x == v.x && this.y == v.y;
-		}
-		return false;
+	public override readonly bool Equals(object? obj) {
+		return obj is Vector2 v && this.x == v.x && this.y == v.y;
 	}
 
 	public override readonly int GetHashCode() {

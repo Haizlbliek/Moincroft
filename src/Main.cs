@@ -14,7 +14,7 @@ public static class Main {
 	public static Vector3 cameraPosition;
 	public static Vector3 cameraRotation;
 
-	public static IInputContext input;
+	public static IInputContext input = null!;
 	public static Vector2? lastMousePosition = null;
 
 	public static World.World world = new World.World();
@@ -25,7 +25,8 @@ public static class Main {
 		Console.WriteLine("Initializing...");
 		Preload.Initialize();
 		Atlas.Initialize();
-		Blocks.Blocks.Initialize();
+		Blocks.Initialize();
+		Entities.Initialize();
 
 		input = Program.window.CreateInput();
 		for (int i = 0; i < input.Keyboards.Count; i++) {
@@ -88,7 +89,7 @@ public static class Main {
 			return;
 		}
 
-		Chunk chunk = world.GetChunkFromBlock(x, y, z);
+		Chunk? chunk = world.GetChunkFromBlock(x, y, z);
 		if (chunk == null) return;
 		x &= 15;
 		y &= 15;
@@ -105,7 +106,7 @@ public static class Main {
 		} else {
 			if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.GenerateMesh();
 
-			Chunk lightChunk = chunk;
+			Chunk? lightChunk = chunk;
 			while (true) {
 				lightChunk.GenerateMesh();
 				if (x == 0 ) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.GenerateMesh();

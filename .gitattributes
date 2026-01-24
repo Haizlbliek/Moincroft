@@ -1,0 +1,2 @@
+*.frag text diff=glsl linguist-Language=GLSL
+*.vert text diff=glsl linguist-Language=GLSL

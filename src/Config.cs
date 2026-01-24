@@ -8,6 +8,8 @@ public static class Config {
 	public static string JarPath = "";
 
 	public static void Initialize() {
+		if (!File.Exists("config.cfg")) return;
+
 		string[] lines = File.ReadAllLines("config.cfg");
 		foreach (string line in lines) {
 			if (line.Trim() == "" || line.Trim().StartsWith('#')) continue;

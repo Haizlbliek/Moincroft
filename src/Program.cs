@@ -11,8 +11,10 @@ public static class Program {
 	public static uint _anyVao;
 
 	public static void Main(string[] args) {
-		if (args.Contains("-a") || args.Contains("--download-assets")) {
-			Assets.Assets.DownloadAssets().GetAwaiter().GetResult();
+		Config.Initialize();
+
+		if (args.Contains("-a") || args.Contains("--extract-assets")) {
+			Assets.Assets.ExtractAssetsFromJar(Config.JarPath);
 			return;
 		}
 
@@ -24,7 +26,7 @@ public static class Program {
 		if (!Directory.Exists("assets/generated/")) {
 			Console.WriteLine("Generating assets");
 			if (!Directory.Exists("tmp")) {
-				Assets.Assets.DownloadAssets().GetAwaiter().GetResult();
+				Assets.Assets.ExtractAssetsFromJar(Config.JarPath);
 			}
 			Assets.Assets.BuildTextureAtlas();
 		}

@@ -1,9 +1,7 @@
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using StbImageSharp;
 using StbImageWriteSharp;
 using Stride.Core.Extensions;
@@ -11,24 +9,25 @@ using Stride.Core.Extensions;
 namespace Moincroft.Assets;
 
 public static class Assets {
-	public static async Task DownloadAssets() {
-		HttpClient client = new HttpClient();
-
-		string zipUrl = "https://github.com/misode/mcmeta/archive/refs/heads/assets.zip";
-		string tempZipPath = "tmp/mcmeta_assets.zip";
+	public static void ExtractAssetsFromJar(string jarPath) {
 		string extractPath = "tmp";
-
-		Console.WriteLine("Download assets...");
-		byte[] fileBytes = await client.GetByteArrayAsync(zipUrl);
-		await File.WriteAllBytesAsync(tempZipPath, fileBytes);
-
 		if (Directory.Exists(extractPath)) Directory.Delete(extractPath, true);
+		Directory.CreateDirectory(extractPath);
 
-		Console.WriteLine("Unzipping...");
-		ZipFile.ExtractToDirectory(tempZipPath, extractPath);
+		Console.WriteLine("Extracting assets from JAR...");
 
-		File.Delete(tempZipPath);
-		Console.WriteLine("Extracted!");
+		using ZipArchive archive = ZipFile.OpenRead(jarPath);
+
+		foreach (ZipArchiveEntry entry in archive.Entries) {
+			if (!entry.FullName.StartsWith("assets")) continue;
+			if (string.IsNullOrEmpty(entry.Name)) continue;
+
+			string dest = Path.Combine(extractPath, entry.FullName);
+			string? dir = Path.GetDirectoryName(dest);
+
+			if (dir != null) Directory.CreateDirectory(dir);
+			entry.ExtractToFile(dest, true);
+		}
 	}
 
 	private struct Rect(int x, int y, int w, int h) {

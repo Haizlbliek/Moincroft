@@ -4,3 +4,4 @@ bin
 obj
 assets/generated/
 tmp
+config.cfg

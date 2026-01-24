@@ -1,6 +1,7 @@
 ﻿using Silk.NET.Maths;
 using Silk.NET.Windowing;
 using Silk.NET.OpenGL;
+using System.IO;
 
 namespace Moincroft;
 
@@ -10,6 +11,24 @@ public static class Program {
 	public static uint _anyVao;
 
 	public static void Main(string[] args) {
+		if (args.Contains("-a") || args.Contains("--download-assets")) {
+			Assets.Assets.DownloadAssets().GetAwaiter().GetResult();
+			return;
+		}
+
+		if (args.Contains("-t") || args.Contains("--build-texture-atlas")) {
+			Assets.Assets.BuildTextureAtlas();
+			return;
+		}
+
+		if (!Directory.Exists("assets/generated/")) {
+			Console.WriteLine("Generating assets");
+			if (!Directory.Exists("tmp")) {
+				Assets.Assets.DownloadAssets().GetAwaiter().GetResult();
+			}
+			Assets.Assets.BuildTextureAtlas();
+		}
+
 		WindowOptions options = WindowOptions.Default with {
 			Size = new Vector2D<int>(800, 600),
 			Title = "Minecraft",

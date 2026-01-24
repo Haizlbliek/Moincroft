@@ -6,32 +6,26 @@ public static class Atlas {
 	public static Texture atlas = null!;
 	public static float atlasWidth;
 	public static float atlasHeight;
-	public static Dictionary<string, (uint, uint)> order = [];
-
-	public static float SpriteWidth => 1f / atlasWidth;
-	public static float SpriteHeight => 1f / atlasHeight;
+	private static readonly Dictionary<string, FaceUv> order = [];
 
 	public static FaceUv GetFace(string name) {
-		(uint, uint) pos = order[name];
-		return new FaceUv(pos.Item1 * SpriteWidth, pos.Item2 * SpriteHeight, SpriteWidth, SpriteHeight);
+		return order[name];
 	}
 
 	public static void Initialize() {
-		atlas = Texture.Load("assets/texture_atlas.png");
-		atlasWidth = atlas.width / 16f;
-		atlasHeight = atlas.height / 16f;
+		atlas = Texture.Load("assets/generated/blocks.png");
+		atlasWidth = atlas.width;
+		atlasHeight = atlas.height;
 
-		string[] lines = File.ReadAllLines("assets/atlas_order.txt");
-		int width = int.Parse(lines[0]);
-		uint x = 0;
-		uint y = 0;
-		for (int i = 1; i < lines.Length; i++) {
-			order.Add(lines[i], (x, y));
-			x++;
-			if (x >= width) {
-				x = 0u;
-				y++;
-			}
+		string[] lines = File.ReadAllLines("assets/generated/blocks.txt");
+		foreach (string line in lines) {
+			string[] parts = line.Split(' ');
+			order.Add(parts[0], new FaceUv(
+				int.Parse(parts[1]) / atlasWidth,
+				int.Parse(parts[2]) / atlasHeight,
+				int.Parse(parts[3]) / atlasWidth,
+				int.Parse(parts[4]) / atlasHeight
+			));
 		}
 	}
 }

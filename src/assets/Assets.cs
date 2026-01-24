@@ -120,7 +120,7 @@ public static class Assets {
 	}
 
 	public static void BuildTextureAtlas() {
-		string texturesDir = "./tmp/mcmeta-assets/assets/minecraft/textures/";
+		string texturesDir = "./tmp/assets/minecraft/textures/";
 		if (Directory.Exists("assets/generated")) Directory.Delete("assets/generated", true);
 		Directory.CreateDirectory("assets/generated");
 

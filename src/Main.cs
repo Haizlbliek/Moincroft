@@ -94,32 +94,32 @@ public static class Main {
 		z &= 15;
 		chunk.SetBlock(x, y, z, button == MouseButton.Left ? 0u : 1u);
 		if (!chunk.CalculateLight()) {
-			chunk.GenerateMesh();
-			if (x == 0 ) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz)?.GenerateMesh();
-			if (x == 15) world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz)?.GenerateMesh();
-			if (y == 0 ) world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz)?.GenerateMesh();
-			if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.GenerateMesh();
-			if (z == 0 ) world.GetChunk(chunk.cx, chunk.cy, chunk.cz - 1)?.GenerateMesh();
-			if (z == 15) world.GetChunk(chunk.cx, chunk.cy, chunk.cz + 1)?.GenerateMesh();
+			chunk.QueueRefresh();
+			if (x == 0 ) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz)?.QueueRefresh();
+			if (x == 15) world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz)?.QueueRefresh();
+			if (y == 0 ) world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz)?.QueueRefresh();
+			if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.QueueRefresh();
+			if (z == 0 ) world.GetChunk(chunk.cx, chunk.cy, chunk.cz - 1)?.QueueRefresh();
+			if (z == 15) world.GetChunk(chunk.cx, chunk.cy, chunk.cz + 1)?.QueueRefresh();
 		} else {
-			if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.GenerateMesh();
+			if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.QueueRefresh();
 
 			Chunk? lightChunk = chunk;
 			while (true) {
-				lightChunk.GenerateMesh();
-				if (x == 0 ) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.GenerateMesh();
-				if (x == 15) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.GenerateMesh();
-				if (z == 0 ) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.GenerateMesh();
-				if (z == 15) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.GenerateMesh();
+				lightChunk.QueueRefresh();
+				if (x == 0 ) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
+				if (x == 15) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
+				if (z == 0 ) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
+				if (z == 15) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
 
 				lightChunk = world.GetChunk(lightChunk.cx, lightChunk.cy - 1, lightChunk.cz);
 				if (lightChunk == null) break;
 				if (!lightChunk.CalculateLight()) {
-					lightChunk.GenerateMesh();
-					if (x == 0 ) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.GenerateMesh();
-					if (x == 15) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.GenerateMesh();
-					if (z == 0 ) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.GenerateMesh();
-					if (z == 15) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.GenerateMesh();
+					lightChunk.QueueRefresh();
+					if (x == 0 ) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
+					if (x == 15) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
+					if (z == 0 ) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
+					if (z == 15) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
 					break;
 				}
 			}
@@ -165,6 +165,8 @@ public static class Main {
 				}
 			}
 		}
+
+		world.RemeshChunks();
 	}
 
 	public static void Render() {

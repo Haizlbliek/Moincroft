@@ -1,6 +1,8 @@
 namespace Moincroft.World;
 
 public class Chunk : ChunkData {
+	public bool meshNeedsRefresh = false;
+
 	public unsafe Chunk(World world, int cx, int cy, int cz) : base(world, cx, cy, cz) {
 		this._vao = Program.gl.GenVertexArray();
 		this._vbo = Program.gl.GenBuffer();
@@ -216,6 +218,14 @@ public class Chunk : ChunkData {
 		Program.gl.DrawElements(PrimitiveType.Triangles, this.indices, DrawElementsType.UnsignedInt, (void*) 0);
 		Program.gl.UseProgram(0);
 		Program.gl.BindVertexArray(0);
+	}
+
+	public void QueueRefresh() {
+		if (this.meshNeedsRefresh)
+			return;
+
+		this.meshNeedsRefresh = true;
+		this.world.chunksToRemesh.Add(this);
 	}
 #endregion
 

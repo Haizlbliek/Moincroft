@@ -2,17 +2,18 @@ namespace Moincroft.World;
 
 public class World {
 	public Dictionary<(int, int, int), Chunk> chunks = [];
+	public readonly List<Chunk> chunksToRemesh = [];
 
-	public static FastNoiseLite.FastNoiseLite noise = new FastNoiseLite.FastNoiseLite();
-	public static FastNoiseLite.FastNoiseLite noise2 = new FastNoiseLite.FastNoiseLite();
+	// public static FastNoiseLite.FastNoiseLite noise = new FastNoiseLite.FastNoiseLite();
+	// public static FastNoiseLite.FastNoiseLite noise2 = new FastNoiseLite.FastNoiseLite();
 	public static ChunkData emptyChunk = new ChunkData(null!, 0, 0, 0);
 
 	static World() {
-		noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2S);
-		noise.SetFrequency(0.02f);
+		// noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2S);
+		// noise.SetFrequency(0.02f);
 
-		noise2.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
-		noise2.SetFrequency(0.025f);
+		// noise2.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
+		// noise2.SetFrequency(0.025f);
 	}
 
 	public Chunk? GetChunk(int cx, int cy, int cz) {
@@ -139,6 +140,18 @@ public class World {
 		this.GetOrLoadChunk(cx,     cy + 1, cz + 1);
 		this.GetOrLoadChunk(cx + 1, cy + 1, cz + 1);
 
-		chunk.GenerateMesh();
+		chunk.QueueRefresh();
+	}
+
+	public void RemeshChunks() {
+		ReadOnlySpan<Chunk> chunks = CollectionsMarshal.AsSpan(this.chunksToRemesh);
+
+		for (int i = 0; i < chunks.Length; i++) {
+			Chunk chunk = chunks[i];
+			chunk.meshNeedsRefresh = false;
+			chunk.GenerateMesh();
+		}
+
+		this.chunksToRemesh.Clear();
 	}
 }

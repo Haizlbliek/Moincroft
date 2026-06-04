@@ -12,13 +12,13 @@ public class Chunk : ChunkData {
 		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._vbo);
 
 		const uint stride = 6 * sizeof(float);
-		Program.gl.EnableVertexAttribArray( 0);
+		Program.gl.EnableVertexAttribArray(0);
 		Program.gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, stride, (void*)0);
 
-		Program.gl.EnableVertexAttribArray( 1);
+		Program.gl.EnableVertexAttribArray(1);
 		Program.gl.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, stride, (void*)(3 * sizeof(float)));
 
-		Program.gl.EnableVertexAttribArray( 2);
+		Program.gl.EnableVertexAttribArray(2);
 		Program.gl.VertexAttribIPointer(2, 1, VertexAttribIType.UnsignedInt, stride, (void*)(5 * sizeof(float)));
 
 		Program.gl.BindVertexArray(0);

@@ -33,9 +33,9 @@ public static class Program {
 
 		WindowOptions options = WindowOptions.Default with {
 			Size = new Vector2D<int>(800, 600),
-			Title = "Minecraft",
+			Title = "Moincroft",
 			VideoMode = Monitor.GetMainMonitor(null).VideoMode,
-			WindowState = WindowState.Fullscreen,
+			// WindowState = WindowState.Fullscreen,
 		};
 		window = Window.Create(options);
 
@@ -65,7 +65,7 @@ public static class Program {
 	private static void OnUpdate(double delta) {
 		time += delta;
 		if (time >= 1.0 / Config.TicksPerSecond) {
-			window.Title = "Minecraft " + Math.Round(1.0 / delta);
+			window.Title = "Moincroft " + Math.Round(1.0 / delta);
 			Moincroft.Main.Update();
 			time -= 1.0 / Config.TicksPerSecond;
 		}

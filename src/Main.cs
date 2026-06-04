@@ -9,7 +9,7 @@ public static class Main {
 	public static Matrix4X4<float> ProjectionMatrix;
 
 	public static Vector3 lastCameraPosition;
-	public static Vector3 cameraPosition = new Vector3(0, 10, 0);
+	public static Vector3 cameraPosition = new Vector3(0f, 10.5f, 0f);
 	public static Vector3 cameraRotation;
 
 	public static IInputContext input = null!;
@@ -179,9 +179,8 @@ public static class Main {
 		Program.gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
 		Program.gl.UseProgram(Preload.Basic);
-		Program.gl.UniformMatrix4(Program.gl.GetUniformLocation(Preload.Basic, "view"), false, [ ..Main.ViewMatrix ]);
-		Program.gl.UniformMatrix4(Program.gl.GetUniformLocation(Preload.Basic, "projection"), false, [ ..Main.ProjectionMatrix ]);
-		Program.gl.UseProgram(Preload.Basic);
+		Preload.Basic.SetUniform("view", Main.ViewMatrix, transpose: false);
+		Preload.Basic.SetUniform("projection", Main.ProjectionMatrix, transpose: false);
 
 		Program.gl.Enable(EnableCap.DepthTest);
 		Program.gl.Enable(EnableCap.Blend);
@@ -192,13 +191,14 @@ public static class Main {
 
 		if (rayCollides) {
 			Program.gl.UseProgram(Preload.Selection);
-			Program.gl.Uniform3(Program.gl.GetUniformLocation(Preload.Selection, "offset"), (float) rayResult.blockPosition.x, rayResult.blockPosition.y, rayResult.blockPosition.z);
-			Program.gl.UniformMatrix4(Program.gl.GetUniformLocation(Preload.Selection, "view"), false, [ ..Main.ViewMatrix ]);
-			Program.gl.UniformMatrix4(Program.gl.GetUniformLocation(Preload.Selection, "projection"), false, [ ..Main.ProjectionMatrix ]);
+			Preload.Selection.SetUniform("offset", (float) rayResult.blockPosition.x, rayResult.blockPosition.y, rayResult.blockPosition.z);
+			Preload.Selection.SetUniform("view", Main.ViewMatrix, transpose: false);
+			Preload.Selection.SetUniform("projection", Main.ProjectionMatrix, transpose: false);
 			Program.gl.BindVertexArray(Program._anyVao);
 			Program.gl.DrawArrays(PrimitiveType.Lines, 0, 24);
 			Program.gl.BindVertexArray(0);
-			Program.gl.UseProgram(0);
 		}
+
+		Program.gl.UseProgram(0);
 	}
 }

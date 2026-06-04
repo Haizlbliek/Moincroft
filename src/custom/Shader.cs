@@ -72,6 +72,7 @@ public class Shader {
 	public void SetUniform(string name, Vector3 value) => Custom.gl.Uniform3(this.GetUniformLocation(name), value.x, value.y, value.z);
 	public void SetUniform(string name, Vector4 value) => Custom.gl.Uniform4(this.GetUniformLocation(name), value.x, value.y, value.z, value.w);
 	public unsafe void SetUniform(string name, Matrix4x4 value, bool transpose = true) => Custom.gl.UniformMatrix4(this.GetUniformLocation(name), 1, transpose, (float*)&value);
+	public unsafe void SetUniform(string name, Matrix4X4<float> value, bool transpose = true) => Custom.gl.UniformMatrix4(this.GetUniformLocation(name), 1, transpose, (float*)&value);
 
 
 	private static string PreprocessSource(string filePath, List<string> fileMap, bool isRoot = true) {

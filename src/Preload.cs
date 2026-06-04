@@ -12,8 +12,7 @@ public static class Preload {
 		Selection = Shader.Load("assets/shaders/Selection.vert", "assets/shaders/Selection.frag");
 
 		Program.gl.UseProgram(Basic);
-		int loc = Program.gl.GetUniformLocation(Basic, "uTexture");
-		Program.gl.Uniform1(loc, 0);
+		Basic.SetUniform("uTexture", 0);
 		Program.gl.UseProgram(0);
 
 		AmbientOcclusionVertexLUT = PrecomputeAmbientOcclusionLUT();

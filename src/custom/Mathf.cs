@@ -1,25 +1,37 @@
 using System.Runtime.CompilerServices;
 
-namespace Moincroft.Utils;
+namespace Custom;
 
 public static class Mathf {
 	public const float PI = 3.14159265359f;
+	public const float TAU = PI * 2f;
+	public const float PI_2 = PI / 2f;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static float Clamp(float value, float min, float max) {
-		if (value < min) return min;
-		if (value > max) return max;
-		return value;
+		return Math.Clamp(value, min, max);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static float Clamp01(float value) {
+		return Math.Clamp(value, 0f, 1f);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static float Lerp(float a, float b, float t) {
+		return a + (b - a) * Math.Clamp(t, 0f, 1f);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static float LerpUnclamped(float a, float b, float t) {
 		return a + (b - a) * t;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static double Lerp(double a, double b, double t) {
-		return a + (b - a) * t;
+	public static float InverseLerp(float value, float a, float b) {
+		if (a == b) return 0f;
+
+		return (value - a) / (b - a);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -58,6 +70,16 @@ public static class Mathf {
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static int CeilToInt(float a) {
+		return (int) MathF.Ceiling(a);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static int RoundToInt(float a) {
+		return (int) MathF.Round(a);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static int Mod(int x, int v) {
 		return ((x % v) + v) % v;
 	}
@@ -74,6 +96,6 @@ public static class Mathf {
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static float Abs(float v) {
-		return Math.Abs(v);
+		return MathF.Abs(v);
 	}
 }

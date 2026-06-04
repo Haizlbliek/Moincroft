@@ -12,9 +12,9 @@ public class WorldRay {
 		int stepY = direction.y > 0 ? 1 : -1;
 		int stepZ = direction.z > 0 ? 1 : -1;
 
-		float deltaX = Math.Abs(1f / direction.x);
-		float deltaY = Math.Abs(1f / direction.y);
-		float deltaZ = Math.Abs(1f / direction.z);
+		float deltaX = direction.x == 0f ? float.PositiveInfinity : Math.Abs(1f / direction.x);
+		float deltaY = direction.y == 0f ? float.PositiveInfinity : Math.Abs(1f / direction.y);
+		float deltaZ = direction.z == 0f ? float.PositiveInfinity : Math.Abs(1f / direction.z);
 
 		float maxT_X = ((direction.x > 0f) ? (x + 1 - origin.x) : (origin.x - x)) * deltaX;
 		float maxT_Y = ((direction.y > 0f) ? (y + 1 - origin.y) : (origin.y - y)) * deltaY;

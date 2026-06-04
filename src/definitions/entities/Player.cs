@@ -1,3 +1,3 @@
-namespace Moincroft.Definitions.Entities;
+// namespace Moincroft.Definitions.Entities;
 
-public class Player : Entity {}
+// public class Player : Entity {}

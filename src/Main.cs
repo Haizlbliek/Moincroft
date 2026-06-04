@@ -1,6 +1,4 @@
 using Silk.NET.Input;
-using Silk.NET.Maths;
-using Silk.NET.OpenGL;
 
 namespace Moincroft;
 
@@ -11,7 +9,7 @@ public static class Main {
 	public static Matrix4X4<float> ProjectionMatrix;
 
 	public static Vector3 lastCameraPosition;
-	public static Vector3 cameraPosition;
+	public static Vector3 cameraPosition = new Vector3(0, 10, 0);
 	public static Vector3 cameraRotation;
 
 	public static IInputContext input = null!;
@@ -26,7 +24,7 @@ public static class Main {
 		Preload.Initialize();
 		Atlas.Initialize();
 		Blocks.Initialize();
-		Entities.Initialize();
+		// Entities.Initialize();
 
 		input = Program.window.CreateInput();
 		for (int i = 0; i < input.Keyboards.Count; i++) {
@@ -44,12 +42,12 @@ public static class Main {
 		// Audio.Audio.Initialize();
 
 		ViewMatrix = Matrix4X4.CreateTranslation(0f, 0f, 0f);
-		float fov = 70f * (Mathf.PI / 180f);
-		ProjectionMatrix = Matrix4X4.CreatePerspectiveFieldOfView(fov, 800f / 600f, 0.1f, 1000f);
+		float fov = 100f * (Mathf.PI / 180f);
+		ProjectionMatrix = Matrix4X4.CreatePerspectiveFieldOfView(fov, Program.defaultSize.X / (float) Program.defaultSize.Y, 0.1f, 1000f);
 	}
 
 	public static void Resize(int width, int height) {
-		float fov = 90f * (Mathf.PI / 180f);
+		float fov = 100f * (Mathf.PI / 180f);
 		ProjectionMatrix = Matrix4X4.CreatePerspectiveFieldOfView(fov, width / (float) height, 0.1f, 1000f);
 	}
 
@@ -74,7 +72,7 @@ public static class Main {
 	}
 
 	private static void MouseDown(IMouse mouse, MouseButton button) {
-		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, 1000f, out rayResult);
+		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, Config.MaxInteractionDistance, out rayResult);
 		if (!rayCollides) return;
 
 		int x = rayResult.blockPosition.x;
@@ -127,7 +125,7 @@ public static class Main {
 			}
 		}
 
-		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, 1000f, out rayResult);
+		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, Config.MaxInteractionDistance, out rayResult);
 	}
 
 	public static void Update() {
@@ -157,12 +155,12 @@ public static class Main {
 		cameraPosition.x += Mathf.Cos(-cameraRotation.y) * movement.x + Mathf.Sin(-cameraRotation.y) * movement.y;
 		cameraPosition.z += -Mathf.Sin(-cameraRotation.y) * movement.x + Mathf.Cos(-cameraRotation.y) * movement.y;
 
-		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, 1000f, out rayResult);
+		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, Config.MaxInteractionDistance, out rayResult);
 
 		Vector3i offset = world.GetChunkPositionFromBlock((int) cameraPosition.x, (int) cameraPosition.y, (int) cameraPosition.z);
 		for (int x = -Config.RenderDistance; x <= Config.RenderDistance; x++) {
 			for (int z = -Config.RenderDistance; z <= Config.RenderDistance; z++) {
-				for (int y = 5; y >= -5; y--) {
+				for (int y = 5; y >= 0; y--) {
 					world.VisibleChunk(offset.x + x, y, offset.z + z);
 				}
 			}

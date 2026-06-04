@@ -4,8 +4,8 @@ public static class Preload {
 	public static Shader Basic = null!;
 	public static Shader Selection = null!;
 
-	public static (byte, byte, byte, byte)[] AO_LUT = null!;
-	public static sbyte[][] FaceNeighbours_LOT = null!;
+	public static (byte, byte, byte, byte)[] AmbientOcclusionVertexLUT = null!;
+	public static sbyte[][] FaceNeighboursLUT = null!;
 
 	public static void Initialize() {
 		Basic = Shader.Load("assets/shaders/Basic.vert", "assets/shaders/Basic.frag");
@@ -16,8 +16,8 @@ public static class Preload {
 		Program.gl.Uniform1(loc, 0);
 		Program.gl.UseProgram(0);
 
-		AO_LUT = PrecomputeAOTable();
-		FaceNeighbours_LOT = [
+		AmbientOcclusionVertexLUT = PrecomputeAmbientOcclusionLUT();
+		FaceNeighboursLUT = [
 			[ 1, -1,  0,    1,  1,  0,    1,  0, -1,    1,  0,  1,    1, -1, -1,    1,  1, -1,    1, -1,  1,    1,  1,  1],
 			[-1, -1,  0,   -1,  1,  0,   -1,  0, -1,   -1,  0,  1,   -1, -1, -1,   -1,  1, -1,   -1, -1,  1,   -1,  1,  1],
 			[ 1,  1,  0,   -1,  1,  0,    0,  1,  1,    0,  1, -1,    1,  1,  1,   -1,  1,  1,    1,  1, -1,   -1,  1, -1],
@@ -27,7 +27,7 @@ public static class Preload {
 		];
 	}
 
-	public static (byte, byte, byte, byte)[] PrecomputeAOTable() {
+	public static (byte, byte, byte, byte)[] PrecomputeAmbientOcclusionLUT() {
 		var table = new (byte, byte, byte, byte)[256];
 
 		for (int mask = 0; mask < 256; mask++) {

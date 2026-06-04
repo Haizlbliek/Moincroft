@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace Moincroft.Definitions.Blocks;
 
 public readonly struct FaceUv : IEquatable<FaceUv> {

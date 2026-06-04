@@ -1,4 +1,4 @@
-namespace Moincroft.Utils;
+namespace Custom;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct Vector3 {

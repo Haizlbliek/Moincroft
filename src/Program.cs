@@ -1,7 +1,4 @@
-﻿using Silk.NET.Maths;
-using Silk.NET.Windowing;
-using Silk.NET.OpenGL;
-using System.IO;
+﻿using Silk.NET.Windowing;
 
 namespace Moincroft;
 
@@ -9,6 +6,8 @@ public static class Program {
 	public static IWindow window = null!;
 	public static GL gl = null!;
 	public static uint _anyVao;
+
+	public static readonly Vector2D<int> defaultSize = new Vector2D<int>(1280, 720);
 
 	public static void Main(string[] args) {
 		Config.Initialize();
@@ -32,7 +31,7 @@ public static class Program {
 		}
 
 		WindowOptions options = WindowOptions.Default with {
-			Size = new Vector2D<int>(800, 600),
+			Size = defaultSize,
 			Title = "Moincroft",
 			VideoMode = Monitor.GetMainMonitor(null).VideoMode,
 			// WindowState = WindowState.Fullscreen,
@@ -51,8 +50,8 @@ public static class Program {
 
 	private static void OnLoad() {
 		gl = GL.GetApi(window);
-
 		gl.ClearColor(0f, 0f, 0f, 1f);
+		Custom.Custom.Initialize(gl);
 
 		window.SetWindowIcon([ Texture.LoadRawImage("assets/icon.png") ]);
 

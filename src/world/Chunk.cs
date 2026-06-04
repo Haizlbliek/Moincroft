@@ -1,5 +1,3 @@
-using Silk.NET.OpenGL;
-
 namespace Moincroft.World;
 
 public class Chunk : ChunkData {
@@ -172,14 +170,12 @@ public class Chunk : ChunkData {
 
 		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._vbo);
 		Span<Vertex> vertexSpan = CollectionsMarshal.AsSpan(vertices);
-		Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (vertexSpan.Length * sizeof(Vertex)), (void*) 0, BufferUsageARB.StaticDraw);
 		fixed (Vertex* buf = vertexSpan) {
 			Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (vertexSpan.Length * sizeof(Vertex)), buf, BufferUsageARB.StaticDraw);
 		}
 
 		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, this._ebo);
 		Span<uint> indexSpan = CollectionsMarshal.AsSpan(indices);
-		Program.gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint) (indexSpan.Length * sizeof(uint)), (void*) 0, BufferUsageARB.StaticDraw);
 		fixed (uint* buf = indexSpan) {
 			Program.gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint) (indexSpan.Length * sizeof(uint)), buf, BufferUsageARB.StaticDraw);
 		}
@@ -193,7 +189,7 @@ public class Chunk : ChunkData {
 	}
 
 	public (byte, byte, byte, byte) GetAO(int x, int y, int z, int faceIndex) {
-		sbyte[] offsets = Preload.FaceNeighbours_LOT[faceIndex];
+		sbyte[] offsets = Preload.FaceNeighboursLUT[faceIndex];
 
 		int mask = 0;
 		if (this.IsVisiblySolid(x + offsets[0], y + offsets[1], z + offsets[2])) mask |= 2;
@@ -205,7 +201,7 @@ public class Chunk : ChunkData {
 		if (this.IsVisiblySolid(x + offsets[18], y + offsets[19], z + offsets[20])) mask |= 16;
 		if (this.IsVisiblySolid(x + offsets[21], y + offsets[22], z + offsets[23])) mask |= 64;
 
-		return Preload.AO_LUT[mask];
+		return Preload.AmbientOcclusionVertexLUT[mask];
 	}
 
 	public unsafe void Render() {

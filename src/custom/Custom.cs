@@ -1,8 +1,12 @@
-using Silk.NET.Maths;
-
-namespace Moincroft.Utils;
+namespace Custom;
 
 public static class Custom {
+	public static GL gl = null!;
+
+	public static void Initialize(GL gl) {
+		Custom.gl = gl;
+	}
+
 	public static T[] ToArray<T>(this Matrix4X4<T> matrix) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T> {
 		return [
 			matrix.M11, matrix.M12, matrix.M13, matrix.M14,
@@ -31,15 +35,28 @@ public static class Custom {
 		yield return matrix.M44;
 	}
 
-	public static void UseProgram(this Silk.NET.OpenGL.GL gl, Shader program) {
+	public static void UseProgram(this GL gl, Shader program) {
 		gl.UseProgram(program.shader);
 	}
 
-	public static int GetUniformLocation(this Silk.NET.OpenGL.GL gl, Shader program, string name) {
+	public static int GetUniformLocation(this GL gl, Shader program, string name) {
 		return gl.GetUniformLocation(program.shader, name);
 	}
 
-	public static uint GetAttribLocation(this Silk.NET.OpenGL.GL gl, Shader program, string name) {
+	public static uint GetAttribLocation(this GL gl, Shader program, string name) {
 		return (uint)gl.GetAttribLocation(program.shader, name);
+	}
+
+	public static void Toggle<T>(this HashSet<T> set, T value) {
+		if (set.Contains(value)) {
+			set.Remove(value);
+		}
+		else {
+			set.Add(value);
+		}
+	}
+
+	public static Dictionary<TKey, TValue> Clone<TKey, TValue>(this Dictionary<TKey, TValue> self) where TKey : notnull {
+		return new Dictionary<TKey, TValue>(self, self.Comparer);
 	}
 }

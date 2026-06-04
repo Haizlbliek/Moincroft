@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Moincroft.Utils;
+namespace Custom;
 
 public static class Noise {
 	public static float Random3(float x, float y, float z) {
@@ -26,11 +26,11 @@ public static class Noise {
 		float theta = 2f * Mathf.PI * random;
 		float phi = MathF.Acos(1f - 2f * random);
 
-		return (
+		return
 			(x - ix) * Mathf.Sin(phi) * Mathf.Cos(theta) +
 			(y - iy) * Mathf.Cos(phi) +
 			(z - iz) * Mathf.Sin(phi) * Mathf.Sin(theta)
-		);
+		;
 	}
 
 	public static float Perlin3(float x, float y, float z) {
@@ -47,30 +47,30 @@ public static class Noise {
 
 		float ix0, ix1;
 
-		ix0 = Mathf.Lerp(
+		ix0 = Mathf.LerpUnclamped(
 			DotGridGradient3(x0, y0, z0, x, y, z),
 			DotGridGradient3(x1, y0, z0, x, y, z),
 			sx
 		);
-		ix1 = Mathf.Lerp(
+		ix1 = Mathf.LerpUnclamped(
 			DotGridGradient3(x0, y1, z0, x, y, z),
 			DotGridGradient3(x1, y1, z0, x, y, z),
 			sx
 		);
-		float ty0 = Mathf.Lerp(ix0, ix1, sy);
+		float ty0 = Mathf.LerpUnclamped(ix0, ix1, sy);
 
-		ix0 = Mathf.Lerp(
+		ix0 = Mathf.LerpUnclamped(
 			DotGridGradient3(x0, y0, z1, x, y, z),
 			DotGridGradient3(x1, y0, z1, x, y, z),
 			sx
 		);
-		ix1 = Mathf.Lerp(
+		ix1 = Mathf.LerpUnclamped(
 			DotGridGradient3(x0, y1, z1, x, y, z),
 			DotGridGradient3(x1, y1, z1, x, y, z),
 			sx
 		);
-		float ty1 = Mathf.Lerp(ix0, ix1, sy);
+		float ty1 = Mathf.LerpUnclamped(ix0, ix1, sy);
 
-		return Mathf.Lerp(ty0, ty1, sz);
+		return Mathf.LerpUnclamped(ty0, ty1, sz);
 	}
 }

@@ -1,5 +1,3 @@
-using System.IO;
-
 namespace Moincroft;
 
 public static class Atlas {
@@ -9,7 +7,10 @@ public static class Atlas {
 	private static readonly Dictionary<string, FaceUv> order = [];
 
 	public static FaceUv GetFace(string name) {
-		return order[name];
+		if (!order.TryGetValue(name, out FaceUv uv))
+			throw new Exception($"Unknown atlas face: {name}");
+
+		return uv;
 	}
 
 	public static void Initialize() {
@@ -19,13 +20,15 @@ public static class Atlas {
 
 		string[] lines = File.ReadAllLines("assets/generated/blocks.txt");
 		foreach (string line in lines) {
-			string[] parts = line.Split(' ');
-			order.Add(parts[0], new FaceUv(
+			string[] parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+			bool added = order.TryAdd(parts[0], new FaceUv(
 				int.Parse(parts[1]) / atlasWidth,
 				int.Parse(parts[2]) / atlasHeight,
 				int.Parse(parts[3]) / atlasWidth,
 				int.Parse(parts[4]) / atlasHeight
 			));
+			if (!added)
+				throw new Exception($"Duplicate atlas entry: {parts[0]}");
 		}
 	}
 }

@@ -60,6 +60,7 @@ public static class Blocks {
 	public static readonly BlockId COBBLESTONE = BlockRegistry.Register("cobblestone", new BlockData(faces: Atlas.GetFace("cobblestone")));
 	public static readonly BlockId STONE = BlockRegistry.Register("stone", new BlockData(faces: Atlas.GetFace("stone")));
 	public static readonly BlockId DIRT = BlockRegistry.Register("dirt", new BlockData(faces: Atlas.GetFace("dirt")));
+	public static readonly BlockId REDSTONE_BLOCK = BlockRegistry.Register("redstone_block", new BlockData(faces: Atlas.GetFace("redstone_block")));
 
 	public static void Initialize() {}
 }

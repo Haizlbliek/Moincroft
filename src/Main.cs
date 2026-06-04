@@ -18,6 +18,7 @@ public static class Main {
 	public static World.World world = new World.World();
 	public static WorldRayResult rayResult;
 	public static bool rayCollides;
+	public static BlockId SelectedBlock = Blocks.REDSTONE_BLOCK;
 
 	public static void Initialize() {
 		Console.WriteLine("Initializing...");
@@ -92,7 +93,7 @@ public static class Main {
 		x &= 15;
 		y &= 15;
 		z &= 15;
-		chunk.SetBlock(x, y, z, button == MouseButton.Left ? 0u : 1u);
+		chunk.SetBlock(x, y, z, button == MouseButton.Left ? 0u : SelectedBlock);
 		if (!chunk.CalculateLight()) {
 			chunk.QueueRefresh();
 			if (x == 0 ) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz)?.QueueRefresh();
@@ -101,6 +102,27 @@ public static class Main {
 			if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.QueueRefresh();
 			if (z == 0 ) world.GetChunk(chunk.cx, chunk.cy, chunk.cz - 1)?.QueueRefresh();
 			if (z == 15) world.GetChunk(chunk.cx, chunk.cy, chunk.cz + 1)?.QueueRefresh();
+
+			if (x == 0 && z == 0) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz - 1)?.QueueRefresh();
+			if (x == 0 && z == 15) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz + 1)?.QueueRefresh();
+			if (x == 15 && z == 0) world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz - 1)?.QueueRefresh();
+			if (x == 15 && z == 15) world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz + 1)?.QueueRefresh();
+			if (x == 0 && y == 0) world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz)?.QueueRefresh();
+			if (x == 0 && y == 15) world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz)?.QueueRefresh();
+			if (x == 15 && y == 0) world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz)?.QueueRefresh();
+			if (x == 15 && y == 15) world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz)?.QueueRefresh();
+			if (y == 0 && z == 0) world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
+			if (y == 0 && z == 15) world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
+			if (y == 15 && z == 0) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
+			if (y == 15 && z == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
+			if (x == 0 && y == 0 && z == 0) world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
+			if (x == 0 && y == 0 && z == 15) world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
+			if (x == 0 && y == 15 && z == 0) world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
+			if (x == 0 && y == 15 && z == 15) world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
+			if (x == 15 && y == 0 && z == 0) world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
+			if (x == 15 && y == 0 && z == 15) world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
+			if (x == 15 && y == 15 && z == 0) world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
+			if (x == 15 && y == 15 && z == 15) world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
 		} else {
 			if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.QueueRefresh();
 
@@ -120,6 +142,12 @@ public static class Main {
 					if (x == 15) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
 					if (z == 0 ) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
 					if (z == 15) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
+
+					if (x == 0 && z == 0) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
+					if (x == 0 && z == 15) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
+					if (x == 15 && z == 0) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
+					if (x == 15 && z == 15) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
+
 					break;
 				}
 			}
@@ -185,9 +213,15 @@ public static class Main {
 		Program.gl.Enable(EnableCap.DepthTest);
 		Program.gl.Enable(EnableCap.Blend);
 		Program.gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+		Program.gl.Enable(EnableCap.CullFace);
+		Program.gl.CullFace(GLEnum.Back);
+		Program.gl.ActiveTexture(Silk.NET.OpenGL.TextureUnit.Texture0);
+		Program.gl.BindTexture(TextureTarget.Texture2D, Atlas.atlas._id);
 		foreach (Chunk chunk in world.chunks.Values) {
 			chunk.Render();
 		}
+		Program.gl.Disable(EnableCap.CullFace);
+		Program.gl.BindVertexArray(0);
 
 		if (rayCollides) {
 			Program.gl.UseProgram(Preload.Selection);

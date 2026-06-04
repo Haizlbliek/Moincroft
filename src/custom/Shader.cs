@@ -7,17 +7,18 @@ public class Shader {
 	public readonly uint shader;
 	private readonly string path;
 	private readonly Dictionary<string, int> _uniformLocations = [];
+	private readonly Dictionary<string, uint> _attribLocations = [];
 
 	private Shader(uint shader, string path) {
 		this.shader = shader;
 		this.path = path;
-		this.PopulateUniforms();
+		this.PopuplateCachedLocations();
 	}
 
 	public void Use() => Custom.gl.UseProgram(this.shader);
 	public void Dispose() => Custom.gl.DeleteProgram(this.shader);
 
-	private void PopulateUniforms() {
+	private void PopuplateCachedLocations() {
 		Custom.gl.GetProgram(this.shader, ProgramPropertyARB.ActiveUniforms, out int uniformCount);
 
 		for (uint i = 0; i < uniformCount; i++) {
@@ -28,6 +29,17 @@ public class Shader {
 				this._uniformLocations[name] = location;
 			}
 		}
+
+		Custom.gl.GetProgram(this.shader, ProgramPropertyARB.ActiveAttributes, out int attributeCount);
+
+		for (uint i = 0; i < attributeCount; i++) {
+			string name = Custom.gl.GetActiveAttrib(this.shader, i, out _, out _);
+			int location = Custom.gl.GetAttribLocation(this.shader, name);
+
+			if (location != -1) {
+				this._attribLocations[name] = (uint) location;
+			}
+		}
 	}
 
 	public int GetUniformLocation(string name) {
@@ -36,11 +48,25 @@ public class Shader {
 
 		location = Custom.gl.GetUniformLocation(this.shader, name);
 		this._uniformLocations[name] = location;
+
 		if (location == -1) {
 			Console.WriteLine($"Warning: Uniform '{name}' not found in shader {this.path}.");
 		}
 
 		return location;
+	}
+
+	public uint GetAttribLocation(string name) {
+		if (this._attribLocations.TryGetValue(name, out uint location))
+			return location;
+
+		int l = Custom.gl.GetAttribLocation(this.shader, name);
+
+		if (l == -1) {
+			throw new Exception($"Attribute '{name}' not found in shader {this.path}.");
+		}
+
+		return this._attribLocations[name] = (uint) l;
 	}
 
 	public void SetUniform(string name, int value) => Custom.gl.Uniform1(this.GetUniformLocation(name), value);
@@ -74,6 +100,7 @@ public class Shader {
 	public unsafe void SetUniform(string name, Matrix4x4 value, bool transpose = true) => Custom.gl.UniformMatrix4(this.GetUniformLocation(name), 1, transpose, (float*)&value);
 	public unsafe void SetUniform(string name, Matrix4X4<float> value, bool transpose = true) => Custom.gl.UniformMatrix4(this.GetUniformLocation(name), 1, transpose, (float*)&value);
 
+	public void SetAttrib(string name, float x, float y, float z) => Custom.gl.VertexAttrib3(this.GetAttribLocation(name), x, y, z);
 
 	private static string PreprocessSource(string filePath, List<string> fileMap, bool isRoot = true) {
 		if (!fileMap.Contains(filePath)) fileMap.Add(filePath);

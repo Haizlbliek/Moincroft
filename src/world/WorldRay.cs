@@ -46,7 +46,7 @@ public class WorldRay {
 				result.normal = new Vector3i(0, 0, -stepZ);
 			}
 
-			if (world.GetBlock(x, y, z) != 0) {
+			if (world.GetBlock(x, y, z).Type != 0) {
 				result.blockPosition = new Vector3i(x, y, z);
 				return true;
 			}

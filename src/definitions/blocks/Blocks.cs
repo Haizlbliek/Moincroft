@@ -1,4 +1,4 @@
-global using BlockId = uint;
+global using BlockId = ushort;
 using System.Runtime.CompilerServices;
 using Moincroft.Definitions.Models;
 
@@ -33,7 +33,7 @@ public static class BlockRegistry {
 	private static BlockData[] _blocks = new BlockData[256];
 	public static int Count { get; private set; }
 
-	public static BlockId Register(string id, BlockData data, uint forcedId) {
+	public static BlockId Register(string id, BlockData data, BlockId forcedId) {
 		if (forcedId >= _blocks.Length) {
 			Array.Resize(ref _blocks, (int) (forcedId + 256));
 		}
@@ -46,7 +46,7 @@ public static class BlockRegistry {
 	}
 
 	public static BlockId Register(string id, BlockData data) {
-		uint index = (uint)Count++;
+		BlockId index = (BlockId)Count++;
 		if (index >= _blocks.Length) Array.Resize(ref _blocks, _blocks.Length * 2);
 		_blocks[index] = data;
 		return index;

@@ -19,7 +19,7 @@ public static class Main {
 	public static World.World world = new World.World();
 	public static WorldRayResult rayResult;
 	public static bool rayCollides;
-	public static BlockId SelectedBlock;
+	public static BlockType SelectedBlock;
 
 	public static void Initialize() {
 		Console.WriteLine("Initializing...");
@@ -28,7 +28,7 @@ public static class Main {
 		ModelLoader.Initialize();
 		Blocks.Initialize();
 
-		SelectedBlock = Blocks.SLIME_BLOCK;
+		SelectedBlock = new BlockType(Blocks.SLIME_BLOCK, 0);
 		// Entities.Initialize();
 
 		input = Program.window.CreateInput();
@@ -97,7 +97,7 @@ public static class Main {
 		x &= 15;
 		y &= 15;
 		z &= 15;
-		chunk.SetBlock(x, y, z, button == MouseButton.Left ? 0u : SelectedBlock);
+		chunk.SetBlock(x, y, z, button == MouseButton.Left ? default : SelectedBlock);
 		if (!chunk.CalculateLight()) {
 			chunk.QueueRefresh();
 			if (x == 0 ) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz)?.QueueRefresh();

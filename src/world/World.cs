@@ -32,15 +32,15 @@ public class World {
 		return this.GetChunk(bx >> 4, by >> 4, bz >> 4);
 	}
 
-	public BlockId GetBlock(int x, int y, int z) {
+	public BlockType GetBlock(int x, int y, int z) {
 		if (this.chunks.TryGetValue((x >> 4, y >> 4, z >> 4), out Chunk? chunk)) {
 			return chunk.GetBlock(x & 15, y & 15, z & 15);
 		}
 
-		return 0;
+		return default;
 	}
 
-	public void SetBlock(int x, int y, int z, BlockId block) {
+	public void SetBlock(int x, int y, int z, BlockType block) {
 		this.GetChunkFromBlock(x, y, z)?.SetBlock(x & 15, y & 15, z & 15, block); // TODO: 
 	}
 
@@ -49,13 +49,11 @@ public class World {
 		this.chunks.Add((cx, cy, cz), chunk);
 		for (int x = 0; x < 16; x++) {
 			for (int z = 0; z < 16; z++) {
-				int xzOffset = (x << 8) | z;
-
 				for (int y = 0; y < 16; y++) {
 					int worldY = y + cy * 16;
 
 					if (worldY < 8)
-						chunk.blocks[xzOffset | (y << 4)] = Blocks.STONE;
+						chunk.SetBlock(x, y, z, new BlockType(Blocks.STONE, 0));
 				}
 			}
 		}

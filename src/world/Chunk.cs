@@ -63,25 +63,25 @@ public class Chunk : ChunkData {
 		for (int z = 0; z < 16; z++) {
 			for (int x = 0; x < 16; x++) {
 				for (int y = 0; y < 16; y++) {
-					BlockId type = this.GetBlock(x, y, z);
-					if (type == 0) continue;
+					BlockType type = this.GetBlock(x, y, z);
+					if (type.Type == 0) continue;
 
-					BlockData data = BlockRegistry.Get(type);
+					BlockData data = BlockRegistry.Get(type.Type);
 					if (!data.Visible) continue;
 
 					foreach (Model.Quad quad in data.Model.quads) {
 						if (quad.cullFace != Direction.None) {
-							BlockId neighborBlock = quad.cullFace switch {
+							BlockType neighborBlock = quad.cullFace switch {
 								Direction.West  => x > 0 ? this.GetBlock(x - 1, y, z) : neighbourNX.GetBlock(15, y, z),
 								Direction.East  => x < 15 ? this.GetBlock(x + 1, y, z) : neighbourPX.GetBlock(0, y, z),
 								Direction.Down  => y > 0 ? this.GetBlock(x, y - 1, z) : neighbourNY.GetBlock(x, 15, z),
 								Direction.Up    => y < 15 ? this.GetBlock(x, y + 1, z) : neighbourPY.GetBlock(x, 0, z),
 								Direction.North => z > 0 ? this.GetBlock(x, y, z - 1) : neighbourNZ.GetBlock(x, y, 15),
 								Direction.South => z < 15 ? this.GetBlock(x, y, z + 1) : neighbourPZ.GetBlock(x, y, 0),
-								_ => 0
+								_ => default
 							};
 
-							if (neighborBlock != 0 && BlockRegistry.Get(neighborBlock).Opaque) {
+							if (neighborBlock.Type != 0 && BlockRegistry.Get(neighborBlock.Type).Opaque) {
 								continue;
 							}
 						}

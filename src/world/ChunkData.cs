@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Moincroft.Definitions;
 
 namespace Moincroft.World;
 
@@ -22,39 +23,39 @@ public class ChunkData {
 	private static int GetIdx(int x, int y, int z) => (x << 8) | (y << 4) | z;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public void SetBlock(int x, int y, int z, BlockType block) {
-		this.blocks.Set(x, y, z, block);
+	public void SetBlock(BlockPos pos, BlockType block) {
+		this.blocks.Set(pos, block);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public BlockType GetBlock(int x, int y, int z) {
-		return this.blocks.Get(x, y, z);
+	public BlockType GetBlock(BlockPos pos) {
+		return this.blocks.Get(pos);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public void CarefulSetBlock(int x, int y, int z, BlockType block) {
-		if (x < 0 || x > 15 || y < 0 || y > 15 || z < 0 || z > 15) return;
+	public void CarefulSetBlock(BlockPos pos, BlockType block) {
+		if (pos.x < 0 || pos.x > 15 || pos.y < 0 || pos.y > 15 || pos.z < 0 || pos.z > 15) return;
 
-		this.SetBlock(x, y, z, block);
+		this.SetBlock(pos, block);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public BlockType CarefulGetBlock(int x, int y, int z) {
-		if (x < 0 || x > 15 || y < 0 || y > 15 || z < 0 || z > 15) return default;
+	public BlockType CarefulGetBlock(BlockPos pos) {
+		if (pos.x < 0 || pos.x > 15 || pos.y < 0 || pos.y > 15 || pos.z < 0 || pos.z > 15) return default;
 
-		return this.GetBlock(x, y, z);
+		return this.GetBlock(pos);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public BlockType GetBlockOutside(int x, int y, int z) {
-		if (x < 0 || x > 15 || y < 0 || y > 15 || z < 0 || z > 15) return this.world.GetBlock(x + this.cx * 16, y + this.cy * 16, z + this.cz * 16);
+	public BlockType GetBlockOutside(BlockPos pos) {
+		if (pos.x < 0 || pos.x > 15 || pos.y < 0 || pos.y > 15 || pos.z < 0 || pos.z > 15) return this.world.GetBlock(pos.x + this.cx * 16, pos.y + this.cy * 16, pos.z + this.cz * 16);
 
-		return this.GetBlock(x, y, z);
+		return this.GetBlock(pos);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool IsVisiblySolid(int x, int y, int z) {
-		BlockType type = this.GetBlockOutside(x, y, z);
+	public bool IsVisiblySolid(BlockPos pos) {
+		BlockType type = this.GetBlockOutside(pos);
 		return type.Type > 0; // && Blocks.Blocks.blocks[type].opaque;
 	}
 
@@ -92,9 +93,10 @@ public class ChunkData {
 
 				for (int y = 15; y >= 0; y--) {
 					int i = GetIdx(x, y, z);
+					BlockPos pos = new BlockPos(x, y, z);
 
 					ref byte currentLight = ref Unsafe.Add(ref lightBase, i);
-					BlockType currentBlock = this.blocks.Get(x, y, z);
+					BlockType currentBlock = this.blocks.Get(pos);
 
 					if (currentBlock.Type != 0) {
 						lightLevel = 0;

@@ -85,12 +85,13 @@ public static class Main {
 		int x = rayResult.blockPosition.x;
 		int y = rayResult.blockPosition.y;
 		int z = rayResult.blockPosition.z;
-		if (button == MouseButton.Left) {}
+		if (button == MouseButton.Left || button == MouseButton.Middle) {}
 		else if (button == MouseButton.Right) {
 			x += rayResult.normal.x;
 			y += rayResult.normal.y;
 			z += rayResult.normal.z;
-		} else {
+		}
+		else {
 			return;
 		}
 
@@ -99,7 +100,16 @@ public static class Main {
 		x &= 15;
 		y &= 15;
 		z &= 15;
-		chunk.SetBlock(x, y, z, button == MouseButton.Left ? default : SelectedBlock);
+		BlockPos pos = new BlockPos(x, y, z);
+		if (button == MouseButton.Middle) {
+			BlockType block = chunk.GetBlock(pos);
+			if (block.Type == Blocks.DAYLIGHT_DETECTOR) {
+				chunk.SetBlock(pos, block.With(DaylightDetectorBlock.INVERTED, !block.Get(DaylightDetectorBlock.INVERTED)));
+			}
+		}
+		else {
+			chunk.SetBlock(pos, button == MouseButton.Left ? default : SelectedBlock);
+		}
 		if (!chunk.CalculateLight()) {
 			chunk.QueueRefresh();
 			if (x == 0 ) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz)?.QueueRefresh();

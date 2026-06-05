@@ -63,21 +63,22 @@ public class Chunk : ChunkData {
 		for (int z = 0; z < 16; z++) {
 			for (int x = 0; x < 16; x++) {
 				for (int y = 0; y < 16; y++) {
-					BlockType type = this.GetBlock(x, y, z);
+					BlockPos pos = new BlockPos(x, y, z);
+					BlockType type = this.GetBlock(pos);
 					if (type.Type == 0) continue;
 
 					Block block = BlockRegistry.GetBlock(type.Type);
 					if (!block.data.Visible) continue;
 
-					foreach (Model.Quad quad in block.data.BlockStateData.GetModel(type).model.quads) {
+					foreach (Model.Quad quad in block.data.BlockStateData.GetModel(type, pos).model.quads) {
 						if (quad.cullFace != Direction.None) {
 							BlockType neighborBlock = quad.cullFace switch {
-								Direction.West  => x > 0 ? this.GetBlock(x - 1, y, z) : neighbourNX.GetBlock(15, y, z),
-								Direction.East  => x < 15 ? this.GetBlock(x + 1, y, z) : neighbourPX.GetBlock(0, y, z),
-								Direction.Down  => y > 0 ? this.GetBlock(x, y - 1, z) : neighbourNY.GetBlock(x, 15, z),
-								Direction.Up    => y < 15 ? this.GetBlock(x, y + 1, z) : neighbourPY.GetBlock(x, 0, z),
-								Direction.North => z > 0 ? this.GetBlock(x, y, z - 1) : neighbourNZ.GetBlock(x, y, 15),
-								Direction.South => z < 15 ? this.GetBlock(x, y, z + 1) : neighbourPZ.GetBlock(x, y, 0),
+								Direction.West  => x > 0 ? this.GetBlock(pos.NX()) : neighbourNX.GetBlock(new BlockPos(15, y, z)),
+								Direction.East  => x < 15 ? this.GetBlock(pos.PX()) : neighbourPX.GetBlock(new BlockPos(0, y, z)),
+								Direction.Down  => y > 0 ? this.GetBlock(pos.NY()) : neighbourNY.GetBlock(new BlockPos(x, 15, z)),
+								Direction.Up    => y < 15 ? this.GetBlock(pos.PY()) : neighbourPY.GetBlock(new BlockPos(x, 0, z)),
+								Direction.North => z > 0 ? this.GetBlock(pos.NZ()) : neighbourNZ.GetBlock(new BlockPos(x, y, 15)),
+								Direction.South => z < 15 ? this.GetBlock(pos.PZ()) : neighbourPZ.GetBlock(new BlockPos(x, y, 0)),
 								_ => default
 							};
 
@@ -225,14 +226,14 @@ public class Chunk : ChunkData {
 		sbyte[] offsets = Preload.FaceNeighboursLUT[faceIndex];
 
 		int mask = 0;
-		if (this.IsVisiblySolid(x + offsets[0], y + offsets[1], z + offsets[2])) mask |= 2;
-		if (this.IsVisiblySolid(x + offsets[3], y + offsets[4], z + offsets[5])) mask |= 8;
-		if (this.IsVisiblySolid(x + offsets[6], y + offsets[7], z + offsets[8])) mask |= 32;
-		if (this.IsVisiblySolid(x + offsets[9], y + offsets[10], z + offsets[11])) mask |= 128;
-		if (this.IsVisiblySolid(x + offsets[12], y + offsets[13], z + offsets[14])) mask |= 1;
-		if (this.IsVisiblySolid(x + offsets[15], y + offsets[16], z + offsets[17])) mask |= 4;
-		if (this.IsVisiblySolid(x + offsets[18], y + offsets[19], z + offsets[20])) mask |= 16;
-		if (this.IsVisiblySolid(x + offsets[21], y + offsets[22], z + offsets[23])) mask |= 64;
+		if (this.IsVisiblySolid(new BlockPos(x + offsets[0], y + offsets[1], z + offsets[2]))) mask |= 2;
+		if (this.IsVisiblySolid(new BlockPos(x + offsets[3], y + offsets[4], z + offsets[5]))) mask |= 8;
+		if (this.IsVisiblySolid(new BlockPos(x + offsets[6], y + offsets[7], z + offsets[8]))) mask |= 32;
+		if (this.IsVisiblySolid(new BlockPos(x + offsets[9], y + offsets[10], z + offsets[11]))) mask |= 128;
+		if (this.IsVisiblySolid(new BlockPos(x + offsets[12], y + offsets[13], z + offsets[14]))) mask |= 1;
+		if (this.IsVisiblySolid(new BlockPos(x + offsets[15], y + offsets[16], z + offsets[17]))) mask |= 4;
+		if (this.IsVisiblySolid(new BlockPos(x + offsets[18], y + offsets[19], z + offsets[20]))) mask |= 16;
+		if (this.IsVisiblySolid(new BlockPos(x + offsets[21], y + offsets[22], z + offsets[23]))) mask |= 64;
 
 		return Preload.AmbientOcclusionVertexLUT[mask];
 	}

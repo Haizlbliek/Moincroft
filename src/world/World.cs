@@ -1,3 +1,5 @@
+using Moincroft.Definitions;
+
 namespace Moincroft.World;
 
 public class World {
@@ -34,14 +36,14 @@ public class World {
 
 	public BlockType GetBlock(int x, int y, int z) {
 		if (this.chunks.TryGetValue((x >> 4, y >> 4, z >> 4), out Chunk? chunk)) {
-			return chunk.GetBlock(x & 15, y & 15, z & 15);
+			return chunk.GetBlock(new BlockPos(x & 15, y & 15, z & 15));
 		}
 
 		return default;
 	}
 
 	public void SetBlock(int x, int y, int z, BlockType block) {
-		this.GetChunkFromBlock(x, y, z)?.SetBlock(x & 15, y & 15, z & 15, block); // TODO: 
+		this.GetChunkFromBlock(x, y, z)?.SetBlock(new BlockPos(x & 15, y & 15, z & 15), block); // TODO: 
 	}
 
 	public Chunk GenerateChunk(int cx, int cy, int cz) {
@@ -53,7 +55,7 @@ public class World {
 					int worldY = y + cy * 16;
 
 					if (worldY < 8)
-						chunk.SetBlock(x, y, z, new BlockType(Blocks.STONE, 0));
+						chunk.SetBlock(new BlockPos(x, y, z), new BlockType(Blocks.STONE, 0));
 				}
 			}
 		}

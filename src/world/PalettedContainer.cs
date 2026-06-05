@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Moincroft.Definitions;
 
 namespace Moincroft.World;
 
@@ -24,23 +25,23 @@ public class PalettedContainer<T> where T : IEquatable<T> {
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static int BlockIndex(int x, int y, int z) => (x << 8) | (y << 4) | z;
+	private static int BlockIndex(BlockPos pos) => (pos.x << 8) | (pos.y << 4) | pos.z;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private (int idx, int datum) Index(int x, int y, int z) {
-		int bIndex = BlockIndex(x, y, z);
+	private (int idx, int datum) Index(BlockPos pos) {
+		int bIndex = BlockIndex(pos);
 		return (bIndex / this.valuesPerDatum, bIndex % this.valuesPerDatum);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private int GetDatum(int x, int y, int z) {
-		(int idx, int datum) = this.Index(x, y, z);
+	private int GetDatum(BlockPos pos) {
+		(int idx, int datum) = this.Index(pos);
 		return (int) ((this.data[idx] >> (this.bitsPerItem * datum)) & this.itemMask);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private void SetDatum(int x, int y, int z, int value) {
-		(int idx, int datum) = this.Index(x, y, z);
+	private void SetDatum(BlockPos pos, int value) {
+		(int idx, int datum) = this.Index(pos);
 		int shift = this.bitsPerItem * datum;
 		this.data[idx] = this.data[idx] & ~(this.itemMask << shift) | ((ulong) value << shift);
 	}
@@ -63,11 +64,11 @@ public class PalettedContainer<T> where T : IEquatable<T> {
 		}
 	}
 
-	public T Get(int x, int y, int z) {
-		return this.palette[this.GetDatum(x, y, z)];
+	public T Get(BlockPos pos) {
+		return this.palette[this.GetDatum(pos)];
 	}
 
-	public void Set(int x, int y, int z, T value) {
+	public void Set(BlockPos pos, T value) {
 		int paletteIndex = Array.IndexOf(this.palette, value);
 
 		if (paletteIndex == -1) {
@@ -81,6 +82,6 @@ public class PalettedContainer<T> where T : IEquatable<T> {
 			}
 		}
 
-		this.SetDatum(x, y, z, paletteIndex);
+		this.SetDatum(pos, paletteIndex);
 	}
 }

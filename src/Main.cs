@@ -1,3 +1,4 @@
+using Moincroft.Definitions.Models;
 using Silk.NET.Input;
 
 namespace Moincroft;
@@ -18,13 +19,16 @@ public static class Main {
 	public static World.World world = new World.World();
 	public static WorldRayResult rayResult;
 	public static bool rayCollides;
-	public static BlockId SelectedBlock = Blocks.REDSTONE_BLOCK;
+	public static BlockId SelectedBlock;
 
 	public static void Initialize() {
 		Console.WriteLine("Initializing...");
 		Preload.Initialize();
 		Atlas.Initialize();
+		ModelLoader.Initialize();
 		Blocks.Initialize();
+
+		SelectedBlock = Blocks.SLIME_BLOCK;
 		// Entities.Initialize();
 
 		input = Program.window.CreateInput();

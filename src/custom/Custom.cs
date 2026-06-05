@@ -59,4 +59,6 @@ public static class Custom {
 	public static Dictionary<TKey, TValue> Clone<TKey, TValue>(this Dictionary<TKey, TValue> self) where TKey : notnull {
 		return new Dictionary<TKey, TValue>(self, self.Comparer);
 	}
+
+	public static string RemoveStart(this string self, string other) => self.StartsWith(other) ? self[other.Length..] : self;
 }

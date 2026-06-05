@@ -1,29 +1,32 @@
 global using BlockId = uint;
 using System.Runtime.CompilerServices;
+using Moincroft.Definitions.Models;
 
 namespace Moincroft.Definitions.Blocks;
 
 public readonly struct BlockData {
 	public readonly bool Visible;
 	public readonly bool Opaque;
-	public readonly FaceUv Px, Nx, Py, Ny, Pz, Nz;
+	// public readonly FaceUv Px, Nx, Py, Ny, Pz, Nz;
+	public readonly Model Model;
 
-	public BlockData(FaceUv faces, bool visible = true, bool opaque = true) {
+	public BlockData(Model model, bool visible = true, bool opaque = true) {
+		this.Model = model;
 		this.Visible = visible;
 		this.Opaque = opaque;
-		this.Px = this.Nx = this.Py = this.Ny = this.Pz = this.Nz = faces;
+		// this.Px = this.Nx = this.Py = this.Ny = this.Pz = this.Nz = faces;
 	}
 
-	public BlockData(FaceUv px, FaceUv nx, FaceUv py, FaceUv ny, FaceUv pz, FaceUv nz, bool visible = true, bool opaque = true) {
-		this.Visible = visible;
-		this.Opaque = opaque;
-		this.Px = px;
-		this.Nx = nx;
-		this.Py = py;
-		this.Ny = ny;
-		this.Pz = pz;
-		this.Nz = nz;
-	}
+	// public BlockData(FaceUv px, FaceUv nx, FaceUv py, FaceUv ny, FaceUv pz, FaceUv nz, bool visible = true, bool opaque = true) {
+	// 	this.Visible = visible;
+	// 	this.Opaque = opaque;
+	// 	this.Px = px;
+	// 	this.Nx = nx;
+	// 	this.Py = py;
+	// 	this.Ny = ny;
+	// 	this.Pz = pz;
+	// 	this.Nz = nz;
+	// }
 }
 
 public static class BlockRegistry {
@@ -56,11 +59,13 @@ public static class BlockRegistry {
 }
 
 public static class Blocks {
-	public static readonly BlockId AIR = BlockRegistry.Register("air", new BlockData(default, false, false), forcedId: 0);
-	public static readonly BlockId COBBLESTONE = BlockRegistry.Register("cobblestone", new BlockData(faces: Atlas.GetFace("cobblestone")));
-	public static readonly BlockId STONE = BlockRegistry.Register("stone", new BlockData(faces: Atlas.GetFace("stone")));
-	public static readonly BlockId DIRT = BlockRegistry.Register("dirt", new BlockData(faces: Atlas.GetFace("dirt")));
-	public static readonly BlockId REDSTONE_BLOCK = BlockRegistry.Register("redstone_block", new BlockData(faces: Atlas.GetFace("redstone_block")));
+	public static readonly BlockId AIR = BlockRegistry.Register("air", new BlockData(ModelLoader.GetModel("block/air"), false, false), forcedId: 0);
+	public static readonly BlockId COBBLESTONE = BlockRegistry.Register("cobblestone", new BlockData(ModelLoader.GetModel("block/cobblestone")));
+	public static readonly BlockId STONE = BlockRegistry.Register("stone", new BlockData(ModelLoader.GetModel("block/stone")));
+	public static readonly BlockId DIRT = BlockRegistry.Register("dirt", new BlockData(ModelLoader.GetModel("block/dirt")));
+	public static readonly BlockId REDSTONE_BLOCK = BlockRegistry.Register("redstone_block", new BlockData(ModelLoader.GetModel("block/redstone_block")));
+	public static readonly BlockId DRAGON_EGG = BlockRegistry.Register("dragon_egg", new BlockData(ModelLoader.GetModel("block/dragon_egg")));
+	public static readonly BlockId SLIME_BLOCK = BlockRegistry.Register("slime_block", new BlockData(ModelLoader.GetModel("block/slime_block")));
 
 	public static void Initialize() {}
 }

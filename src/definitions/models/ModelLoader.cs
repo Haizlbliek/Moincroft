@@ -1,0 +1,227 @@
+using System.Text.Json.Nodes;
+
+namespace Moincroft.Definitions.Models;
+
+public static class ModelLoader {
+	private static readonly Dictionary<string, Model> models = [];
+	private static readonly Dictionary<string, MiddleModel> middleModels = [];
+	private static readonly string modelsDir = Path.Combine("assets", "generated", "models");
+
+	private static MiddleModel GetMiddleModel(string modelName) {
+		modelName = modelName.RemoveStart("minecraft:").ToString();
+
+		if (middleModels.TryGetValue(modelName, out MiddleModel? existingModel))
+			return existingModel;
+
+		string filePath = Path.Combine(modelsDir, modelName + ".json");
+		JsonObject currentJson = JsonNode.Parse(File.ReadAllText(filePath))!.AsObject();
+
+		MiddleModel newModel = new MiddleModel();
+
+		if (currentJson.TryGetPropertyValue("parent", out JsonNode? parentNode) && parentNode != null) {
+			string parentName = parentNode.ToString();
+			MiddleModel parentModel = GetMiddleModel(parentName);
+			newModel.MergeFrom(parentModel);
+		}
+
+		if (currentJson.TryGetPropertyValue("textures", out JsonNode? texturesNode) && texturesNode != null) {
+			foreach (KeyValuePair<string, JsonNode?> property in texturesNode.AsObject()) {
+				if (property.Value != null) {
+					newModel.textures[property.Key] = property.Value.ToString();
+				}
+			}
+		}
+		if (currentJson.TryGetPropertyValue("elements", out JsonNode? elementsNode) && elementsNode != null) {
+			newModel.elements.Clear();
+
+			foreach (JsonNode? elementNode in elementsNode.AsArray()) {
+				if (elementNode == null) continue;
+				JsonObject elementObj = elementNode.AsObject();
+
+				MiddleModel.Element element = new MiddleModel.Element {
+					faces = []
+				};
+
+				if (elementObj.TryGetPropertyValue("from", out JsonNode? fromNode) && fromNode != null) {
+					JsonArray arr = fromNode.AsArray();
+					element.from = new Vector3(
+						(float)arr[0]!,
+						(float)arr[1]!,
+						(float)arr[2]!
+					);
+				}
+
+				if (elementObj.TryGetPropertyValue("to", out JsonNode? toNode) && toNode != null) {
+					JsonArray arr = toNode.AsArray();
+					element.to = new Vector3(
+						(float)arr[0]!,
+						(float)arr[1]!,
+						(float)arr[2]!
+					);
+				}
+
+				if (elementObj.TryGetPropertyValue("faces", out JsonNode? facesNode) && facesNode != null) {
+					foreach (KeyValuePair<string, JsonNode?> faceProperty in facesNode.AsObject()) {
+						if (faceProperty.Value == null) continue;
+
+						JsonObject faceObj = faceProperty.Value.AsObject();
+
+						MiddleModel.Element.Face face = new MiddleModel.Element.Face {
+							texture = faceObj.TryGetPropertyValue("texture", out JsonNode? texNode) ? texNode!.ToString() : "",
+							cullface = faceObj.TryGetPropertyValue("cullface", out JsonNode? cullNode) ? cullNode!.ToString() : null
+						};
+
+						if (faceObj.TryGetPropertyValue("uv", out JsonNode? uvNode) && uvNode != null) {
+							JsonArray uvArr = uvNode.AsArray();
+							face.uv = [ (float)uvArr[0]!, (float)uvArr[1]!, (float)uvArr[2]!, (float)uvArr[3]! ];
+						}
+
+						element.faces[faceProperty.Key] = face;
+					}
+				}
+
+				newModel.elements.Add(element);
+			}
+		}
+
+		middleModels[modelName] = newModel;
+		return newModel;
+	}
+
+	private static void LoadMiddleModels() {
+		foreach (string modelPath in Directory.GetFiles(modelsDir, "*.json", SearchOption.AllDirectories)) {
+			GetMiddleModel(Path.ChangeExtension(Path.GetRelativePath(modelsDir, modelPath), null));
+		}
+	}
+
+	private static Direction DirectionFromFace(string face) => face switch {
+		"north" => Direction.North,
+		"south" => Direction.South,
+		"east" => Direction.East,
+		"west" => Direction.West,
+		"up" => Direction.Up,
+		"down" => Direction.Down,
+		_ => Direction.None
+	};
+
+	private static void ParseMiddleModels() {
+		foreach (KeyValuePair<string, MiddleModel> pair in middleModels) {
+			Console.WriteLine($"Parsing: {pair.Key}");
+
+			string modelKey = pair.Key;
+			MiddleModel middleModel = pair.Value;
+
+			List<Model.Quad> quads = [];
+			bool skip = false;
+
+			foreach (MiddleModel.Element element in middleModel.elements) {
+				foreach (KeyValuePair<string, MiddleModel.Element.Face> face in element.faces) {
+					Model.Quad quad = new Model.Quad {
+						direction = DirectionFromFace(face.Key),
+						from = element.from,
+						to = element.to,
+						cullFace = face.Value.cullface == null ? Direction.None : DirectionFromFace(face.Value.cullface)
+					};
+					string texturePath = face.Value.texture;
+					while (texturePath.StartsWith('#')) {
+						string varName = texturePath[1..];
+						if (middleModel.textures.TryGetValue(varName, out string? resolved)) {
+							texturePath = resolved;
+						}
+						else {
+							break;
+						}
+					}
+					texturePath = texturePath.RemoveStart("minecraft:").RemoveStart("block/");
+
+					try {
+						FaceUv faceUv = Atlas.GetFace(texturePath);
+						float[]? uv = face.Value.uv;
+						if (uv == null || uv.Length == 0) {
+							uv = face.Key switch {
+								"north" => [16 - element.to.x, 16 - element.to.y, 16 - element.from.x, 16 - element.from.y],
+								"south" => [element.from.x, 16 - element.to.y, element.to.x, 16 - element.from.y],
+								"west"  => [element.from.z, 16 - element.to.y, element.to.z, 16 - element.from.y],
+								"east"  => [16 - element.to.z, 16 - element.to.y, 16 - element.from.z, 16 - element.from.y],
+								"up"    => [element.from.x, element.from.z, element.to.x, element.to.z],
+								"down"  => [element.from.x, 16 - element.to.z, element.to.x, 16 - element.from.z],
+								_       => [0, 0, 16, 16]
+							};
+						}
+						quad.u0 = uv[0] / Atlas.AtlasWidth + faceUv.X;
+						quad.v0 = uv[1] / Atlas.AtlasHeight + faceUv.Y;
+						quad.u1 = uv[2] / Atlas.AtlasWidth + faceUv.X;
+						quad.v1 = uv[3] / Atlas.AtlasHeight + faceUv.Y;
+						quads.Add(quad);
+					}
+					catch (Exception) {
+						if (!texturePath.StartsWith('#')) {
+							Console.WriteLine($"WARNING: Missing texture: {texturePath}");
+						}
+						skip = true;
+						break;
+					}
+				}
+
+				if (skip)
+					break;
+			}
+
+			if (skip) {
+				Console.WriteLine("- skipped");
+			}
+			else {
+				models.Add(modelKey, new Model() { quads = [..quads] });
+			}
+		}
+	}
+
+	public static Model GetModel(string modelKey) {
+		return models[modelKey];
+	}
+
+	public static void Initialize() {
+		LoadMiddleModels();
+		ParseMiddleModels();
+	}
+
+	private class MiddleModel {
+		public readonly Dictionary<string, string> textures = [];
+		public readonly List<Element> elements = [];
+
+		public void MergeFrom(MiddleModel other) {
+			foreach (KeyValuePair<string, string> kvp in other.textures) {
+				this.textures[kvp.Key] = kvp.Value;
+			}
+
+			foreach (Element element in other.elements) {
+				Element clonedElement = new Element {
+					from = element.from,
+					to = element.to,
+					faces = []
+				};
+
+				foreach (KeyValuePair<string, Element.Face> faceKvp in element.faces) {
+					clonedElement.faces[faceKvp.Key] = new Element.Face {
+						uv = faceKvp.Value.uv == null ? null : (float[])faceKvp.Value.uv.Clone(),
+						texture = faceKvp.Value.texture,
+						cullface = faceKvp.Value.cullface
+					};
+				}
+				this.elements.Add(clonedElement);
+			}
+		}
+
+		public struct Element {
+			public Vector3 from;
+			public Vector3 to;
+			public Dictionary<string, Face> faces;
+
+			public struct Face {
+				public float[]? uv;
+				public string texture;
+				public string? cullface;
+			}
+		}
+	}
+}

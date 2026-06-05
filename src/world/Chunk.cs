@@ -1,3 +1,6 @@
+using Moincroft.Definitions;
+using Moincroft.Definitions.Models;
+
 namespace Moincroft.World;
 
 public class Chunk : ChunkData {
@@ -40,7 +43,7 @@ public class Chunk : ChunkData {
 		public uint data;
 	}
 
-	public (List<Vertex>, List<uint>) MeshData() {
+		public (List<Vertex>, List<uint>) MeshData() {
 		List<Vertex> vertices = [];
 		List<uint> indices = [];
 		uint vertexIndex = 0;
@@ -66,97 +69,125 @@ public class Chunk : ChunkData {
 					BlockData data = BlockRegistry.Get(type);
 					if (!data.Visible) continue;
 
-					BlockId bnx = x > 0 ? this.GetBlock(x - 1, y, z) : neighbourNX.GetBlock(15, y, z);
-					BlockId bpx = x < 15 ? this.GetBlock(x + 1, y, z) : neighbourPX.GetBlock(0, y, z);
-					BlockId bny = y > 0 ? this.GetBlock(x, y - 1, z) : neighbourNY.GetBlock(x, 15, z);
-					BlockId bpy = y < 15 ? this.GetBlock(x, y + 1, z) : neighbourPY.GetBlock(x, 0, z);
-					BlockId bnz = z > 0 ? this.GetBlock(x, y, z - 1) : neighbourNZ.GetBlock(x, y, 15);
-					BlockId bpz = z < 15 ? this.GetBlock(x, y, z + 1) : neighbourPZ.GetBlock(x, y, 0);
+					foreach (Model.Quad quad in data.Model.quads) {
+						if (quad.cullFace != Direction.None) {
+							BlockId neighborBlock = quad.cullFace switch {
+								Direction.West  => x > 0 ? this.GetBlock(x - 1, y, z) : neighbourNX.GetBlock(15, y, z),
+								Direction.East  => x < 15 ? this.GetBlock(x + 1, y, z) : neighbourPX.GetBlock(0, y, z),
+								Direction.Down  => y > 0 ? this.GetBlock(x, y - 1, z) : neighbourNY.GetBlock(x, 15, z),
+								Direction.Up    => y < 15 ? this.GetBlock(x, y + 1, z) : neighbourPY.GetBlock(x, 0, z),
+								Direction.North => z > 0 ? this.GetBlock(x, y, z - 1) : neighbourNZ.GetBlock(x, y, 15),
+								Direction.South => z < 15 ? this.GetBlock(x, y, z + 1) : neighbourPZ.GetBlock(x, y, 0),
+								_ => 0
+							};
 
-					byte ao0, ao1, ao2, ao3;
-
-					if (bnz == 0) {
-						(ao0, ao1, ao2, ao3) = this.GetAO(x, y, z, 5);
-						if (ao0 + ao3 < ao1 + ao2) {
-							indices.AddRange([ vertexIndex + 2, vertexIndex + 1, vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
-						} else {
-							indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
+							if (neighborBlock != 0 && BlockRegistry.Get(neighborBlock).Opaque) {
+								continue;
+							}
 						}
-						byte light = (byte) ((z > 0 ? this.GetBlockLight(x, y, z - 1) : neighbourNZ.GetBlockLight(x, y, 15)) << 4);
-						AddVertex(x + 0, y + 0, z + 0, data.Nz.X + data.Nz.W, data.Nz.Y + data.Nz.H, (byte) (ao0 | light));
-						AddVertex(x + 1, y + 0, z + 0, data.Nz.X, data.Nz.Y + data.Nz.H, (byte) (ao1 | light));
-						AddVertex(x + 0, y + 1, z + 0, data.Nz.X + data.Nz.W, data.Nz.Y, (byte) (ao2 | light));
-						AddVertex(x + 1, y + 1, z + 0, data.Nz.X, data.Nz.Y, (byte) (ao3 | light));
-					}
 
-					if (bpz == 0) {
-						(ao1, ao0, ao3, ao2) = this.GetAO(x, y, z, 4);
-						if (ao0 + ao3 < ao1 + ao2) {
-							indices.AddRange([ vertexIndex + 2, vertexIndex + 1, vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
-						} else {
-							indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
-						}
-						byte light = (byte) ((z < 15 ? this.GetBlockLight(x, y, z + 1) : neighbourPZ.GetBlockLight(x, y, 0)) << 4);
-						AddVertex(x + 1, y + 0, z + 1, data.Pz.X + data.Pz.W, data.Pz.Y + data.Pz.H, (byte) (ao0 | light));
-						AddVertex(x + 0, y + 0, z + 1, data.Pz.X, data.Pz.Y + data.Pz.H, (byte) (ao1 | light));
-						AddVertex(x + 1, y + 1, z + 1, data.Pz.X + data.Pz.W, data.Pz.Y, (byte) (ao2 | light));
-						AddVertex(x + 0, y + 1, z + 1, data.Pz.X, data.Pz.Y, (byte) (ao3 | light));
-					}
+						byte aoDirIndex = quad.direction switch {
+							Direction.East  => 0, Direction.West  => 1,
+							Direction.Up    => 2, Direction.Down  => 3,
+							Direction.South => 4, Direction.North => 5,
+							_ => 2
+						};
+						
+						byte lightValue = quad.direction switch {
+							Direction.West  => (byte) (x > 0 ? this.GetBlockLight(x - 1, y, z) : neighbourNX.GetBlockLight(15, y, z)),
+							Direction.East  => (byte) (x < 15 ? this.GetBlockLight(x + 1, y, z) : neighbourPX.GetBlockLight(0, y, z)),
+							Direction.Down  => (byte) (y > 0 ? this.GetBlockLight(x, y - 1, z) : neighbourNY.GetBlockLight(x, 15, z)),
+							Direction.Up    => (byte) (y < 15 ? this.GetBlockLight(x, y + 1, z) : neighbourPY.GetBlockLight(x, 0, z)),
+							Direction.North => (byte) (z > 0 ? this.GetBlockLight(x, y, z - 1) : neighbourNZ.GetBlockLight(x, y, 15)),
+							Direction.South => (byte) (z < 15 ? this.GetBlockLight(x, y, z + 1) : neighbourPZ.GetBlockLight(x, y, 0)),
+							_ => (byte) this.GetBlockLight(x, y, z)
+						};
+						byte PackedLight = (byte)(lightValue << 4);
 
-					if (bny == 0) {
-						(ao3, ao1, ao2, ao0) = this.GetAO(x, y, z, 3);
-						if (ao0 + ao3 < ao1 + ao2) {
-							indices.AddRange([ vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 2, vertexIndex + 1, vertexIndex + 3 ]);
-						} else {
-							indices.AddRange([ vertexIndex + 0, vertexIndex + 3, vertexIndex + 2, vertexIndex + 0, vertexIndex + 1, vertexIndex + 3 ]);
-						}
-						byte light = (byte) ((y > 0 ? this.GetBlockLight(x, y - 1, z) : neighbourNY.GetBlockLight(x, 15, z)) << 4);
-						AddVertex(x + 0, y + 0, z + 0, data.Ny.X, data.Ny.Y, (byte) (ao0 | light));
-						AddVertex(x + 1, y + 0, z + 0, data.Ny.X + data.Ny.W, data.Ny.Y, (byte) (ao1 | light));
-						AddVertex(x + 0, y + 0, z + 1, data.Ny.X, data.Ny.Y + data.Ny.H, (byte) (ao2 | light));
-						AddVertex(x + 1, y + 0, z + 1, data.Ny.X + data.Ny.W, data.Ny.Y + data.Ny.H, (byte) (ao3 | light));
-					}
+						byte ao0, ao1, ao2, ao3;
+						float xmin = x + (quad.from.x / 16f); float xmax = x + (quad.to.x / 16f);
+						float ymin = y + (quad.from.y / 16f); float ymax = y + (quad.to.y / 16f);
+						float zmin = z + (quad.from.z / 16f); float zmax = z + (quad.to.z / 16f);
 
-					if (bpy == 0) {
-						(ao2, ao0, ao3, ao1) = this.GetAO(x, y, z, 2);
-						if (ao0 + ao3 < ao1 + ao2) {
-							indices.AddRange([ vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 2, vertexIndex + 1, vertexIndex + 3 ]);
-						} else {
-							indices.AddRange([ vertexIndex + 0, vertexIndex + 3, vertexIndex + 2, vertexIndex + 0, vertexIndex + 1, vertexIndex + 3 ]);
-						}
-						byte light = (byte) ((y < 15 ? this.GetBlockLight(x, y + 1, z) : neighbourPY.GetBlockLight(x, 0, z)) << 4);
-						AddVertex(x + 1, y + 1, z + 0, data.Py.X, data.Py.Y + data.Py.H, (byte) (ao0 | light));
-						AddVertex(x + 0, y + 1, z + 0, data.Py.X + data.Py.W, data.Py.Y + data.Py.H, (byte) (ao1 | light));
-						AddVertex(x + 1, y + 1, z + 1, data.Py.X, data.Py.Y, (byte) (ao2 | light));
-						AddVertex(x + 0, y + 1, z + 1, data.Py.X + data.Py.W, data.Py.Y, (byte) (ao3 | light));
-					}
+						switch (quad.direction) {
+							case Direction.NZ:
+								(ao0, ao1, ao2, ao3) = this.GetAO(x, y, z, 5);
+								if (ao0 + ao3 < ao1 + ao2) {
+									indices.AddRange([ vertexIndex + 2, vertexIndex + 1, vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+								} else {
+									indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
+								}
+								AddVertex(xmin, ymin, zmin, quad.u1, quad.v1, (byte) (ao0 | PackedLight));
+								AddVertex(xmax, ymin, zmin, quad.u0, quad.v1, (byte) (ao1 | PackedLight));
+								AddVertex(xmin, ymax, zmin, quad.u1, quad.v0, (byte) (ao2 | PackedLight));
+								AddVertex(xmax, ymax, zmin, quad.u0, quad.v0, (byte) (ao3 | PackedLight));
+								break;
 
-					if (bnx == 0) {
-						(ao0, ao2, ao1, ao3) = this.GetAO(x, y, z, 1);
-						if (ao0 + ao3 < ao1 + ao2) {
-							indices.AddRange([ vertexIndex + 2, vertexIndex + 1, vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
-						} else {
-							indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
-						}
-						byte light = (byte) ((x > 0 ? this.GetBlockLight(x - 1, y, z) : neighbourNX.GetBlockLight(15, y, z)) << 4);
-						AddVertex(x + 0, y + 0, z + 0, data.Nx.X, data.Nx.Y + data.Nx.H, (byte) (ao0 | light));
-						AddVertex(x + 0, y + 1, z + 0, data.Nx.X, data.Nx.Y, (byte) (ao1 | light));
-						AddVertex(x + 0, y + 0, z + 1, data.Nx.X + data.Nx.W, data.Nx.Y + data.Nx.H, (byte) (ao2 | light));
-						AddVertex(x + 0, y + 1, z + 1, data.Nx.X + data.Nx.W, data.Nx.Y, (byte) (ao3 | light));
-					}
+							case Direction.PZ:
+								(ao1, ao0, ao3, ao2) = this.GetAO(x, y, z, 4);
+								if (ao0 + ao3 < ao1 + ao2) {
+									indices.AddRange([ vertexIndex + 2, vertexIndex + 1, vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+								} else {
+									indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
+								}
+								AddVertex(xmax, ymin, zmax, quad.u1, quad.v1, (byte) (ao0 | PackedLight));
+								AddVertex(xmin, ymin, zmax, quad.u0, quad.v1, (byte) (ao1 | PackedLight));
+								AddVertex(xmax, ymax, zmax, quad.u1, quad.v0, (byte) (ao2 | PackedLight));
+								AddVertex(xmin, ymax, zmax, quad.u0, quad.v0, (byte) (ao3 | PackedLight));
+								break;
 
-					if (bpx == 0) {
-						(ao1, ao3, ao0, ao2) = this.GetAO(x, y, z, 0);
-						if (ao0 + ao3 < ao1 + ao2) {
-							indices.AddRange([ vertexIndex + 2, vertexIndex + 1, vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
-						} else {
-							indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
+							case Direction.NY:
+								(ao3, ao1, ao2, ao0) = this.GetAO(x, y, z, 3);
+								if (ao0 + ao3 < ao1 + ao2) {
+									indices.AddRange([ vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 2, vertexIndex + 1, vertexIndex + 3 ]);
+								} else {
+									indices.AddRange([ vertexIndex + 0, vertexIndex + 3, vertexIndex + 2, vertexIndex + 0, vertexIndex + 1, vertexIndex + 3 ]);
+								}
+								AddVertex(xmin, ymin, zmin, quad.u0, quad.v0, (byte) (ao0 | PackedLight));
+								AddVertex(xmax, ymin, zmin, quad.u1, quad.v0, (byte) (ao1 | PackedLight));
+								AddVertex(xmin, ymin, zmax, quad.u0, quad.v1, (byte) (ao2 | PackedLight));
+								AddVertex(xmax, ymin, zmax, quad.u1, quad.v1, (byte) (ao3 | PackedLight));
+								break;
+
+							case Direction.PY:
+								(ao2, ao0, ao3, ao1) = this.GetAO(x, y, z, 2);
+								if (ao0 + ao3 < ao1 + ao2) {
+									indices.AddRange([ vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 2, vertexIndex + 1, vertexIndex + 3 ]);
+								} else {
+									indices.AddRange([ vertexIndex + 0, vertexIndex + 3, vertexIndex + 2, vertexIndex + 0, vertexIndex + 1, vertexIndex + 3 ]);
+								}
+								AddVertex(xmax, ymax, zmin, quad.u1, quad.v0, (byte) (ao0 | PackedLight));
+								AddVertex(xmin, ymax, zmin, quad.u0, quad.v0, (byte) (ao1 | PackedLight));
+								AddVertex(xmax, ymax, zmax, quad.u1, quad.v1, (byte) (ao2 | PackedLight));
+								AddVertex(xmin, ymax, zmax, quad.u0, quad.v1, (byte) (ao3 | PackedLight));
+								break;
+
+							case Direction.NX:
+								(ao0, ao2, ao1, ao3) = this.GetAO(x, y, z, 1);
+								if (ao0 + ao3 < ao1 + ao2) {
+									indices.AddRange([ vertexIndex + 2, vertexIndex + 1, vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+								} else {
+									indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
+								}
+								AddVertex(xmin, ymin, zmin, quad.u0, quad.v1, (byte) (ao0 | PackedLight));
+								AddVertex(xmin, ymax, zmin, quad.u0, quad.v0, (byte) (ao1 | PackedLight));
+								AddVertex(xmin, ymin, zmax, quad.u1, quad.v1, (byte) (ao2 | PackedLight));
+								AddVertex(xmin, ymax, zmax, quad.u1, quad.v0, (byte) (ao3 | PackedLight));
+								break;
+
+							case Direction.PX:
+								(ao1, ao3, ao0, ao2) = this.GetAO(x, y, z, 0);
+								if (ao0 + ao3 < ao1 + ao2) {
+									indices.AddRange([ vertexIndex + 2, vertexIndex + 1, vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
+								} else {
+									indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
+								}
+								AddVertex(xmax, ymax, zmin, quad.u1, quad.v0, (byte) (ao0 | PackedLight));
+								AddVertex(xmax, ymin, zmin, quad.u1, quad.v1, (byte) (ao1 | PackedLight));
+								AddVertex(xmax, ymax, zmax, quad.u0, quad.v0, (byte) (ao2 | PackedLight));
+								AddVertex(xmax, ymin, zmax, quad.u0, quad.v1, (byte) (ao3 | PackedLight));
+								break;
 						}
-						byte light = (byte) ((x < 15 ? this.GetBlockLight(x + 1, y, z) : neighbourPX.GetBlockLight(0, y, z)) << 4);
-						AddVertex(x + 1, y + 1, z + 0, data.Px.X, data.Px.Y, (byte) (ao0 | light));
-						AddVertex(x + 1, y + 0, z + 0, data.Px.X, data.Px.Y + data.Px.H, (byte) (ao1 | light));
-						AddVertex(x + 1, y + 1, z + 1, data.Px.X + data.Px.W, data.Px.Y, (byte) (ao2 | light));
-						AddVertex(x + 1, y + 0, z + 1, data.Px.X + data.Px.W, data.Px.Y + data.Px.H, (byte) (ao3 | light));
 					}
 				}
 			}

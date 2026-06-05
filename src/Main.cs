@@ -1,3 +1,4 @@
+using Moincroft.Definitions;
 using Moincroft.Definitions.Models;
 using Silk.NET.Input;
 
@@ -26,9 +27,10 @@ public static class Main {
 		Preload.Initialize();
 		Atlas.Initialize();
 		ModelLoader.Initialize();
+		BlockStateLoader.Initialize();
 		Blocks.Initialize();
 
-		SelectedBlock = new BlockType(Blocks.SLIME_BLOCK, 0);
+		SelectedBlock = new BlockType(Blocks.DAYLIGHT_DETECTOR, 0);
 		// Entities.Initialize();
 
 		input = Program.window.CreateInput();

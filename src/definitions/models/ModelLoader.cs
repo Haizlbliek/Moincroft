@@ -8,9 +8,10 @@ public static class ModelLoader {
 	private static readonly string modelsDir = Path.Combine("assets", "generated", "models");
 
 	private static MiddleModel GetMiddleModel(string modelName) {
-		modelName = modelName.RemoveStart("minecraft:").ToString();
+		string modelKey = modelName.StartsWith("minecraft:") ? modelName : $"minecraft:{modelName}";
+		modelName = modelName.RemoveStart("minecraft:");
 
-		if (middleModels.TryGetValue(modelName, out MiddleModel? existingModel))
+		if (middleModels.TryGetValue(modelKey, out MiddleModel? existingModel))
 			return existingModel;
 
 		string filePath = Path.Combine(modelsDir, modelName + ".json");
@@ -84,7 +85,7 @@ public static class ModelLoader {
 			}
 		}
 
-		middleModels[modelName] = newModel;
+		middleModels[modelKey] = newModel;
 		return newModel;
 	}
 

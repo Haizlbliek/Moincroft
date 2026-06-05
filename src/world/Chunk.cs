@@ -66,10 +66,10 @@ public class Chunk : ChunkData {
 					BlockType type = this.GetBlock(x, y, z);
 					if (type.Type == 0) continue;
 
-					BlockData data = BlockRegistry.Get(type.Type);
-					if (!data.Visible) continue;
+					Block block = BlockRegistry.GetBlock(type.Type);
+					if (!block.data.Visible) continue;
 
-					foreach (Model.Quad quad in data.Model.quads) {
+					foreach (Model.Quad quad in block.data.BlockStateData.GetModel(type).model.quads) {
 						if (quad.cullFace != Direction.None) {
 							BlockType neighborBlock = quad.cullFace switch {
 								Direction.West  => x > 0 ? this.GetBlock(x - 1, y, z) : neighbourNX.GetBlock(15, y, z),
@@ -81,7 +81,7 @@ public class Chunk : ChunkData {
 								_ => default
 							};
 
-							if (neighborBlock.Type != 0 && BlockRegistry.Get(neighborBlock.Type).Opaque) {
+							if (neighborBlock.Type != 0 && BlockRegistry.GetBlock(neighborBlock.Type).data.Opaque) {
 								continue;
 							}
 						}

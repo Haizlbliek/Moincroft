@@ -77,12 +77,12 @@ public static class BlockRegistry {
 
 public static class Blocks {
 	public static readonly BlockId AIR = BlockRegistry.Register("air", d => new Block(d), Properties.Of().Air(), forcedId: 0);
-	// public static readonly BlockId COBBLESTONE = BlockRegistry.Register("cobblestone", d => new Block(d), Properties.Of());
+	public static readonly BlockId COBBLESTONE = BlockRegistry.Register("cobblestone", d => new Block(d), Properties.Of());
 	public static readonly BlockId STONE = BlockRegistry.Register("stone", d => new Block(d), Properties.Of());
-	// public static readonly BlockId DIRT = BlockRegistry.Register("dirt", d => new Block(d), Properties.Of());
-	// public static readonly BlockId REDSTONE_BLOCK = BlockRegistry.Register("redstone_block", d => new Block(d), Properties.Of());
-	// public static readonly BlockId DRAGON_EGG = BlockRegistry.Register("dragon_egg", d => new Block(d), Properties.Of());
-	// public static readonly BlockId SLIME_BLOCK = BlockRegistry.Register("slime_block", d => new Block(d), Properties.Of());
+	public static readonly BlockId DIRT = BlockRegistry.Register("dirt", d => new Block(d), Properties.Of());
+	public static readonly BlockId REDSTONE_BLOCK = BlockRegistry.Register("redstone_block", d => new Block(d), Properties.Of());
+	public static readonly BlockId DRAGON_EGG = BlockRegistry.Register("dragon_egg", d => new Block(d), Properties.Of());
+	public static readonly BlockId SLIME_BLOCK = BlockRegistry.Register("slime_block", d => new Block(d), Properties.Of());
 	public static readonly BlockId DAYLIGHT_DETECTOR = BlockRegistry.Register("daylight_detector", d => new DaylightDetectorBlock(d), Properties.Of());
 
 	public static void Initialize() {}

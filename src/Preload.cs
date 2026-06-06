@@ -19,8 +19,8 @@ public static class Preload {
 		new FaceBasis(new( 0, 0, 1), new(-1, 0, 0), new( 0, 1, 0)), // PZ
 		new FaceBasis(new( 1, 0, 0), new( 0, 0, 1), new( 0, 1, 0)), // PX
 		new FaceBasis(new(-1, 0, 0), new( 0, 0,-1), new( 0, 1, 0)), // NX
-		new FaceBasis(new( 0, 1, 0), new( 1, 0, 0), new( 0, 0, 1)), // PY
-		new FaceBasis(new( 0,-1, 0), new( 1, 0, 0), new( 0, 0,-1)), // NY
+		new FaceBasis(new( 0, 1, 0), new(-1, 0, 0), new( 0, 0,-1)), // PY
+		new FaceBasis(new( 0,-1, 0), new(-1, 0, 0), new( 0, 0, 1)), // NY
 	];
 
 	public static void Initialize() {

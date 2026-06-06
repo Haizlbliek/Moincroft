@@ -102,6 +102,8 @@ public static class Blocks {
 	public static readonly BlockId LEVER = BlockRegistry.Register("lever", d => new LeverBlock(d), Properties.Of().NonOccluding());
 	public static readonly BlockId OBSERVER = BlockRegistry.Register("observer", d => new ObserverBlock(d), Properties.Of());
 	public static readonly BlockId STONE_PRESSURE_PLATE = BlockRegistry.Register("stone_pressure_plate", d => new PressurePlateBlock(d), Properties.Of().NonOccluding());
+	public static readonly BlockId REDSTONE_TORCH = BlockRegistry.Register("redstone_torch", d => new RedstoneTorchBlock(d), Properties.Of().NonOccluding());
+	public static readonly BlockId REDSTONE_WALL_TORCH = BlockRegistry.Register("redstone_wall_torch", d => new RedstoneWallTorchBlock(d), Properties.Of().NonOccluding());
 
 	public static void Initialize() {}
 }

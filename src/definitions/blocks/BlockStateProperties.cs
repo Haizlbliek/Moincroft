@@ -9,10 +9,16 @@ public static class BlockStateProperties {
 	public static readonly EnumProperty<RedstoneSide> WEST_REDSTONE = new("west");
 	public static readonly BooleanProperty LOCKED = new("locked");
 	public static readonly IntegerProperty DELAY = new("delay", 1, 4);
+	public static readonly EnumProperty<ComparatorMode> MODE_COMPARATOR = new("mode");
 
 	public enum RedstoneSide {
 		Up,
 		Side,
 		None,
+	}
+
+	public enum ComparatorMode {
+		Compare,
+		Subtract,
 	}
 }

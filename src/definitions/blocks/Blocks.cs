@@ -107,6 +107,7 @@ public static class Blocks {
 	public static readonly BlockId TARGET = BlockRegistry.Register("target", d => new TargetBlock(d), Properties.Of());
 	public static readonly BlockId REDSTONE_WIRE = BlockRegistry.Register("redstone_wire", d => new RedstoneWireBlock(d), Properties.Of().NonOccluding());
 	public static readonly BlockId REPEATER = BlockRegistry.Register("repeater", d => new RepeaterBlock(d), Properties.Of().NonOccluding());
+	public static readonly BlockId COMPARATOR = BlockRegistry.Register("comparator", d => new ComparatorBlock(d), Properties.Of().NonOccluding());
 
 	public static void Initialize() {}
 }

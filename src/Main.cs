@@ -35,11 +35,11 @@ public static class Main {
 
 		input = Program.window.CreateInput();
 		for (int i = 0; i < input.Keyboards.Count; i++) {
-			var keyboard = input.Keyboards[i];
+			IKeyboard keyboard = input.Keyboards[i];
 			keyboard.KeyDown += KeyDown;
 		}
 		for (int i = 0; i < input.Mice.Count; i++) {
-			var mouse = input.Mice[i];
+			IMouse mouse = input.Mice[i];
 			mouse.Cursor.CursorMode = CursorMode.Disabled;
 			mouse.MouseUp += MouseUp;
 			mouse.MouseMove += MouseMove;

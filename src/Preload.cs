@@ -10,6 +10,15 @@ public static class Preload {
 	public static sbyte[][] FaceNeighboursLUT = null!;
 	public static Direction[,,,] RotationLUT = null!;
 
+	public static readonly FaceBasis[] FaceBasis = [
+		new() { Normal = new( 1, 0, 0), Right = new( 0, 0,-1), Up = new(0,1,0) }, // PX
+		new() { Normal = new(-1, 0, 0), Right = new( 0, 0, 1), Up = new(0,1,0) }, // NX
+		new() { Normal = new( 0, 1, 0), Right = new( 1, 0, 0), Up = new(0,0,-1) }, // PY
+		new() { Normal = new( 0,-1, 0), Right = new( 1, 0, 0), Up = new(0,0, 1) }, // NY
+		new() { Normal = new( 0, 0, 1), Right = new(-1, 0, 0), Up = new(0,1,0) }, // PZ
+		new() { Normal = new( 0, 0,-1), Right = new( 1, 0, 0), Up = new(0,1,0) }, // NZ
+	];
+
 	public static void Initialize() {
 		Basic = Shader.Load("assets/shaders/Basic.vert", "assets/shaders/Basic.frag");
 		Selection = Shader.Load("assets/shaders/Selection.vert", "assets/shaders/Selection.frag");
@@ -31,7 +40,7 @@ public static class Preload {
 	}
 
 	public static (byte, byte, byte, byte)[] PrecomputeAmbientOcclusionLUT() {
-		var table = new (byte, byte, byte, byte)[256];
+		(byte, byte, byte, byte)[] table = new (byte, byte, byte, byte)[256];
 
 		for (int mask = 0; mask < 256; mask++) {
 			bool c0 = (mask & (1 << 0)) != 0;
@@ -54,11 +63,14 @@ public static class Preload {
 	}
 
 	private static byte CalculateVertexAO(bool side1, bool side2, bool corner) {
-		if (side1 && side2) return 0;
+		if (side1 && side2)
+			return 0;
+
 		int s1 = side1 ? 1 : 0;
 		int s2 = side2 ? 1 : 0;
 		int c = corner ? 1 : 0;
-		return (byte)(3 - (s1 + s2 + c));
+
+		return (byte) (3 - (s1 + s2 + c));
 	}
 
 	public static Direction Rotate(Direction direction, int x, int y, int z) {
@@ -110,16 +122,16 @@ public static class Preload {
 	}
 
 	public static Direction[,,,] PrecomputeRotationLUT() {
-		var table = new Direction[6, 4, 4, 4];
+		Direction[,,,] table = new Direction[6, 4, 4, 4];
 
 		for (int d = 0; d < 6; d++) {
-			var v = DirToVec((Direction)d);
+			(int x, int y, int z) v = DirToVec((Direction) d);
 
 			for (int x = 0; x < 4; x++) {
 				for (int y = 0; y < 4; y++) {
 					for (int z = 0; z < 4; z++) {
 
-						var r = v;
+						(int x, int y, int z) r = v;
 
 						r = RotateX(r, x);
 						r = RotateY(r, y);

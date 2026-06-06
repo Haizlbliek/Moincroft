@@ -32,7 +32,7 @@ public class Block {
 		this.data = data;
 		this._propertyStrides = new int[this.Properties.Length];
 
-		var combinations = GenerateCombinations(this.Properties);
+		List<int[]> combinations = GenerateCombinations(this.Properties);
 		this._idToState = new PropertyState[combinations.Count];
 
 		int stride = 1;
@@ -65,7 +65,7 @@ public class Block {
 	}
 
 	private static List<int[]> GenerateCombinations(IProperty[] props) {
-		var result = new List<int[]>();
+		List<int[]> result = [];
 		GenerateRecursive(props, 0, new int[props.Length], result);
 		return result;
 	}

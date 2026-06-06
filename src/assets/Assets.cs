@@ -94,10 +94,10 @@ public static class Assets {
 		int totalHeight = placements.Max(p => p.y + p.h);
 
 		byte[] atlasData = new byte[totalWidth * totalHeight * 4];
-		var txtData = new StringBuilder();
+		StringBuilder txtData = new StringBuilder();
 
-		foreach (var (name, path, x, y, width, height) in placements) {
-			using var stream = File.OpenRead(path);
+		foreach ((string? name, string? path, int x, int y, int width, int height) in placements) {
+			using FileStream stream = File.OpenRead(path);
 			ImageResult image = ImageResult.FromStream(stream, StbImageSharp.ColorComponents.RedGreenBlueAlpha);
 
 			for (int row = 0; row < height; row++) {
@@ -109,8 +109,8 @@ public static class Assets {
 			txtData.AppendLine($"{name} {x} {y} {width} {height}");
 		}
 
-		using (var stream = File.Create(outputPath + ".png")) {
-			var writer = new ImageWriter();
+		using (FileStream stream = File.Create(outputPath + ".png")) {
+			ImageWriter writer = new ImageWriter();
 			writer.WritePng(atlasData, totalWidth, totalHeight, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream);
 		}
 

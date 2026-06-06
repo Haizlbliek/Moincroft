@@ -9,10 +9,9 @@ public class Model {
 		public Vector2 uv0, uv1, uv2, uv3;
 		public Direction direction;
 		public Direction cullFace;
+		public int tintIndex;
 
 		// LATER: shade
 		// LATER: lightEmission
-		// LATER REVIEW: tintIndex
-		// NOTE: tintIndex is required for quad to be tinted.
 	}
 }

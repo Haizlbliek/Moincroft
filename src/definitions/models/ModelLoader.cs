@@ -103,10 +103,11 @@ public static class ModelLoader {
 
 						JsonObject faceObj = faceProperty.Value.AsObject();
 
-						MiddleModel.Element.Face face = new MiddleModel.Element.Face {
+						MiddleModel.Element.Face face = new MiddleModel.Element.Face() {
 							texture = faceObj.TryGetPropertyValue("texture", out JsonNode? texNode) ? texNode!.ToString() : "",
 							cullface = faceObj.TryGetPropertyValue("cullface", out JsonNode? cullNode) ? cullNode!.ToString() : null,
 							rotation = faceObj.TryGetPropertyValue("rotation", out JsonNode? faceRotationNode) ? ((int) faceRotationNode! / 90) : 0,
+							tintIndex = faceObj.TryGetPropertyValue("tintindex", out JsonNode? tintIndexNode) ? ((int) tintIndexNode!) : -1,
 						};
 
 						if (faceObj.TryGetPropertyValue("uv", out JsonNode? uvNode) && uvNode != null) {
@@ -184,9 +185,10 @@ public static class ModelLoader {
 
 			foreach (MiddleModel.Element element in middleModel.elements) {
 				foreach (KeyValuePair<string, MiddleModel.Element.Face> face in element.faces) {
-					Model.Quad quad = new Model.Quad {
+					Model.Quad quad = new Model.Quad() {
 						direction = DirectionFromFace(face.Key),
 						cullFace = face.Value.cullface == null ? Direction.None : DirectionFromFace(face.Value.cullface),
+						tintIndex = face.Value.tintIndex,
 					};
 
 					FaceBasis faceBasis = Preload.FaceBases[(int) quad.direction];
@@ -365,7 +367,7 @@ public static class ModelLoader {
 				public string texture;
 				public string? cullface;
 				public int rotation;
-				// LATER REVIEW: tintIndex
+				public int tintIndex;
 			}
 		}
 	}

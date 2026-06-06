@@ -203,8 +203,6 @@ public class Chunk : ChunkData {
 					if (!block.data.Visible) continue;
 					if (block.data.RenderLayer != renderLayer) continue;
 
-					int color = BlockColors.GetColor(type, 0);
-
 					BlockStateItem[] models = block.data.BlockStateData.GetModels(type, pos);
 
 					foreach (BlockStateItem model in models)
@@ -264,6 +262,7 @@ public class Chunk : ChunkData {
 						Vector3 v2 = RotateModelPos(quad.v2, model.rotationX, model.rotationY, model.rotationZ) + modelPos;
 						Vector3 v3 = RotateModelPos(quad.v3, model.rotationX, model.rotationY, model.rotationZ) + modelPos;
 
+						int color = quad.tintIndex == -1 ? -1 : BlockColors.GetColor(type, quad.tintIndex);
 						AddVertex(v0, quad.uv0, (byte) (ao0 | PackedLight), color);
 						AddVertex(v1, quad.uv1, (byte) (ao1 | PackedLight), color);
 						AddVertex(v2, quad.uv2, (byte) (ao2 | PackedLight), color);

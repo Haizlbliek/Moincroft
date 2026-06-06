@@ -61,4 +61,5 @@ public static class Custom {
 	}
 
 	public static string RemoveStart(this string self, string other) => self.StartsWith(other) ? self[other.Length..] : self;
+	public static string RemoveStart(this string self, char other) => self[0] == other ? self[1..] : self;
 }

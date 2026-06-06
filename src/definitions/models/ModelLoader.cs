@@ -144,8 +144,6 @@ public static class ModelLoader {
 
 	private static void ParseMiddleModels() {
 		foreach (KeyValuePair<string, MiddleModel> pair in middleModels) {
-			Console.WriteLine($"Parsing: {pair.Key}");
-
 			string modelKey = pair.Key;
 			MiddleModel middleModel = pair.Value;
 
@@ -164,15 +162,9 @@ public static class ModelLoader {
 						rotationRescale = element.rotationRescale,
 						faceRotation = face.Value.rotation,
 					};
-					string texturePath = face.Value.texture;
-					while (texturePath.StartsWith('#')) {
-						string varName = texturePath[1..];
-						if (middleModel.textures.TryGetValue(varName, out string? resolved)) {
-							texturePath = resolved;
-						}
-						else {
-							break;
-						}
+					string texturePath = face.Value.texture.RemoveStart('#');
+					while (middleModel.textures.TryGetValue(texturePath, out string? resolved)) {
+						texturePath = resolved.RemoveStart('#');
 					}
 					texturePath = texturePath.RemoveStart("minecraft:").RemoveStart("block/");
 
@@ -181,9 +173,8 @@ public static class ModelLoader {
 						faceUv = Atlas.GetFace(texturePath);
 					}
 					catch (Exception) {
-						if (!texturePath.StartsWith('#')) {
-							Console.WriteLine($"WARNING: Missing texture: {texturePath}");
-						}
+						Console.WriteLine($"Parsing: {pair.Key}");
+						Console.WriteLine($"WARNING: Missing texture: {texturePath}");
 						skip = true;
 						break;
 					}
@@ -211,10 +202,7 @@ public static class ModelLoader {
 					break;
 			}
 
-			if (skip) {
-				Console.WriteLine("- skipped");
-			}
-			else {
+			if (!skip) {
 				models.Add(modelKey, new Model() { quads = [..quads] });
 			}
 		}

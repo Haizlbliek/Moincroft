@@ -118,14 +118,35 @@ public static class Assets {
 	}
 
 	public static void BuildTextureAtlas() {
-		string texturesDir = "./tmp/assets/minecraft/textures/";
+		string rootAssetDir = "./tmp/assets/minecraft/";
+		string texturesDir = Path.Combine(rootAssetDir, "textures");
 		if (Directory.Exists("assets/generated")) Directory.Delete("assets/generated", true);
 		Directory.CreateDirectory("assets/generated");
 
-		string[] blocks = Directory.GetFiles(texturesDir + "block/", "*.png");
-		string[] items = Directory.GetFiles(texturesDir + "item/", "*.png");
+		string[] blocks = Directory.GetFiles(Path.Combine(texturesDir, "block"), "*.png");
+		string[] items = Directory.GetFiles(Path.Combine(texturesDir, "item"), "*.png");
 
 		Pack(blocks, "assets/generated/blocks");
 		Pack(items, "assets/generated/items");
+
+		string blockstatesSourceDir = Path.Combine(rootAssetDir, "blockstates/");
+		string blockstatesDestDir = "assets/generated/blockstates/";
+		CopyJsonFolder(blockstatesSourceDir, blockstatesDestDir);
+
+		string blockModelsSourceDir = Path.Combine(rootAssetDir, "models/block/");
+		string blockModelsDestDir = "assets/generated/models/block/";
+		CopyJsonFolder(blockModelsSourceDir, blockModelsDestDir);
+	}
+
+	private static void CopyJsonFolder(string sourceDir, string destDir) {
+		if (!Directory.Exists(sourceDir)) return;
+		Directory.CreateDirectory(destDir);
+
+		string[] files = Directory.GetFiles(sourceDir, "*.json");
+		foreach (string file in files) {
+			string fileName = Path.GetFileName(file);
+			string destFile = Path.Combine(destDir, fileName);
+			File.Copy(file, destFile, true);
+		}
 	}
 }

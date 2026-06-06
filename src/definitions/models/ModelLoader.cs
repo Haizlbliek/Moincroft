@@ -198,12 +198,40 @@ public static class ModelLoader {
 
 					Vector3 front = center + size * (Vector3) faceBasis.Front;
 					Vector3 rotationOrigin = element.rotationOrigin;
-					// TODO: element.rotationRescale
+					Vector3 localScale = Vector3.One;
 
-					quad.v0 = Rotate(front + size * (Vector3) (-faceBasis.Right + faceBasis.Up) - rotationOrigin, element.rotation) + rotationOrigin;
-					quad.v1 = Rotate(front + size * (Vector3) (faceBasis.Right + faceBasis.Up) - rotationOrigin, element.rotation) + rotationOrigin;
-					quad.v2 = Rotate(front + size * (Vector3) (-faceBasis.Right - faceBasis.Up) - rotationOrigin, element.rotation) + rotationOrigin;
-					quad.v3 = Rotate(front + size * (Vector3) (faceBasis.Right - faceBasis.Up) - rotationOrigin, element.rotation) + rotationOrigin;
+					if (element.rotationRescale) {
+						float angleRadX = element.rotation.x * Mathf.Deg2Rad;
+						float cosX = Mathf.Cos(angleRadX);
+						float scaleFactorX = Mathf.Abs(cosX) < 0.0001f ? 1f : 1f / cosX;
+
+						float angleRadY = element.rotation.y * Mathf.Deg2Rad;
+						float cosY = Mathf.Cos(angleRadY);
+						float scaleFactorY = Mathf.Abs(cosY) < 0.0001f ? 1f : 1f / cosY;
+
+						float angleRadZ = element.rotation.z * Mathf.Deg2Rad;
+						float cosZ = Mathf.Cos(angleRadZ);
+						float scaleFactorZ = Mathf.Abs(cosZ) < 0.0001f ? 1f : 1f / cosZ;
+
+						localScale.y *= scaleFactorX; localScale.z *= scaleFactorX;
+						localScale.x *= scaleFactorY; localScale.z *= scaleFactorY;
+						localScale.x *= scaleFactorZ; localScale.y *= scaleFactorZ;
+					}
+
+					Vector3 v0Local = front + size * (Vector3) (-faceBasis.Right + faceBasis.Up) - rotationOrigin;
+					Vector3 v1Local = front + size * (Vector3) (faceBasis.Right + faceBasis.Up) - rotationOrigin;
+					Vector3 v2Local = front + size * (Vector3) (-faceBasis.Right - faceBasis.Up) - rotationOrigin;
+					Vector3 v3Local = front + size * (Vector3) (faceBasis.Right - faceBasis.Up) - rotationOrigin;
+
+					v0Local *= localScale;
+					v1Local *= localScale;
+					v2Local *= localScale;
+					v3Local *= localScale;
+
+					quad.v0 = Rotate(v0Local, element.rotation) + rotationOrigin;
+					quad.v1 = Rotate(v1Local, element.rotation) + rotationOrigin;
+					quad.v2 = Rotate(v2Local, element.rotation) + rotationOrigin;
+					quad.v3 = Rotate(v3Local, element.rotation) + rotationOrigin;
 
 					string texturePath = face.Value.texture.RemoveStart('#');
 					while (middleModel.textures.TryGetValue(texturePath, out string? resolved)) {

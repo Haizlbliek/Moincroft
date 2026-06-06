@@ -6,6 +6,7 @@ public static class Mathf {
 	public const float PI = 3.14159265359f;
 	public const float TAU = PI * 2f;
 	public const float PI_2 = PI / 2f;
+	public const float Deg2Rad = PI / 180f;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static float Clamp(float value, float min, float max) {

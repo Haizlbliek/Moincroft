@@ -105,7 +105,7 @@ public class ChunkData {
 					ref byte currentLight = ref Unsafe.Add(ref lightBase, i);
 					BlockType currentBlock = this.blocks.Get(pos);
 
-					if (currentBlock.Type != 0) {
+					if (this.IsVisiblySolid(currentBlock)) {
 						lightLevel = 0;
 					}
 

@@ -218,8 +218,9 @@ public class Chunk : ChunkData {
 					if (!block.data.Visible) continue;
 					if (block.data.RenderLayer != renderLayer) continue;
 
-					BlockStateItem model = block.data.BlockStateData.GetModel(type, pos);
+					BlockStateItem[] models = block.data.BlockStateData.GetModels(type, pos);
 
+					foreach (BlockStateItem model in models)
 					foreach (Model.Quad quad in model.model.quads) {
 						Direction rotatedDirection = Preload.Rotate(quad.direction, model.rotationX, model.rotationY, model.rotationZ);
 						Direction rotatedCullFace = quad.cullFace == Direction.None ? Direction.None : Preload.Rotate(quad.cullFace, model.rotationX, model.rotationY, model.rotationZ);

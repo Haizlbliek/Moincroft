@@ -13,11 +13,18 @@ public class PropertyState {
 		this.PropertyKey = key;
 	}
 
+	public object Get(Property property) {
+		int propIndex = Array.IndexOf(this._properties, property);
+		int valIndex = this._valueIndices[propIndex];
+		return property.GetValueAt(valIndex);
+	}
+
 	public T Get<T>(Property<T> property) where T : notnull {
 		int propIndex = Array.IndexOf(this._properties, property);
 		int valIndex = this._valueIndices[propIndex];
 		return (T) property.GetValueAt(valIndex);
 	}
+
 	public int GetIndex(Property property) {
 		int propIndex = Array.IndexOf(this._properties, property);
 		return this._valueIndices[propIndex];

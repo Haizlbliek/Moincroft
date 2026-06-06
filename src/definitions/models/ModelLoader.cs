@@ -29,7 +29,12 @@ public static class ModelLoader {
 		if (currentJson.TryGetPropertyValue("textures", out JsonNode? texturesNode) && texturesNode != null) {
 			foreach (KeyValuePair<string, JsonNode?> property in texturesNode.AsObject()) {
 				if (property.Value != null) {
-					newModel.textures[property.Key] = property.Value.ToString();
+					if (property.Value is JsonObject obj) {
+						newModel.textures[property.Key] = obj["sprite"]!.GetValue<string>();
+					}
+					else {
+						newModel.textures[property.Key] = property.Value.ToString();
+					}
 				}
 			}
 		}

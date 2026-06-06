@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Moincroft.Definitions.Models;
+using Silk.NET.SDL;
 
 namespace Moincroft.Definitions;
 
@@ -40,40 +41,111 @@ public static class BlockStateLoader {
 		return item;
 	}
 
+	private static BlockStateItem[] ParseBlockStateItems(JsonNode node) {
+		BlockStateItem[] items;
+
+		if (node is JsonArray arrayNode) {
+			items = arrayNode
+				.Select(LoadItem)
+				.Where(item => item != null)
+				.ToArray()!;
+		} else {
+			BlockStateItem? singleItem = LoadItem(node);
+			items = singleItem != null ? [singleItem] : [];
+		}
+
+		return items;
+	}
+
+	private static VariantBlockStateData ParseVariants(JsonObject obj) {
+		VariantBlockStateData variant = new VariantBlockStateData();
+
+		foreach (KeyValuePair<string, JsonNode?> property in obj) {
+			string variantKey = property.Key;
+			JsonNode? valueNode = property.Value;
+
+			if (valueNode == null) continue;
+
+			BlockStateItem[] items = ParseBlockStateItems(valueNode);
+			if (string.IsNullOrWhiteSpace(variantKey)) {
+				variant.DefaultVariant = items;
+			}
+			else {
+				variant.Variants[new PropertyStateKey(variantKey)] = items;
+			}
+		}
+
+		return variant;
+	}
+
+	private static Dictionary<string, string[]> ParseMultiPartCondition(JsonObject obj) {
+		Dictionary<string, string[]> condition = [];
+
+		foreach (KeyValuePair<string, JsonNode?> item in obj) {
+			condition[item.Key] = item.Value!.GetValue<string>().Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+		}
+
+		return condition;
+	}
+
+	private static MultiPartBlockStateData ParseMultiPart(JsonArray arr) {
+		MultiPartBlockStateData multiPart = new MultiPartBlockStateData();
+
+		foreach (JsonNode? part in arr) {
+			if (part is not JsonObject partObj)
+				continue;
+
+			if (!partObj.TryGetPropertyValue("apply", out JsonNode? applyNode) || applyNode == null) {
+				continue;
+			}
+
+			if (!partObj.TryGetPropertyValue("when", out JsonNode? whenNode) || whenNode is not JsonObject whenObj) {
+				continue;
+			}
+
+			BlockStateItem[] items = ParseBlockStateItems(applyNode);
+			List<Dictionary<string, string[]>> conditions = [];
+			MultiPartBlockStateData.Part.ConditionType conditionType;
+
+			if (whenObj.TryGetPropertyValue("OR", out JsonNode? orNode) && orNode is JsonArray orArr) {
+				conditionType = MultiPartBlockStateData.Part.ConditionType.Or;
+				foreach (JsonNode? conditionNode in orArr) {
+					if (conditionNode is not JsonObject conditionObj)
+						continue;
+
+					conditions.Add(ParseMultiPartCondition(conditionObj));
+				}
+			}
+			else if (whenObj.TryGetPropertyValue("AND", out JsonNode? andNode) && andNode is JsonArray andArr) {
+				conditionType = MultiPartBlockStateData.Part.ConditionType.And;
+				foreach (JsonNode? conditionNode in andArr) {
+					if (conditionNode is not JsonObject conditionObj)
+						continue;
+
+					conditions.Add(ParseMultiPartCondition(conditionObj));
+				}
+			}
+			else {
+				conditionType = MultiPartBlockStateData.Part.ConditionType.And;
+				conditions.Add(ParseMultiPartCondition(whenObj));
+			}
+
+			multiPart.parts.Add(new MultiPartBlockStateData.Part(items, [.. conditions], conditionType));
+		}
+
+		return multiPart;
+	}
+
 	private static BlockStateData LoadBlockState(string path) {
 		JsonObject rootNode = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
 
 		BlockStateData stateData = null!;
 
 		if (rootNode.TryGetPropertyValue("variants", out JsonNode? variantsNode) && variantsNode is JsonObject variantsObj) {
-			VariantBlockStateData variant = new VariantBlockStateData();
-			stateData = variant;
-
-			foreach (KeyValuePair<string, JsonNode?> property in variantsObj) {
-				string variantKey = property.Key;
-				JsonNode? valueNode = property.Value;
-
-				if (valueNode == null) continue;
-
-				BlockStateItem[] items;
-
-				if (valueNode is JsonArray arrayNode) {
-					items = arrayNode
-						.Select(node => LoadItem(node))
-						.Where(item => item != null)
-						.ToArray()!;
-				} else {
-					BlockStateItem? singleItem = LoadItem(valueNode);
-					items = singleItem != null ? [singleItem] : [];
-				}
-
-				if (string.IsNullOrWhiteSpace(variantKey)) {
-					variant.DefaultVariant = items;
-				}
-				else {
-					variant.Variants[new PropertyStateKey(variantKey)] = items;
-				}
-			}
+			stateData = ParseVariants(variantsObj);
+		}
+		else if (rootNode.TryGetPropertyValue("multipart", out JsonNode? multipartNode) && multipartNode is JsonArray multipartArr) {
+			stateData = ParseMultiPart(multipartArr);
 		}
 
 		if (stateData == null) throw new Exception($"Invalid blockstate: {path}");

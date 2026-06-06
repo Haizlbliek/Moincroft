@@ -51,7 +51,7 @@ public readonly struct BlockData {
 
 public static class BlockRegistry {
 	private static Block[] _blocks = new Block[256];
-	private static int Count;
+	public static int Count { get; private set; }
 
 	public static BlockId Register(string id, Func<BlockData, Block> factory, Properties properties, BlockId? forcedId = null) {
 		BlockId index = forcedId == null ? (BlockId)Count++ : forcedId.Value;
@@ -89,6 +89,7 @@ public static class Blocks {
 	public static readonly BlockId DROPPER = BlockRegistry.Register("dropper", d => new DirectionalBlock(d), Properties.Of());
 	public static readonly BlockId STONE_BUTTON = BlockRegistry.Register("stone_button", d => new ButtonBlock(d), Properties.Of());
 	public static readonly BlockId LEVER = BlockRegistry.Register("lever", d => new LeverBlock(d), Properties.Of());
+	public static readonly BlockId OBSERVER = BlockRegistry.Register("observer", d => new ObserverBlock(d), Properties.Of());
 
 	public static void Initialize() {}
 }

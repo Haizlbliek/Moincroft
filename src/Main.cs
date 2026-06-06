@@ -1,6 +1,7 @@
 using Moincroft.Definitions;
 using Moincroft.Definitions.Models;
 using Silk.NET.Input;
+using Silk.NET.SDL;
 
 namespace Moincroft;
 
@@ -20,7 +21,7 @@ public static class Main {
 	public static World.World world = new World.World();
 	public static WorldRayResult rayResult;
 	public static bool rayCollides;
-	public static BlockType SelectedBlock;
+	public static BlockId SelectedBlockId;
 
 	public static void Initialize() {
 		Console.WriteLine("Initializing...");
@@ -30,7 +31,7 @@ public static class Main {
 		BlockStateLoader.Initialize();
 		Blocks.Initialize();
 
-		SelectedBlock = new BlockType(Blocks.LEVER, 0);
+		SelectedBlockId = Blocks.AIR;
 		// Entities.Initialize();
 
 		input = Program.window.CreateInput();
@@ -118,7 +119,7 @@ public static class Main {
 			}
 		}
 		else {
-			chunk.SetBlock(pos, button == MouseButton.Left ? default : SelectedBlock);
+			chunk.SetBlock(pos, button == MouseButton.Left ? default : new BlockType(SelectedBlockId, 0));
 		}
 		if (!chunk.CalculateLight()) {
 			chunk.QueueRefresh();
@@ -182,6 +183,8 @@ public static class Main {
 		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, Config.MaxInteractionDistance, out rayResult);
 	}
 
+	private static bool previousQ = false;
+	private static bool previousE = false;
 	public static void Update() {
 		lastCameraPosition = cameraPosition;
 
@@ -206,13 +209,30 @@ public static class Main {
 		if (keyboard.IsKeyPressed(Key.Space)) {
 			cameraPosition.y += speed;
 		}
+		if (keyboard.IsKeyPressed(Key.Q)) {
+			if (!previousQ)
+				SelectedBlockId = (BlockId) (SelectedBlockId - 1 + BlockRegistry.Count);
+			previousQ = true;
+		}
+		else {
+			previousQ = false;
+		}
+		if (keyboard.IsKeyPressed(Key.E)) {
+			if (!previousE)
+				SelectedBlockId++;
+			previousE = true;
+		}
+		else {
+			previousE = false;
+		}
+		SelectedBlockId = (BlockId) (SelectedBlockId % BlockRegistry.Count);
 		cameraPosition.x += Mathf.Cos(-cameraRotation.y) * movement.x + Mathf.Sin(-cameraRotation.y) * movement.y;
 		cameraPosition.z += -Mathf.Sin(-cameraRotation.y) * movement.x + Mathf.Cos(-cameraRotation.y) * movement.y;
 
 		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, Config.MaxInteractionDistance, out rayResult);
 		BlockType type = world.GetBlock(rayResult.blockPosition.x, rayResult.blockPosition.y, rayResult.blockPosition.z);
 		Block block = BlockRegistry.GetBlock(type.Type);
-		Program.data = $"{block.data.Id} {type.State.PropertyKey}";
+		Program.data = $"{BlockRegistry.GetBlock(SelectedBlockId).data.Id}  -  {block.data.Id} {type.State.PropertyKey}";
 
 		Vector3i offset = world.GetChunkPositionFromBlock((int) cameraPosition.x, (int) cameraPosition.y, (int) cameraPosition.z);
 		for (int x = -Config.RenderDistance; x <= Config.RenderDistance; x++) {

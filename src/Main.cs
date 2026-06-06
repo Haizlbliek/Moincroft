@@ -2,6 +2,7 @@ using Moincroft.Definitions;
 using Moincroft.Definitions.Models;
 using Silk.NET.Input;
 using Silk.NET.SDL;
+using StbImageWriteSharp;
 
 namespace Moincroft;
 
@@ -22,6 +23,7 @@ public static class Main {
 	public static WorldRayResult rayResult;
 	public static bool rayCollides;
 	public static BlockId SelectedBlockId;
+	private static bool takeScreenshot = false;
 
 	public static void Initialize() {
 		Console.WriteLine("Initializing...");
@@ -38,6 +40,7 @@ public static class Main {
 		for (int i = 0; i < input.Keyboards.Count; i++) {
 			IKeyboard keyboard = input.Keyboards[i];
 			keyboard.KeyDown += KeyDown;
+			keyboard.KeyUp += KeyUp;
 		}
 		for (int i = 0; i < input.Mice.Count; i++) {
 			IMouse mouse = input.Mice[i];
@@ -60,9 +63,11 @@ public static class Main {
 	}
 
 	private static void KeyDown(IKeyboard keyboard, Key key, int arg3) {
-		if (key == Key.Escape) {
-			Program.window.Close();
-		}
+		Keys.Press(key);
+	}
+
+	private static void KeyUp(IKeyboard keyboard, Key key, int arg3) {
+		Keys.Release(key);
 	}
 
 	private static void MouseUp(IMouse mouse, MouseButton button) {
@@ -81,12 +86,13 @@ public static class Main {
 
 	private static void MouseDown(IMouse mouse, MouseButton button) {
 		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, Config.MaxInteractionDistance, out rayResult);
-		if (!rayCollides) return;
+		if (!rayCollides)
+			return;
 
 		int x = rayResult.blockPosition.x;
 		int y = rayResult.blockPosition.y;
 		int z = rayResult.blockPosition.z;
-		if (button == MouseButton.Left || button == MouseButton.Middle) {}
+		if (button == MouseButton.Left || button == MouseButton.Middle) { }
 		else if (button == MouseButton.Right) {
 			x += rayResult.normal.x;
 			y += rayResult.normal.y;
@@ -97,7 +103,8 @@ public static class Main {
 		}
 
 		Chunk? chunk = world.GetChunkFromBlock(x, y, z);
-		if (chunk == null) return;
+		if (chunk == null)
+			return;
 		x &= 15;
 		y &= 15;
 		z &= 15;
@@ -123,57 +130,98 @@ public static class Main {
 		}
 		if (!chunk.CalculateLight()) {
 			chunk.QueueRefresh();
-			if (x == 0 ) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz)?.QueueRefresh();
-			if (x == 15) world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz)?.QueueRefresh();
-			if (y == 0 ) world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz)?.QueueRefresh();
-			if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.QueueRefresh();
-			if (z == 0 ) world.GetChunk(chunk.cx, chunk.cy, chunk.cz - 1)?.QueueRefresh();
-			if (z == 15) world.GetChunk(chunk.cx, chunk.cy, chunk.cz + 1)?.QueueRefresh();
+			if (x == 0)
+				world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz)?.QueueRefresh();
+			if (x == 15)
+				world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz)?.QueueRefresh();
+			if (y == 0)
+				world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz)?.QueueRefresh();
+			if (y == 15)
+				world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.QueueRefresh();
+			if (z == 0)
+				world.GetChunk(chunk.cx, chunk.cy, chunk.cz - 1)?.QueueRefresh();
+			if (z == 15)
+				world.GetChunk(chunk.cx, chunk.cy, chunk.cz + 1)?.QueueRefresh();
 
-			if (x == 0 && z == 0) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz - 1)?.QueueRefresh();
-			if (x == 0 && z == 15) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz + 1)?.QueueRefresh();
-			if (x == 15 && z == 0) world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz - 1)?.QueueRefresh();
-			if (x == 15 && z == 15) world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz + 1)?.QueueRefresh();
-			if (x == 0 && y == 0) world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz)?.QueueRefresh();
-			if (x == 0 && y == 15) world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz)?.QueueRefresh();
-			if (x == 15 && y == 0) world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz)?.QueueRefresh();
-			if (x == 15 && y == 15) world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz)?.QueueRefresh();
-			if (y == 0 && z == 0) world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
-			if (y == 0 && z == 15) world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
-			if (y == 15 && z == 0) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
-			if (y == 15 && z == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
-			if (x == 0 && y == 0 && z == 0) world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
-			if (x == 0 && y == 0 && z == 15) world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
-			if (x == 0 && y == 15 && z == 0) world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
-			if (x == 0 && y == 15 && z == 15) world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
-			if (x == 15 && y == 0 && z == 0) world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
-			if (x == 15 && y == 0 && z == 15) world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
-			if (x == 15 && y == 15 && z == 0) world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
-			if (x == 15 && y == 15 && z == 15) world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
-		} else {
-			if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.QueueRefresh();
+			if (x == 0 && z == 0)
+				world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz - 1)?.QueueRefresh();
+			if (x == 0 && z == 15)
+				world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz + 1)?.QueueRefresh();
+			if (x == 15 && z == 0)
+				world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz - 1)?.QueueRefresh();
+			if (x == 15 && z == 15)
+				world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz + 1)?.QueueRefresh();
+			if (x == 0 && y == 0)
+				world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz)?.QueueRefresh();
+			if (x == 0 && y == 15)
+				world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz)?.QueueRefresh();
+			if (x == 15 && y == 0)
+				world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz)?.QueueRefresh();
+			if (x == 15 && y == 15)
+				world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz)?.QueueRefresh();
+			if (y == 0 && z == 0)
+				world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
+			if (y == 0 && z == 15)
+				world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
+			if (y == 15 && z == 0)
+				world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
+			if (y == 15 && z == 15)
+				world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
+			if (x == 0 && y == 0 && z == 0)
+				world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
+			if (x == 0 && y == 0 && z == 15)
+				world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
+			if (x == 0 && y == 15 && z == 0)
+				world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
+			if (x == 0 && y == 15 && z == 15)
+				world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
+			if (x == 15 && y == 0 && z == 0)
+				world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
+			if (x == 15 && y == 0 && z == 15)
+				world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
+			if (x == 15 && y == 15 && z == 0)
+				world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
+			if (x == 15 && y == 15 && z == 15)
+				world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
+		}
+		else {
+			if (y == 15)
+				world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.QueueRefresh();
 
 			Chunk? lightChunk = chunk;
 			while (true) {
 				lightChunk.QueueRefresh();
-				if (x == 0 ) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
-				if (x == 15) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
-				if (z == 0 ) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
-				if (z == 15) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
+				if (x == 0)
+					world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
+				if (x == 15)
+					world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
+				if (z == 0)
+					world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
+				if (z == 15)
+					world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
 
 				lightChunk = world.GetChunk(lightChunk.cx, lightChunk.cy - 1, lightChunk.cz);
-				if (lightChunk == null) break;
+				if (lightChunk == null)
+					break;
 				if (!lightChunk.CalculateLight()) {
 					lightChunk.QueueRefresh();
-					if (x == 0 ) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
-					if (x == 15) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
-					if (z == 0 ) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
-					if (z == 15) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
+					if (x == 0)
+						world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
+					if (x == 15)
+						world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
+					if (z == 0)
+						world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
+					if (z == 15)
+						world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
 
-					if (x == 0 && z == 0) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
-					if (x == 0 && z == 15) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
-					if (x == 15 && z == 0) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
-					if (x == 15 && z == 15) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
+					if (x == 0 && z == 0)
+						world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
+					if (x == 0 && z == 15)
+						world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
+					if (x == 15 && z == 0)
+						world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
+					if (x == 15 && z == 15)
+						world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
 
 					break;
 				}
@@ -183,47 +231,35 @@ public static class Main {
 		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, Config.MaxInteractionDistance, out rayResult);
 	}
 
-	private static bool previousQ = false;
-	private static bool previousE = false;
 	public static void Update() {
 		lastCameraPosition = cameraPosition;
 
-		IKeyboard keyboard = input.Keyboards[0];
 		Vector2 movement = Vector2.Zero;
-		float speed = keyboard.IsKeyPressed(Key.ControlLeft) ? 0.4f : 0.15f;
-		if (keyboard.IsKeyPressed(Key.W)) {
+		float speed = Keys.Pressed(Key.ControlLeft) ? 0.4f : 0.15f;
+		if (Keys.Pressed(Key.W)) {
 			movement.y -= speed;
 		}
-		if (keyboard.IsKeyPressed(Key.S)) {
+		if (Keys.Pressed(Key.S)) {
 			movement.y += speed;
 		}
-		if (keyboard.IsKeyPressed(Key.A)) {
+		if (Keys.Pressed(Key.A)) {
 			movement.x -= speed;
 		}
-		if (keyboard.IsKeyPressed(Key.D)) {
+		if (Keys.Pressed(Key.D)) {
 			movement.x += speed;
 		}
-		if (keyboard.IsKeyPressed(Key.ShiftLeft)) {
+		if (Keys.Pressed(Key.ShiftLeft)) {
 			cameraPosition.y -= speed;
 		}
-		if (keyboard.IsKeyPressed(Key.Space)) {
+		if (Keys.Pressed(Key.Space)) {
 			cameraPosition.y += speed;
 		}
-		if (keyboard.IsKeyPressed(Key.Q)) {
-			if (!previousQ)
-				SelectedBlockId = (BlockId) (SelectedBlockId - 1 + BlockRegistry.Count);
-			previousQ = true;
+		if (Keys.JustPressed(Key.Q)) {
+			SelectedBlockId = (BlockId) (SelectedBlockId - 1 + BlockRegistry.Count);
 		}
-		else {
-			previousQ = false;
-		}
-		if (keyboard.IsKeyPressed(Key.E)) {
-			if (!previousE)
-				SelectedBlockId++;
-			previousE = true;
-		}
-		else {
-			previousE = false;
+		if (Keys.JustPressed(Key.E)) {
+			SelectedBlockId++;
+			;
 		}
 		SelectedBlockId = (BlockId) (SelectedBlockId % BlockRegistry.Count);
 		cameraPosition.x += Mathf.Cos(-cameraRotation.y) * movement.x + Mathf.Sin(-cameraRotation.y) * movement.y;
@@ -244,6 +280,12 @@ public static class Main {
 		}
 
 		world.RemeshChunks();
+
+		if (Keys.JustPressed(Key.F2)) {
+			takeScreenshot = true;
+		}
+
+		Keys.End();
 	}
 
 	public static void Render() {
@@ -283,5 +325,51 @@ public static class Main {
 		}
 
 		Program.gl.UseProgram(0);
+
+		if (takeScreenshot) {
+			takeScreenshot = false;
+
+			Program.gl.Flush();
+			int width = Program.window.Size.X;
+			int height = Program.window.Size.Y;
+			byte[] pixels = new byte[width * height * 4];
+
+			unsafe {
+				fixed (byte* ptr = pixels) {
+					Program.gl.ReadPixels(
+						0, 0,
+						(uint) width,
+						(uint) height,
+						Silk.NET.OpenGL.PixelFormat.Rgba,
+						Silk.NET.OpenGL.PixelType.UnsignedByte,
+						ptr
+					);
+				}
+			}
+
+			byte[] flipped = new byte[pixels.Length];
+			int rowSize = width * 4;
+
+			for (int y = 0; y < height; y++) {
+				System.Buffer.BlockCopy(
+					pixels,
+					y * rowSize,
+					flipped,
+					(height - 1 - y) * rowSize,
+					rowSize
+				);
+			}
+
+			string path = "screenshot.png";
+			ImageWriter writer = new ImageWriter();
+
+			unsafe {
+				fixed (byte* ptr = flipped) {
+					using FileStream stream = File.Create(path);
+
+					writer.WritePng(ptr, width, height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream);
+				}
+			}
+		}
 	}
 }

@@ -30,7 +30,7 @@ public static class Main {
 		BlockStateLoader.Initialize();
 		Blocks.Initialize();
 
-		SelectedBlock = new BlockType(Blocks.DROPPER, 0);
+		SelectedBlock = new BlockType(Blocks.LEVER, 0);
 		// Entities.Initialize();
 
 		input = Program.window.CreateInput();
@@ -102,19 +102,19 @@ public static class Main {
 		z &= 15;
 		BlockPos pos = new BlockPos(x, y, z);
 		if (button == MouseButton.Middle) {
-			BlockType block = chunk.GetBlock(pos);
-			if (block.Type == Blocks.DAYLIGHT_DETECTOR) {
-				chunk.SetBlock(pos, block.With(DaylightDetectorBlock.INVERTED, !block.Get(DaylightDetectorBlock.INVERTED)));
-			}
-			else if (block.Type == Blocks.CARVED_PUMPKIN) {
-				HorizontalDirection dir = block.Get(HorizontalDirectionBlock.FACING);
-				HorizontalDirection next = (HorizontalDirection)(((int)dir + 1) & 3);
-				chunk.SetBlock(pos, block.With(HorizontalDirectionBlock.FACING, next));
-			}
-			else if (block.Type == Blocks.DROPPER) {
-				Directional dir = block.Get(DirectionalBlock.FACING);
-				Directional next = (Directional)(((int)dir + 1) % Enum.GetValues<Directional>().Length);
-				chunk.SetBlock(pos, block.With(DirectionalBlock.FACING, next));
+			BlockType blockType = chunk.GetBlock(pos);
+			Block block = BlockRegistry.GetBlock(blockType.Type);
+			Property[] properties = block.Properties;
+
+			IKeyboard keyboard = input.Keyboards[0];
+			for (int i = 0; i < properties.Length; i++) {
+				if (keyboard.IsKeyPressed(Key.Number1 + i)) {
+					Property property = properties[i];
+
+					int currentIndex = blockType.State.GetIndex(property);
+					int nextIndex = (currentIndex + 1) % property.ValueCount;
+					chunk.SetBlock(pos, blockType.With(property, nextIndex));
+				}
 			}
 		}
 		else {

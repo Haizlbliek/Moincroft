@@ -84,9 +84,11 @@ public static class Blocks {
 	public static readonly BlockId DRAGON_EGG = BlockRegistry.Register("dragon_egg", d => new Block(d), Properties.Of());
 	public static readonly BlockId SLIME_BLOCK = BlockRegistry.Register("slime_block", d => new Block(d), Properties.Of());
 	public static readonly BlockId DAYLIGHT_DETECTOR = BlockRegistry.Register("daylight_detector", d => new DaylightDetectorBlock(d), Properties.Of());
-	public static readonly BlockId CARVED_PUMPKIN = BlockRegistry.Register("carved_pumpkin", d => new HorizontalDirectionBlock(d), Properties.Of());
+	public static readonly BlockId CARVED_PUMPKIN = BlockRegistry.Register("carved_pumpkin", d => new HorizontalDirectionalBlock(d), Properties.Of());
 	public static readonly BlockId FLETCHING_TABLE = BlockRegistry.Register("fletching_table", d => new Block(d), Properties.Of());
 	public static readonly BlockId DROPPER = BlockRegistry.Register("dropper", d => new DirectionalBlock(d), Properties.Of());
+	public static readonly BlockId STONE_BUTTON = BlockRegistry.Register("stone_button", d => new ButtonBlock(d), Properties.Of());
+	public static readonly BlockId LEVER = BlockRegistry.Register("lever", d => new LeverBlock(d), Properties.Of());
 
 	public static void Initialize() {}
 }

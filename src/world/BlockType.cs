@@ -21,6 +21,12 @@ public readonly struct BlockType : IEquatable<BlockType> {
 		return new BlockType(this.Type, newStateId);
 	}
 
+	public BlockType With(Property property, int valueIndex) {
+		Block block = BlockRegistry.GetBlock(this.Type);
+		BlockStateId newStateId = block.ModifyState(this.StateId, property, valueIndex);
+		return new BlockType(this.Type, newStateId);
+	}
+
 	public T Get<T>(Property<T> property) where T : notnull {
 		return this.State.Get(property);
 	}

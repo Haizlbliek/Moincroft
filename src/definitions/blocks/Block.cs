@@ -18,13 +18,17 @@ public class PropertyState {
 		int valIndex = this._valueIndices[propIndex];
 		return (T) property.GetValueAt(valIndex);
 	}
+	public int GetIndex(Property property) {
+		int propIndex = Array.IndexOf(this._properties, property);
+		return this._valueIndices[propIndex];
+	}
 }
 
 public class Block {
 	private readonly PropertyState[] _idToState;
 	private readonly int[] _propertyStrides;
 
-	public virtual IProperty[] Properties => [];
+	public virtual Property[] Properties => [];
 
 	public readonly BlockData data;
 

@@ -12,7 +12,7 @@ public enum Directional {
 public class DirectionalBlock : Block {
 	public static readonly EnumProperty<Directional> FACING = new EnumProperty<Directional>("facing");
 
-	public override IProperty[] Properties => [ FACING ];
+	public override Property[] Properties => [ FACING ];
 
 	public DirectionalBlock(BlockData data) : base(data) {}
 }

@@ -10,29 +10,29 @@ public readonly struct PropertyStateKey : IEquatable<PropertyStateKey> {
 	public PropertyStateKey(Dictionary<string, string> values) {
 		KeyValuePair<string, string>[] orderedPairs = values.OrderBy(kvp => kvp.Key).ToArray();
 
-		_keys = new string[orderedPairs.Length];
-		_values = new string[orderedPairs.Length];
+		this._keys = new string[orderedPairs.Length];
+		this._values = new string[orderedPairs.Length];
 
-		if (_keys.Length == 0) {
-			_hashCode = 0;
+		if (this._keys.Length == 0) {
+			this._hashCode = 0;
 			return;
 		}
 
 		HashCode hash = new HashCode();
 		for (int i = 0; i < orderedPairs.Length; i++) {
-			_keys[i] = orderedPairs[i].Key;
-			_values[i] = orderedPairs[i].Value;
+			this._keys[i] = orderedPairs[i].Key;
+			this._values[i] = orderedPairs[i].Value;
 			hash.Add(orderedPairs[i].Key);
 			hash.Add(orderedPairs[i].Value);
 		}
-		_hashCode = hash.ToHashCode();
+		this._hashCode = hash.ToHashCode();
 	}
 
 	public PropertyStateKey(string from) {
 		if (string.IsNullOrEmpty(from)) {
-			_keys = [];
-			_values = [];
-			_hashCode = 0;
+			this._keys = [];
+			this._values = [];
+			this._hashCode = 0;
 			return;
 		}
 
@@ -42,25 +42,25 @@ public readonly struct PropertyStateKey : IEquatable<PropertyStateKey> {
 			.OrderBy(kvp => kvp.Key)
 			.ToArray();
 
-		_keys = new string[orderedPairs.Length];
-		_values = new string[orderedPairs.Length];
+		this._keys = new string[orderedPairs.Length];
+		this._values = new string[orderedPairs.Length];
 
 		HashCode hash = new HashCode();
 		for (int i = 0; i < orderedPairs.Length; i++) {
-			_keys[i] = orderedPairs[i].Key;
-			_values[i] = orderedPairs[i].Value;
+			this._keys[i] = orderedPairs[i].Key;
+			this._values[i] = orderedPairs[i].Value;
 			hash.Add(orderedPairs[i].Key);
 			hash.Add(orderedPairs[i].Value);
 		}
-		_hashCode = hash.ToHashCode();
+		this._hashCode = hash.ToHashCode();
 	}
 
 	public bool Equals(PropertyStateKey other) {
-		if (_hashCode != other._hashCode) return false;
-		if (_keys.Length != other._keys.Length) return false;
+		if (this._hashCode != other._hashCode) return false;
+		if (this._keys.Length != other._keys.Length) return false;
 
-		for (int i = 0; i < _keys.Length; i++) {
-			if (_keys[i] != other._keys[i] || _values[i] != other._values[i]) {
+		for (int i = 0; i < this._keys.Length; i++) {
+			if (this._keys[i] != other._keys[i] || this._values[i] != other._values[i]) {
 				return false;
 			}
 		}
@@ -75,9 +75,9 @@ public readonly struct PropertyStateKey : IEquatable<PropertyStateKey> {
 	public static bool operator !=(PropertyStateKey left, PropertyStateKey right) => !left.Equals(right);
 
 	public override string ToString() {
-		if (_keys == null || _keys.Length == 0) {
+		if (this._keys == null || this._keys.Length == 0) {
 			return "";
 		}
-		return string.Join(",", _keys.Zip(_values, (k, v) => $"{k}={v}"));
+		return string.Join(",", this._keys.Zip(this._values, (k, v) => $"{k}={v}"));
 	}
 }

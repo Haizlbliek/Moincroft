@@ -10,8 +10,16 @@ public interface IProperty {
 	int GetIndexOf(object value);
 }
 
-public abstract class Property<T> : IProperty where T : notnull {
-	public string Name { get; }
+public abstract class Property : IProperty {
+	public abstract string Name { get; }
+	public abstract int ValueCount { get; }
+
+	public abstract int GetIndexOf(object value);
+	public abstract object GetValueAt(int index);
+}
+
+public abstract class Property<T> : Property where T : notnull {
+	public override string Name { get; }
 	public ImmutableArray<T> AllowedValues { get; }
 	private readonly Dictionary<T, int> _valueToStreamIndex;
 
@@ -23,9 +31,9 @@ public abstract class Property<T> : IProperty where T : notnull {
 			.ToDictionary(x => x.val, x => x.idx);
 	}
 
-	public int ValueCount => this.AllowedValues.Length;
-	public object GetValueAt(int index) => this.AllowedValues[index];
-	public int GetIndexOf(object value) => this._valueToStreamIndex[(T) value];
+	public override int ValueCount => this.AllowedValues.Length;
+	public override object GetValueAt(int index) => this.AllowedValues[index];
+	public override int GetIndexOf(object value) => this._valueToStreamIndex[(T) value];
 }
 
 public class BooleanProperty : Property<bool> {

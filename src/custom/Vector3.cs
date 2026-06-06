@@ -63,4 +63,6 @@ public struct Vector3 {
 	public static Vector3 Right => new Vector3(1f, 0f, 0f);
 	public static Vector3 Forward => new Vector3(0f, 0f, 1f);
 	public static Vector3 Backward => new Vector3(0f, 0f, -1f);
+
+	public override string ToString() => $"({this.x} {this.y} {this.z})";
 }

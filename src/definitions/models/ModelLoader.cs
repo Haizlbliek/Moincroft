@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using Silk.NET.Input;
 
 namespace Moincroft.Definitions.Models;
 
@@ -61,6 +62,36 @@ public static class ModelLoader {
 					);
 				}
 
+				if (elementObj.TryGetPropertyValue("rotation", out JsonNode? rotationNode) && rotationNode is JsonObject rotationObj) {
+					if (rotationObj.TryGetPropertyValue("rescale", out JsonNode? rescaleNode) && rescaleNode != null) {
+						element.rotationRescale = rescaleNode.GetValue<bool>();
+					}
+
+					if (rotationObj.TryGetPropertyValue("origin", out JsonNode? originNode) && originNode is JsonArray originArr) {
+						element.rotationOrigin = new Vector3(((float) originArr[0]!) / 16f, ((float) originArr[1]!) / 16f, ((float) originArr[2]!) / 16f);
+					}
+
+					if (rotationObj.TryGetPropertyValue("axis", out JsonNode? axisNode) && axisNode != null
+					 && rotationObj.TryGetPropertyValue("angle", out JsonNode? angleNode) && angleNode != null) {
+						string axis = (string) axisNode!;
+						float angle = (float) angleNode!;
+						if (axis == "x") element.rotation = new Vector3(angle, 0f, 0f);
+						if (axis == "y") element.rotation = new Vector3(0f, angle, 0f);
+						if (axis == "z") element.rotation = new Vector3(0f, 0f, angle);
+					}
+					else {
+						if (rotationObj.TryGetPropertyValue("x", out JsonNode? xNode) && xNode != null) {
+							element.rotation.x = (float) xNode!;
+						}
+						if (rotationObj.TryGetPropertyValue("y", out JsonNode? yNode) && yNode != null) {
+							element.rotation.y = (float) yNode!;
+						}
+						if (rotationObj.TryGetPropertyValue("z", out JsonNode? zNode) && zNode != null) {
+							element.rotation.z = (float) zNode!;
+						}
+					}
+				}
+
 				if (elementObj.TryGetPropertyValue("faces", out JsonNode? facesNode) && facesNode != null) {
 					foreach (KeyValuePair<string, JsonNode?> faceProperty in facesNode.AsObject()) {
 						if (faceProperty.Value == null) continue;
@@ -69,7 +100,8 @@ public static class ModelLoader {
 
 						MiddleModel.Element.Face face = new MiddleModel.Element.Face {
 							texture = faceObj.TryGetPropertyValue("texture", out JsonNode? texNode) ? texNode!.ToString() : "",
-							cullface = faceObj.TryGetPropertyValue("cullface", out JsonNode? cullNode) ? cullNode!.ToString() : null
+							cullface = faceObj.TryGetPropertyValue("cullface", out JsonNode? cullNode) ? cullNode!.ToString() : null,
+							rotation = faceObj.TryGetPropertyValue("rotation", out JsonNode? faceRotationNode) ? ((int) faceRotationNode! / 90) : 0,
 						};
 
 						if (faceObj.TryGetPropertyValue("uv", out JsonNode? uvNode) && uvNode != null) {
@@ -121,7 +153,11 @@ public static class ModelLoader {
 						direction = DirectionFromFace(face.Key),
 						from = element.from,
 						to = element.to,
-						cullFace = face.Value.cullface == null ? Direction.None : DirectionFromFace(face.Value.cullface)
+						cullFace = face.Value.cullface == null ? Direction.None : DirectionFromFace(face.Value.cullface),
+						rotation = element.rotation,
+						rotationOrigin = element.rotationOrigin,
+						rotationRescale = element.rotationRescale,
+						faceRotation = face.Value.rotation,
 					};
 					string texturePath = face.Value.texture;
 					while (texturePath.StartsWith('#')) {
@@ -135,25 +171,9 @@ public static class ModelLoader {
 					}
 					texturePath = texturePath.RemoveStart("minecraft:").RemoveStart("block/");
 
+					FaceUv faceUv;
 					try {
-						FaceUv faceUv = Atlas.GetFace(texturePath);
-						float[]? uv = face.Value.uv;
-						if (uv == null || uv.Length == 0) {
-							uv = face.Key switch {
-								"north" => [16 - element.to.x, 16 - element.to.y, 16 - element.from.x, 16 - element.from.y],
-								"south" => [element.from.x, 16 - element.to.y, element.to.x, 16 - element.from.y],
-								"west"  => [element.from.z, 16 - element.to.y, element.to.z, 16 - element.from.y],
-								"east"  => [16 - element.to.z, 16 - element.to.y, 16 - element.from.z, 16 - element.from.y],
-								"up"    => [element.from.x, element.from.z, element.to.x, element.to.z],
-								"down"  => [element.from.x, 16 - element.to.z, element.to.x, 16 - element.from.z],
-								_       => [0, 0, 16, 16]
-							};
-						}
-						quad.u0 = uv[0] / Atlas.AtlasWidth + faceUv.X;
-						quad.v0 = uv[1] / Atlas.AtlasHeight + faceUv.Y;
-						quad.u1 = uv[2] / Atlas.AtlasWidth + faceUv.X;
-						quad.v1 = uv[3] / Atlas.AtlasHeight + faceUv.Y;
-						quads.Add(quad);
+						faceUv = Atlas.GetFace(texturePath);
 					}
 					catch (Exception) {
 						if (!texturePath.StartsWith('#')) {
@@ -162,6 +182,24 @@ public static class ModelLoader {
 						skip = true;
 						break;
 					}
+
+					float[]? uv = face.Value.uv;
+					if (uv == null || uv.Length == 0) {
+						uv = face.Key switch {
+							"north" => [16 - element.to.x, 16 - element.to.y, 16 - element.from.x, 16 - element.from.y],
+							"south" => [element.from.x, 16 - element.to.y, element.to.x, 16 - element.from.y],
+							"west"  => [element.from.z, 16 - element.to.y, element.to.z, 16 - element.from.y],
+							"east"  => [16 - element.to.z, 16 - element.to.y, 16 - element.from.z, 16 - element.from.y],
+							"up"    => [element.from.x, element.from.z, element.to.x, element.to.z],
+							"down"  => [element.from.x, 16 - element.to.z, element.to.x, 16 - element.from.z],
+							_       => [0, 0, 16, 16]
+						};
+					}
+					quad.u0 = uv[0] / Atlas.AtlasWidth + faceUv.X;
+					quad.v0 = uv[1] / Atlas.AtlasHeight + faceUv.Y;
+					quad.u1 = uv[2] / Atlas.AtlasWidth + faceUv.X;
+					quad.v1 = uv[3] / Atlas.AtlasHeight + faceUv.Y;
+					quads.Add(quad);
 				}
 
 				if (skip)
@@ -199,14 +237,18 @@ public static class ModelLoader {
 				Element clonedElement = new Element {
 					from = element.from,
 					to = element.to,
-					faces = []
+					rotation = element.rotation,
+					rotationOrigin = element.rotationOrigin,
+					rotationRescale = element.rotationRescale,
+					faces = [],
 				};
 
 				foreach (KeyValuePair<string, Element.Face> faceKvp in element.faces) {
 					clonedElement.faces[faceKvp.Key] = new Element.Face {
 						uv = faceKvp.Value.uv == null ? null : (float[])faceKvp.Value.uv.Clone(),
 						texture = faceKvp.Value.texture,
-						cullface = faceKvp.Value.cullface
+						cullface = faceKvp.Value.cullface,
+						rotation = faceKvp.Value.rotation,
 					};
 				}
 				this.elements.Add(clonedElement);
@@ -216,12 +258,17 @@ public static class ModelLoader {
 		public struct Element {
 			public Vector3 from;
 			public Vector3 to;
+			public Vector3 rotation;
+			public Vector3 rotationOrigin;
+			public bool rotationRescale;
 			public Dictionary<string, Face> faces;
 
 			public struct Face {
 				public float[]? uv;
 				public string texture;
 				public string? cullface;
+				public int rotation;
+				// LATER REVIEW: tintIndex
 			}
 		}
 	}

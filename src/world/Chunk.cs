@@ -66,6 +66,38 @@ public class Chunk : ChunkData {
 		return p;
 	}
 
+	Vector3 Rotate(Vector3 v, Vector3 rotation) {
+		float rx = MathF.PI / 180f * rotation.x;
+		float ry = MathF.PI / 180f * rotation.y;
+		float rz = MathF.PI / 180f * rotation.z;
+
+		float cosX = MathF.Cos(rx);
+		float sinX = MathF.Sin(rx);
+
+		float y1 = v.y * cosX - v.z * sinX;
+		float z1 = v.y * sinX + v.z * cosX;
+		v.y = y1;
+		v.z = z1;
+
+		float cosY = MathF.Cos(ry);
+		float sinY = MathF.Sin(ry);
+
+		float x2 = v.x * cosY + v.z * sinY;
+		float z2 = -v.x * sinY + v.z * cosY;
+		v.x = x2;
+		v.z = z2;
+
+		float cosZ = MathF.Cos(rz);
+		float sinZ = MathF.Sin(rz);
+
+		float x3 = v.x * cosZ - v.y * sinZ;
+		float y3 = v.x * sinZ + v.y * cosZ;
+		v.x = x3;
+		v.y = y3;
+
+		return v;
+	}
+
 	public (List<Vertex>, List<uint>) MeshData() {
 		List<Vertex> vertices = [];
 		List<uint> indices = [];
@@ -97,7 +129,7 @@ public class Chunk : ChunkData {
 
 					foreach (Model.Quad quad in model.model.quads) {
 						Direction rotatedDirection = Preload.Rotate(quad.direction, model.rotationX, model.rotationY, model.rotationZ);
-						Direction rotatedCullFace = Preload.Rotate(quad.cullFace, model.rotationX, model.rotationY, model.rotationZ);
+						Direction rotatedCullFace = quad.cullFace == Direction.None ? Direction.None : Preload.Rotate(quad.cullFace, model.rotationX, model.rotationY, model.rotationZ);
 
 						if (rotatedCullFace != Direction.None) {
 							BlockType neighborBlock = rotatedCullFace switch {
@@ -133,8 +165,8 @@ public class Chunk : ChunkData {
 						} else {
 							indices.AddRange([ vertexIndex + 0, vertexIndex + 1, vertexIndex + 3, vertexIndex + 3, vertexIndex + 2, vertexIndex + 0 ]);
 						}
-						Vector3 center = (quad.to + quad.from) / 32f;
-						Vector3 size = (quad.from - quad.to) / 32f;
+						Vector3 center = (quad.to + quad.from) / 16f / 2f;
+						Vector3 size = (quad.from - quad.to) / 16f / 2f;
 						size.x = Mathf.Abs(size.x);
 						size.y = Mathf.Abs(size.y);
 						size.z = Mathf.Abs(size.z);
@@ -146,6 +178,11 @@ public class Chunk : ChunkData {
 						Vector3 v3 = front + size * (Vector3) (faceBasis.Right - faceBasis.Up);
 
 						Vector3 modelPos = new Vector3(x, y, z);
+						Vector3 rotationOrigin = quad.rotationOrigin;
+						v0 = this.Rotate(v0 - rotationOrigin, quad.rotation) + rotationOrigin;
+						v1 = this.Rotate(v1 - rotationOrigin, quad.rotation) + rotationOrigin;
+						v2 = this.Rotate(v2 - rotationOrigin, quad.rotation) + rotationOrigin;
+						v3 = this.Rotate(v3 - rotationOrigin, quad.rotation) + rotationOrigin;
 						v0 = this.RotateModelPos(v0, model.rotationX, model.rotationY, model.rotationZ) + modelPos;
 						v1 = this.RotateModelPos(v1, model.rotationX, model.rotationY, model.rotationZ) + modelPos;
 						v2 = this.RotateModelPos(v2, model.rotationX, model.rotationY, model.rotationZ) + modelPos;

@@ -5,14 +5,10 @@ public class Model {
 	// LATER: ambientocclusion
 
 	public struct Quad {
-		public Vector3 from, to;
+		public Vector3 v0, v1, v2, v3;
 		public Vector2 uv0, uv1, uv2, uv3;
 		public Direction direction;
 		public Direction cullFace;
-
-		public Vector3 rotation;
-		public Vector3 rotationOrigin;
-		public bool rotationRescale; // TODO
 
 		// LATER: shade
 		// LATER: lightEmission

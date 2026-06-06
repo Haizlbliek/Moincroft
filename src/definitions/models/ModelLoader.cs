@@ -142,6 +142,38 @@ public static class ModelLoader {
 		_ => Direction.None
 	};
 
+	public static Vector3 Rotate(Vector3 v, Vector3 rotation) {
+		float rx = MathF.PI / 180f * rotation.x;
+		float ry = MathF.PI / 180f * rotation.y;
+		float rz = MathF.PI / 180f * rotation.z;
+
+		float cosX = MathF.Cos(rx);
+		float sinX = MathF.Sin(rx);
+
+		float y1 = v.y * cosX - v.z * sinX;
+		float z1 = v.y * sinX + v.z * cosX;
+		v.y = y1;
+		v.z = z1;
+
+		float cosY = MathF.Cos(ry);
+		float sinY = MathF.Sin(ry);
+
+		float x2 = v.x * cosY + v.z * sinY;
+		float z2 = -v.x * sinY + v.z * cosY;
+		v.x = x2;
+		v.z = z2;
+
+		float cosZ = MathF.Cos(rz);
+		float sinZ = MathF.Sin(rz);
+
+		float x3 = v.x * cosZ - v.y * sinZ;
+		float y3 = v.x * sinZ + v.y * cosZ;
+		v.x = x3;
+		v.y = y3;
+
+		return v;
+	}
+
 	private static void ParseMiddleModels() {
 		foreach (KeyValuePair<string, MiddleModel> pair in middleModels) {
 			string modelKey = pair.Key;
@@ -154,13 +186,25 @@ public static class ModelLoader {
 				foreach (KeyValuePair<string, MiddleModel.Element.Face> face in element.faces) {
 					Model.Quad quad = new Model.Quad {
 						direction = DirectionFromFace(face.Key),
-						from = element.from,
-						to = element.to,
 						cullFace = face.Value.cullface == null ? Direction.None : DirectionFromFace(face.Value.cullface),
-						rotation = element.rotation,
-						rotationOrigin = element.rotationOrigin,
-						rotationRescale = element.rotationRescale,
 					};
+
+					FaceBasis faceBasis = Preload.FaceBases[(int) quad.direction];
+					Vector3 center = (element.to + element.from) / 16f / 2f;
+					Vector3 size = (element.from - element.to) / 16f / 2f;
+					size.x = Mathf.Abs(size.x);
+					size.y = Mathf.Abs(size.y);
+					size.z = Mathf.Abs(size.z);
+
+					Vector3 front = center + size * (Vector3) faceBasis.Front;
+					Vector3 rotationOrigin = element.rotationOrigin;
+					// TODO: element.rotationRescale
+
+					quad.v0 = Rotate(front + size * (Vector3) (-faceBasis.Right + faceBasis.Up) - rotationOrigin, element.rotation) + rotationOrigin;
+					quad.v1 = Rotate(front + size * (Vector3) (faceBasis.Right + faceBasis.Up) - rotationOrigin, element.rotation) + rotationOrigin;
+					quad.v2 = Rotate(front + size * (Vector3) (-faceBasis.Right - faceBasis.Up) - rotationOrigin, element.rotation) + rotationOrigin;
+					quad.v3 = Rotate(front + size * (Vector3) (faceBasis.Right - faceBasis.Up) - rotationOrigin, element.rotation) + rotationOrigin;
+
 					string texturePath = face.Value.texture.RemoveStart('#');
 					while (middleModel.textures.TryGetValue(texturePath, out string? resolved)) {
 						texturePath = resolved.RemoveStart('#');
@@ -175,6 +219,7 @@ public static class ModelLoader {
 						Console.WriteLine($"Parsing: {pair.Key}");
 						Console.WriteLine($"WARNING: Missing texture: {texturePath}");
 						skip = true;
+						// TODO: turn into pink/black checker
 						break;
 					}
 

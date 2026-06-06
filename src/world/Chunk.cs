@@ -115,38 +115,6 @@ public class Chunk : ChunkData {
 		return p;
 	}
 
-	public static Vector3 Rotate(Vector3 v, Vector3 rotation) {
-		float rx = MathF.PI / 180f * rotation.x;
-		float ry = MathF.PI / 180f * rotation.y;
-		float rz = MathF.PI / 180f * rotation.z;
-
-		float cosX = MathF.Cos(rx);
-		float sinX = MathF.Sin(rx);
-
-		float y1 = v.y * cosX - v.z * sinX;
-		float z1 = v.y * sinX + v.z * cosX;
-		v.y = y1;
-		v.z = z1;
-
-		float cosY = MathF.Cos(ry);
-		float sinY = MathF.Sin(ry);
-
-		float x2 = v.x * cosY + v.z * sinY;
-		float z2 = -v.x * sinY + v.z * cosY;
-		v.x = x2;
-		v.z = z2;
-
-		float cosZ = MathF.Cos(rz);
-		float sinZ = MathF.Sin(rz);
-
-		float x3 = v.x * cosZ - v.y * sinZ;
-		float y3 = v.x * sinZ + v.y * cosZ;
-		v.x = x3;
-		v.y = y3;
-
-		return v;
-	}
-
 	private readonly List<Vertex> vertices = [];
 	private uint[] indices = new uint[6 * 6 * 512];
 
@@ -289,40 +257,12 @@ public class Chunk : ChunkData {
 							this.indices[indexPtr++] = vertexIndex + 2;
 							this.indices[indexPtr++] = vertexIndex + 0;
 						}
-						Vector3 center = (quad.to + quad.from) / 16f / 2f;
-						Vector3 size = (quad.from - quad.to) / 16f / 2f;
-						size.x = Mathf.Abs(size.x);
-						size.y = Mathf.Abs(size.y);
-						size.z = Mathf.Abs(size.z);
 
-						Vector3 front = center + size * (Vector3) faceBasis.Front;
 						Vector3 modelPos = new Vector3(x, y, z);
-						Vector3 rotationOrigin = quad.rotationOrigin;
-
-						Vector3 v0 = RotateModelPos(
-							Rotate(front + size * (Vector3) (-faceBasis.Right + faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
-							model.rotationX,
-							model.rotationY,
-							model.rotationZ
-						) + modelPos;
-						Vector3 v1 = RotateModelPos(
-							Rotate(front + size * (Vector3) (faceBasis.Right + faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
-							model.rotationX,
-							model.rotationY,
-							model.rotationZ
-						) + modelPos;
-						Vector3 v2 = RotateModelPos(
-							Rotate(front + size * (Vector3) (-faceBasis.Right - faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
-							model.rotationX,
-							model.rotationY,
-							model.rotationZ
-						) + modelPos;
-						Vector3 v3 = RotateModelPos(
-							Rotate(front + size * (Vector3) (faceBasis.Right - faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
-							model.rotationX,
-							model.rotationY,
-							model.rotationZ
-						) + modelPos;
+						Vector3 v0 = RotateModelPos(quad.v0, model.rotationX, model.rotationY, model.rotationZ) + modelPos;
+						Vector3 v1 = RotateModelPos(quad.v1, model.rotationX, model.rotationY, model.rotationZ) + modelPos;
+						Vector3 v2 = RotateModelPos(quad.v2, model.rotationX, model.rotationY, model.rotationZ) + modelPos;
+						Vector3 v3 = RotateModelPos(quad.v3, model.rotationX, model.rotationY, model.rotationZ) + modelPos;
 
 						AddVertex(v0, quad.uv0, (byte) (ao0 | PackedLight), color);
 						AddVertex(v1, quad.uv1, (byte) (ao1 | PackedLight), color);

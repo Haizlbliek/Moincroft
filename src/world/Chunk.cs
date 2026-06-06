@@ -8,14 +8,33 @@ public class Chunk : ChunkData {
 	public bool meshNeedsRefresh = false;
 
 	public unsafe Chunk(World world, int cx, int cy, int cz) : base(world, cx, cy, cz) {
-		this._vao = Program.gl.GenVertexArray();
-		this._vbo = Program.gl.GenBuffer();
-		this._ebo = Program.gl.GenBuffer();
+		this._opaqueVao = Program.gl.GenVertexArray();
+		this._opaqueVbo = Program.gl.GenBuffer();
+		this._opaqueEbo = Program.gl.GenBuffer();
+		this._transparentVao = Program.gl.GenVertexArray();
+		this._transparentVbo = Program.gl.GenBuffer();
+		this._transparentEbo = Program.gl.GenBuffer();
 
-		Program.gl.BindVertexArray(this._vao);
-		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._vbo);
+		Program.gl.BindVertexArray(this._opaqueVao);
+		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._opaqueVbo);
 
 		const uint stride = 6 * sizeof(float);
+		Program.gl.EnableVertexAttribArray(0);
+		Program.gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, stride, (void*)0);
+
+		Program.gl.EnableVertexAttribArray(1);
+		Program.gl.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, stride, (void*)(3 * sizeof(float)));
+
+		Program.gl.EnableVertexAttribArray(2);
+		Program.gl.VertexAttribIPointer(2, 1, VertexAttribIType.UnsignedInt, stride, (void*)(5 * sizeof(float)));
+
+		Program.gl.BindVertexArray(0);
+		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
+
+
+		Program.gl.BindVertexArray(this._transparentVao);
+		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._transparentVbo);
+
 		Program.gl.EnableVertexAttribArray(0);
 		Program.gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, stride, (void*)0);
 
@@ -31,11 +50,17 @@ public class Chunk : ChunkData {
 
 
 #region Rendering
-	public uint _vao;
-	public uint _vbo;
-	public uint _ebo;
+	public uint _opaqueVao;
+	public uint _opaqueVbo;
+	public uint _opaqueEbo;
+	public uint opaqueIndexCount;
+
+	public uint _transparentVao;
+	public uint _transparentVbo;
+	public uint _transparentEbo;
+	public uint transparentIndexCount;
+
 	public bool meshed;
-	public uint indexCount;
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct Vertex {
@@ -43,6 +68,7 @@ public class Chunk : ChunkData {
 		public float u, v;
 		public uint data;
 	}
+
 	public static Vector3 RotateAroundOrigin(Vector3 v, int rx, int ry, int rz) {
 		float x = v.x;
 		float y = v.y;
@@ -72,7 +98,7 @@ public class Chunk : ChunkData {
 		return new Vector3(x, y, z);
 	}
 
-	Vector3 RotateModelPos(Vector3 p, int rx, int ry, int rz) {
+	public static Vector3 RotateModelPos(Vector3 p, int rx, int ry, int rz) {
 		p.x -= 0.5f; p.y -= 0.5f; p.z -= 0.5f;
 		p = RotateAroundOrigin(p, rx, ry, rz);
 		p.x += 0.5f; p.y += 0.5f; p.z += 0.5f;
@@ -80,7 +106,7 @@ public class Chunk : ChunkData {
 		return p;
 	}
 
-	Vector3 Rotate(Vector3 v, Vector3 rotation) {
+	public static Vector3 Rotate(Vector3 v, Vector3 rotation) {
 		float rx = MathF.PI / 180f * rotation.x;
 		float ry = MathF.PI / 180f * rotation.y;
 		float rz = MathF.PI / 180f * rotation.z;
@@ -115,7 +141,7 @@ public class Chunk : ChunkData {
 	private readonly List<Vertex> vertices = [];
 	private uint[] indices = new uint[6 * 6 * 512];
 
-	public void MeshData() {
+	public void MeshData(RenderLayer renderLayer) {
 		this.vertices.Clear();
 		uint vertexIndex = 0;
 
@@ -190,6 +216,7 @@ public class Chunk : ChunkData {
 
 					Block block = BlockRegistry.GetBlock(type.Type);
 					if (!block.data.Visible) continue;
+					if (block.data.RenderLayer != renderLayer) continue;
 
 					BlockStateItem model = block.data.BlockStateData.GetModel(type, pos);
 
@@ -208,12 +235,12 @@ public class Chunk : ChunkData {
 								_ => default
 							};
 
-							if (this.IsVisiblySolid(neighborBlock)) {
+							if (this.Occludes(neighborBlock, block.data)) {
 								continue;
 							}
 						}
 
-						byte lightValue = rotatedDirection switch {
+						byte lightValue = rotatedCullFace switch {
 							Direction.West  => (byte) (x > 0 ? this.GetBlockLight(x - 1, y, z) : neighbourNX.GetBlockLight(15, y, z)),
 							Direction.East  => (byte) (x < 15 ? this.GetBlockLight(x + 1, y, z) : neighbourPX.GetBlockLight(0, y, z)),
 							Direction.Down  => (byte) (y > 0 ? this.GetBlockLight(x, y - 1, z) : neighbourNY.GetBlockLight(x, 15, z)),
@@ -252,26 +279,26 @@ public class Chunk : ChunkData {
 						Vector3 modelPos = new Vector3(x, y, z);
 						Vector3 rotationOrigin = quad.rotationOrigin;
 
-						Vector3 v0 = this.RotateModelPos(
-							this.Rotate(front + size * (Vector3) (-faceBasis.Right + faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
+						Vector3 v0 = RotateModelPos(
+							Rotate(front + size * (Vector3) (-faceBasis.Right + faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
 							model.rotationX,
 							model.rotationY,
 							model.rotationZ
 						) + modelPos;
-						Vector3 v1 = this.RotateModelPos(
-							this.Rotate(front + size * (Vector3) (faceBasis.Right + faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
+						Vector3 v1 = RotateModelPos(
+							Rotate(front + size * (Vector3) (faceBasis.Right + faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
 							model.rotationX,
 							model.rotationY,
 							model.rotationZ
 						) + modelPos;
-						Vector3 v2 = this.RotateModelPos(
-							this.Rotate(front + size * (Vector3) (-faceBasis.Right - faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
+						Vector3 v2 = RotateModelPos(
+							Rotate(front + size * (Vector3) (-faceBasis.Right - faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
 							model.rotationX,
 							model.rotationY,
 							model.rotationZ
 						) + modelPos;
-						Vector3 v3 = this.RotateModelPos(
-							this.Rotate(front + size * (Vector3) (faceBasis.Right - faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
+						Vector3 v3 = RotateModelPos(
+							Rotate(front + size * (Vector3) (faceBasis.Right - faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
 							model.rotationX,
 							model.rotationY,
 							model.rotationZ
@@ -286,24 +313,52 @@ public class Chunk : ChunkData {
 			}
 		}
 
-		this.indexCount = indexPtr;
+		if (renderLayer == RenderLayer.Opaque)
+			this.opaqueIndexCount = indexPtr;
+		else if (renderLayer == RenderLayer.Transparent)
+			this.transparentIndexCount = indexPtr;
 	}
 
 	public unsafe void GenerateMesh() {
-		Program.gl.BindVertexArray(this._vao);
+		Program.gl.BindVertexArray(this._opaqueVao);
 
-		this.MeshData();
+		this.MeshData(RenderLayer.Opaque);
 
-		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._vbo);
+		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._opaqueVbo);
 		fixed (Vertex* buf = CollectionsMarshal.AsSpan(this.vertices)) {
 			Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (this.vertices.Count * Unsafe.SizeOf<Vertex>()), buf, BufferUsageARB.StaticDraw);
 		}
 
-		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, this._ebo);
+		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, this._opaqueEbo);
 		fixed (uint* buf = this.indices) {
 			Program.gl.BufferData(
 				BufferTargetARB.ElementArrayBuffer,
-				this.indexCount * sizeof(uint),
+				this.opaqueIndexCount * sizeof(uint),
+				buf,
+				BufferUsageARB.StaticDraw
+			);
+		}
+
+		Program.gl.BindVertexArray(0);
+		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
+		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
+
+
+
+		Program.gl.BindVertexArray(this._transparentVao);
+
+		this.MeshData(RenderLayer.Transparent);
+
+		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._transparentVbo);
+		fixed (Vertex* buf = CollectionsMarshal.AsSpan(this.vertices)) {
+			Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (this.vertices.Count * Unsafe.SizeOf<Vertex>()), buf, BufferUsageARB.StaticDraw);
+		}
+
+		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, this._transparentEbo);
+		fixed (uint* buf = this.indices) {
+			Program.gl.BufferData(
+				BufferTargetARB.ElementArrayBuffer,
+				this.transparentIndexCount * sizeof(uint),
 				buf,
 				BufferUsageARB.StaticDraw
 			);
@@ -316,12 +371,19 @@ public class Chunk : ChunkData {
 		this.meshed = true;
 	}
 
-	public unsafe void Render() {
+	public unsafe void Render(RenderLayer renderLayer) {
 		if (!this.meshed) return;
 
 		Preload.Basic.SetUniform("uChunkOffset", this.cx * 16f, this.cy * 16f, this.cz * 16f);
-		Program.gl.BindVertexArray(this._vao);
-		Program.gl.DrawElements(PrimitiveType.Triangles, this.indexCount, DrawElementsType.UnsignedInt, (void*) 0);
+
+		if (renderLayer == RenderLayer.Opaque) {
+			Program.gl.BindVertexArray(this._opaqueVao);
+			Program.gl.DrawElements(PrimitiveType.Triangles, this.opaqueIndexCount, DrawElementsType.UnsignedInt, (void*) 0);
+		}
+		else {
+			Program.gl.BindVertexArray(this._transparentVao);
+			Program.gl.DrawElements(PrimitiveType.Triangles, this.transparentIndexCount, DrawElementsType.UnsignedInt, (void*) 0);
+		}
 	}
 
 	public void QueueRefresh() {

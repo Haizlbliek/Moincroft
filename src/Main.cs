@@ -264,22 +264,32 @@ public static class Main {
 		Program.gl.StencilMask(0xFF);
 		Program.gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
+
 		Program.gl.UseProgram(Preload.Basic);
 		Preload.Basic.SetUniform("view", Main.ViewMatrix, transpose: false);
 		Preload.Basic.SetUniform("projection", Main.ProjectionMatrix, transpose: false);
-
 		Program.gl.Enable(EnableCap.DepthTest);
-		Program.gl.Enable(EnableCap.Blend);
 		Program.gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 		Program.gl.Enable(EnableCap.CullFace);
 		Program.gl.CullFace(GLEnum.Back);
 		Program.gl.ActiveTexture(Silk.NET.OpenGL.TextureUnit.Texture0);
 		Program.gl.BindTexture(TextureTarget.Texture2D, Atlas.atlas._id);
+
+		Program.gl.Disable(EnableCap.Blend);
 		foreach (Chunk chunk in world.chunks.Values) {
-			chunk.Render();
+			chunk.Render(RenderLayer.Opaque);
 		}
+
+		Program.gl.DepthMask(false);
+		Program.gl.Enable(EnableCap.Blend);
+		foreach (Chunk chunk in world.chunks.Values) {
+			chunk.Render(RenderLayer.Transparent);
+		}
+		Program.gl.DepthMask(true);
+
 		Program.gl.Disable(EnableCap.CullFace);
 		Program.gl.BindVertexArray(0);
+
 
 		if (rayCollides && showUI) {
 			Program.gl.UseProgram(Preload.Selection);

@@ -63,7 +63,22 @@ public class ChunkData {
 	public bool IsVisiblySolid(BlockType type) {
 		if (type.Type == 0) return false;
 		BlockData data = BlockRegistry.GetBlock(type.Type).data;
-		return data.OccludesFullFace && data.Opaque;
+		return data.Occludes; // TODO: Render layer
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public bool Occludes(BlockType type, BlockType self) {
+		if (type.Type == 0) return false;
+		BlockData data = BlockRegistry.GetBlock(type.Type).data;
+		BlockData selfData = BlockRegistry.GetBlock(self.Type).data;
+		return data.Occludes && (data.RenderLayer == selfData.RenderLayer);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public bool Occludes(BlockType type, BlockData selfData) {
+		if (type.Type == 0) return false;
+		BlockData data = BlockRegistry.GetBlock(type.Type).data;
+		return data.Occludes && (data.RenderLayer == selfData.RenderLayer);
 	}
 
 #region Lighting
@@ -104,13 +119,17 @@ public class ChunkData {
 
 					ref byte currentLight = ref Unsafe.Add(ref lightBase, i);
 					BlockType currentBlock = this.blocks.Get(pos);
+					BlockData data = BlockRegistry.GetBlock(currentBlock.Type).data;
 
-					if (this.IsVisiblySolid(currentBlock)) {
+					if (data.Occludes && data.Visible) {
 						lightLevel = 0;
+					}
+					else if (currentBlock.Type != 0) {
+						if (lightLevel > 0) lightLevel--;
 					}
 
 					if (y == 0 && currentLight != lightLevel) {
-						recalculateBelow = recalculateBelow || true;
+						recalculateBelow = true;
 					}
 					currentLight = lightLevel;
 				}

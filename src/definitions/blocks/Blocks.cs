@@ -1,37 +1,35 @@
 global using BlockId = ushort;
 using System.Runtime.CompilerServices;
-using Moincroft.Definitions.Models;
 
 namespace Moincroft.Definitions.Blocks;
 
 public class Properties {
 	private bool visible = true;
-	private bool opaque = true;
+	private RenderLayer renderLayer = RenderLayer.Opaque;
 	private BlockStateData blockStateData = null!;
 	private string Id = "";
-	private bool occludesFullFace = true;
+	private bool occludes = true;
 
 	private Properties() {}
 
 	public static Properties Of() => new Properties();
 
 	public BlockData Compress() {
-		return new BlockData(visible: this.visible, opaque: this.opaque, blockStateData: this.blockStateData, id: this.Id, occludesFullFace: this.occludesFullFace);
+		return new BlockData(visible: this.visible, renderLayer: this.renderLayer, blockStateData: this.blockStateData, id: this.Id, occludes: this.occludes);
 	}
 
 	public Properties Air() {
 		this.visible = false;
-		this.opaque = false;
 		return this;
 	}
 
 	public Properties Transparent() {
-		this.opaque = false;
+		this.renderLayer = RenderLayer.Transparent;
 		return this;
 	}
 
 	public Properties NonOccluding() {
-		this.occludesFullFace = false;
+		this.occludes = false;
 		return this;
 	}
 
@@ -48,15 +46,15 @@ public class Properties {
 
 public readonly struct BlockData {
 	public readonly bool Visible;
-	public readonly bool Opaque;
-	public readonly bool OccludesFullFace;
+	public readonly RenderLayer RenderLayer;
+	public readonly bool Occludes;
 	public readonly BlockStateData BlockStateData;
 	public readonly string Id;
 
-	public BlockData(bool visible, bool opaque, bool occludesFullFace, BlockStateData blockStateData, string id) {
+	public BlockData(bool visible, RenderLayer renderLayer, bool occludes, BlockStateData blockStateData, string id) {
 		this.Visible = visible;
-		this.Opaque = opaque;
-		this.OccludesFullFace = occludesFullFace;
+		this.RenderLayer = renderLayer;
+		this.Occludes = occludes;
 		this.BlockStateData = blockStateData;
 		this.Id = id;
 	}
@@ -94,8 +92,8 @@ public static class Blocks {
 	public static readonly BlockId STONE = BlockRegistry.Register("stone", d => new Block(d), Properties.Of());
 	public static readonly BlockId DIRT = BlockRegistry.Register("dirt", d => new Block(d), Properties.Of());
 	public static readonly BlockId REDSTONE_BLOCK = BlockRegistry.Register("redstone_block", d => new Block(d), Properties.Of());
-	public static readonly BlockId DRAGON_EGG = BlockRegistry.Register("dragon_egg", d => new Block(d), Properties.Of());
-	public static readonly BlockId SLIME_BLOCK = BlockRegistry.Register("slime_block", d => new Block(d), Properties.Of().Transparent());
+	public static readonly BlockId DRAGON_EGG = BlockRegistry.Register("dragon_egg", d => new Block(d), Properties.Of().NonOccluding());
+	public static readonly BlockId SLIME_BLOCK = BlockRegistry.Register("slime_block", d => new Block(d), Properties.Of().Transparent().NonOccluding());
 	public static readonly BlockId DAYLIGHT_DETECTOR = BlockRegistry.Register("daylight_detector", d => new DaylightDetectorBlock(d), Properties.Of().NonOccluding());
 	public static readonly BlockId CARVED_PUMPKIN = BlockRegistry.Register("carved_pumpkin", d => new HorizontalDirectionalBlock(d), Properties.Of());
 	public static readonly BlockId FLETCHING_TABLE = BlockRegistry.Register("fletching_table", d => new Block(d), Properties.Of());

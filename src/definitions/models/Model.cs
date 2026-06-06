@@ -10,8 +10,8 @@ public class Model {
 		public Direction direction;
 		public Direction cullFace;
 		public int tintIndex;
+		public int lightEmisson;
 
 		// LATER: shade
-		// LATER: lightEmission
 	}
 }

@@ -235,6 +235,9 @@ public class Chunk : ChunkData {
 							Direction.South => (byte) (z < 15 ? this.GetBlockLight(x, y, z + 1) : neighbourPZ.GetBlockLight(x, y, 0)),
 							_ => (byte) this.GetBlockLight(x, y, z)
 						};
+						if (quad.lightEmisson >= 0)
+							lightValue = (byte) quad.lightEmisson;
+
 						byte PackedLight = (byte)(lightValue << 4);
 
 						FaceBasis faceBasis = Preload.FaceBases[(int) quad.direction];

@@ -110,6 +110,7 @@ public static class Blocks {
 	public static readonly BlockId COMPARATOR = BlockRegistry.Register("comparator", d => new ComparatorBlock(d), Properties.Of().NonOccluding());
 	public static readonly BlockId REDSTONE_LAMP = BlockRegistry.Register("redstone_lamp", d => new RedstoneLampBlock(d), Properties.Of());
 	public static readonly BlockId RAIL = BlockRegistry.Register("rail", d => new RailBlock(d), Properties.Of().NonOccluding());
+	public static readonly BlockId OPEN_EYEBLOSSOM = BlockRegistry.Register("open_eyeblossom", d => new Block(d), Properties.Of().NonOccluding());
 
 	public static void Initialize() {}
 }

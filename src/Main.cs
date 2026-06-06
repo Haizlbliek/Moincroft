@@ -1,4 +1,5 @@
 using Moincroft.Definitions;
+using Moincroft.Definitions.BlockColors;
 using Moincroft.Definitions.Models;
 using Silk.NET.Input;
 using Silk.NET.SDL;
@@ -33,6 +34,7 @@ public static class Main {
 		ModelLoader.Initialize();
 		BlockStateLoader.Initialize();
 		Blocks.Initialize();
+		BlockColors.Initialize();
 
 		SelectedBlockId = Blocks.AIR;
 		// Entities.Initialize();
@@ -337,7 +339,9 @@ public static class Main {
 				);
 			}
 
-			string path = "screenshot.png";
+			string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+			string path = "screenshots/screenshot_{timestamp}.png";
+			Directory.CreateDirectory("screenshots");
 			ImageWriter writer = new ImageWriter();
 
 			unsafe {

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Moincroft.Definitions;
+using Moincroft.Definitions.BlockColors;
 using Moincroft.Definitions.Models;
 
 namespace Moincroft.World;
@@ -15,10 +16,11 @@ public class Chunk : ChunkData {
 		this._transparentVbo = Program.gl.GenBuffer();
 		this._transparentEbo = Program.gl.GenBuffer();
 
+		const uint stride = 7 * sizeof(float);
+
 		Program.gl.BindVertexArray(this._opaqueVao);
 		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._opaqueVbo);
 
-		const uint stride = 6 * sizeof(float);
 		Program.gl.EnableVertexAttribArray(0);
 		Program.gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, stride, (void*)0);
 
@@ -27,6 +29,9 @@ public class Chunk : ChunkData {
 
 		Program.gl.EnableVertexAttribArray(2);
 		Program.gl.VertexAttribIPointer(2, 1, VertexAttribIType.UnsignedInt, stride, (void*)(5 * sizeof(float)));
+
+		Program.gl.EnableVertexAttribArray(3);
+		Program.gl.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, stride, (void*)(6 * sizeof(float)));
 
 		Program.gl.BindVertexArray(0);
 		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
@@ -43,6 +48,9 @@ public class Chunk : ChunkData {
 
 		Program.gl.EnableVertexAttribArray(2);
 		Program.gl.VertexAttribIPointer(2, 1, VertexAttribIType.UnsignedInt, stride, (void*)(5 * sizeof(float)));
+
+		Program.gl.EnableVertexAttribArray(3);
+		Program.gl.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, stride, (void*)(6 * sizeof(float)));
 
 		Program.gl.BindVertexArray(0);
 		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
@@ -67,6 +75,7 @@ public class Chunk : ChunkData {
 		public float x, y, z;
 		public float u, v;
 		public uint data;
+		public uint color;
 	}
 
 	public static Vector3 RotateAroundOrigin(Vector3 v, int rx, int ry, int rz) {
@@ -154,8 +163,16 @@ public class Chunk : ChunkData {
 		ChunkData neighbourNZ = this.world.GetChunk(this.cx, this.cy, this.cz - 1) ?? World.emptyChunk;
 		ChunkData neighbourPZ = this.world.GetChunk(this.cx, this.cy, this.cz + 1) ?? World.emptyChunk;
 
-		void AddVertex(Vector3 pos, Vector2 uv, byte ao) {
-			this.vertices.Add(new Vertex() { x=pos.x, y=pos.y, z=pos.z, u=uv.x, v=uv.y, data=ao });
+		void AddVertex(Vector3 pos, Vector2 uv, byte ao, int color = -1) {
+			this.vertices.Add(new Vertex() {
+				x = pos.x,
+				y = pos.y,
+				z = pos.z,
+				u = uv.x,
+				v = uv.y,
+				data = ao,
+				color = (uint) color,
+			});
 			vertexIndex++;
 		}
 
@@ -217,6 +234,8 @@ public class Chunk : ChunkData {
 					Block block = BlockRegistry.GetBlock(type.Type);
 					if (!block.data.Visible) continue;
 					if (block.data.RenderLayer != renderLayer) continue;
+
+					int color = BlockColors.GetColor(type, 0);
 
 					BlockStateItem[] models = block.data.BlockStateData.GetModels(type, pos);
 
@@ -305,10 +324,10 @@ public class Chunk : ChunkData {
 							model.rotationZ
 						) + modelPos;
 
-						AddVertex(v0, new Vector2(quad.u1, quad.v0), (byte) (ao0 | PackedLight));
-						AddVertex(v1, new Vector2(quad.u0, quad.v0), (byte) (ao1 | PackedLight));
-						AddVertex(v2, new Vector2(quad.u1, quad.v1), (byte) (ao2 | PackedLight));
-						AddVertex(v3, new Vector2(quad.u0, quad.v1), (byte) (ao3 | PackedLight));
+						AddVertex(v0, new Vector2(quad.u1, quad.v0), (byte) (ao0 | PackedLight), color);
+						AddVertex(v1, new Vector2(quad.u0, quad.v0), (byte) (ao1 | PackedLight), color);
+						AddVertex(v2, new Vector2(quad.u1, quad.v1), (byte) (ao2 | PackedLight), color);
+						AddVertex(v3, new Vector2(quad.u0, quad.v1), (byte) (ao3 | PackedLight), color);
 					}
 				}
 			}

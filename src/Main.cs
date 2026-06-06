@@ -23,6 +23,7 @@ public static class Main {
 	public static WorldRayResult rayResult;
 	public static bool rayCollides;
 	public static BlockId SelectedBlockId;
+	private static bool showUI = true;
 	private static bool takeScreenshot = false;
 
 	public static void Initialize() {
@@ -285,6 +286,10 @@ public static class Main {
 			takeScreenshot = true;
 		}
 
+		if (Keys.JustPressed(Key.F1)) {
+			showUI = !showUI;
+		}
+
 		Keys.End();
 	}
 
@@ -314,7 +319,7 @@ public static class Main {
 		Program.gl.Disable(EnableCap.CullFace);
 		Program.gl.BindVertexArray(0);
 
-		if (rayCollides) {
+		if (rayCollides && showUI) {
 			Program.gl.UseProgram(Preload.Selection);
 			Preload.Selection.SetUniform("offset", (float) rayResult.blockPosition.x, rayResult.blockPosition.y, rayResult.blockPosition.z);
 			Preload.Selection.SetUniform("view", Main.ViewMatrix, transpose: false);

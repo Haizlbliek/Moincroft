@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Moincroft.Definitions;
 using Moincroft.Definitions.Models;
 
@@ -34,7 +35,7 @@ public class Chunk : ChunkData {
 	public uint _vbo;
 	public uint _ebo;
 	public bool meshed;
-	public uint indices;
+	public uint indexCount;
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct Vertex {
@@ -42,26 +43,39 @@ public class Chunk : ChunkData {
 		public float u, v;
 		public uint data;
 	}
-
 	public static Vector3 RotateAroundOrigin(Vector3 v, int rx, int ry, int rz) {
-		for (int i = 0; i < rx; i++) {
-			// REVIEW
-			v = new Vector3(v.x, -v.z, v.y);
+		float x = v.x;
+		float y = v.y;
+		float z = v.z;
+
+		for (int i = 0; i < (rx & 3); i++) {
+			float ny = -z;
+			float nz = y;
+			y = ny;
+			z = nz;
 		}
-		for (int i = 0; i < ry; i++) {
-			v = new Vector3(-v.z, v.y, v.x);
+
+		for (int i = 0; i < (ry & 3); i++) {
+			float nx = z;
+			float nz = -x;
+			x = nx;
+			z = nz;
 		}
-		for (int i = 0; i < rz; i++) {
-			// REVIEW
-			v = new Vector3(-v.y, v.x, v.z);
+
+		for (int i = 0; i < (rz & 3); i++) {
+			float nx = -y;
+			float ny = x;
+			x = nx;
+			y = ny;
 		}
-		return v;
+
+		return new Vector3(x, y, z);
 	}
 
 	Vector3 RotateModelPos(Vector3 p, int rx, int ry, int rz) {
-		p -= new Vector3(0.5f, 0.5f, 0.5f);
+		p.x -= 0.5f; p.y -= 0.5f; p.z -= 0.5f;
 		p = RotateAroundOrigin(p, rx, ry, rz);
-		p += new Vector3(0.5f, 0.5f, 0.5f);
+		p.x += 0.5f; p.y += 0.5f; p.z += 0.5f;
 
 		return p;
 	}
@@ -98,15 +112,14 @@ public class Chunk : ChunkData {
 		return v;
 	}
 
-	public (List<Vertex>, List<uint>) MeshData() {
-		List<Vertex> vertices = [];
-		List<uint> indices = [];
+	private readonly List<Vertex> vertices = [];
+	private uint[] indices = new uint[6 * 6 * 512];
+
+	public void MeshData() {
+		this.vertices.Clear();
 		uint vertexIndex = 0;
 
-		void AddVertex(Vector3 pos, Vector2 uv, byte ao) {
-			vertices.Add(new Vertex() { x=pos.x, y=pos.y, z=pos.z, u=uv.x, v=uv.y, data=ao });
-			vertexIndex++;
-		}
+		uint indexPtr = 0;
 
 		ChunkData neighbourNX = this.world.GetChunk(this.cx - 1, this.cy, this.cz) ?? World.emptyChunk;
 		ChunkData neighbourPX = this.world.GetChunk(this.cx + 1, this.cy, this.cz) ?? World.emptyChunk;
@@ -114,6 +127,59 @@ public class Chunk : ChunkData {
 		ChunkData neighbourPY = this.world.GetChunk(this.cx, this.cy + 1, this.cz) ?? World.emptyChunk;
 		ChunkData neighbourNZ = this.world.GetChunk(this.cx, this.cy, this.cz - 1) ?? World.emptyChunk;
 		ChunkData neighbourPZ = this.world.GetChunk(this.cx, this.cy, this.cz + 1) ?? World.emptyChunk;
+
+		void AddVertex(Vector3 pos, Vector2 uv, byte ao) {
+			this.vertices.Add(new Vertex() { x=pos.x, y=pos.y, z=pos.z, u=uv.x, v=uv.y, data=ao });
+			vertexIndex++;
+		}
+
+		void EnsureIndexCapacity(uint needed) {
+			if (needed <= this.indices.Length) return;
+
+			int newSize = this.indices.Length * 2;
+			while (newSize < needed)
+				newSize *= 2;
+
+			Array.Resize(ref this.indices, newSize);
+		}
+
+		BlockType GetBlockNeighbour(BlockPos localPos) {
+			int x = localPos.x, y = localPos.y, z = localPos.z;
+			bool inX = x >= 0 && x < 16;
+			bool inY = y >= 0 && y < 16;
+			bool inZ = z >= 0 && z < 16;
+			if (inX && inY && inZ) return this.GetBlock(localPos);
+			if (x <  0 && inY && inZ) return neighbourNX.GetBlock(new BlockPos(15, y, z));
+			if (x > 15 && inY && inZ) return neighbourPX.GetBlock(new BlockPos(0, y, z));
+			if (y <  0 && inX && inZ) return neighbourNY.GetBlock(new BlockPos(x, 15, z));
+			if (y > 15 && inX && inZ) return neighbourPY.GetBlock(new BlockPos(x, 0, z));
+			if (z <  0 && inX && inY) return neighbourNZ.GetBlock(new BlockPos(x, y, 15));
+			if (z > 15 && inX && inY) return neighbourPZ.GetBlock(new BlockPos(x, y, 0));
+
+			return this.world.GetBlock(x + this.cx * 16, y + this.cy * 16, z + this.cz * 16);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		bool IsVisiblySolidClean(BlockPos localPos) {
+			return this.IsVisiblySolid(GetBlockNeighbour(localPos));
+		}
+
+		(byte, byte, byte, byte) GetAO(BlockPos pos, FaceBasis faceBasis) {
+			BlockPos front = pos + faceBasis.Front;
+
+			int mask = 0;
+
+			if (IsVisiblySolidClean(front + faceBasis.Up - faceBasis.Right)) mask |= 1;
+			if (IsVisiblySolidClean(front + faceBasis.Up)) mask |= 2;
+			if (IsVisiblySolidClean(front + faceBasis.Up + faceBasis.Right)) mask |= 4;
+			if (IsVisiblySolidClean(front + faceBasis.Right)) mask |= 8;
+			if (IsVisiblySolidClean(front - faceBasis.Up + faceBasis.Right)) mask |= 16;
+			if (IsVisiblySolidClean(front - faceBasis.Up)) mask |= 32;
+			if (IsVisiblySolidClean(front - faceBasis.Up - faceBasis.Right)) mask |= 64;
+			if (IsVisiblySolidClean(front - faceBasis.Right)) mask |= 128;
+
+			return Preload.AmbientOcclusionVertexLUT[mask];
+		}
 
 		for (int z = 0; z < 16; z++) {
 			for (int x = 0; x < 16; x++) {
@@ -159,11 +225,22 @@ public class Chunk : ChunkData {
 						byte PackedLight = (byte)(lightValue << 4);
 
 						FaceBasis faceBasis = Preload.FaceBases[(int) quad.direction];
-						(byte ao0, byte ao1, byte ao2, byte ao3) = this.GetAO(pos, faceBasis.Rotated(model.rotationX, model.rotationY, model.rotationZ));
+						(byte ao0, byte ao1, byte ao2, byte ao3) = GetAO(pos, faceBasis.Rotated(model.rotationX, model.rotationY, model.rotationZ));
+						EnsureIndexCapacity(indexPtr + 6);
 						if (ao0 + ao3 < ao1 + ao2) {
-							indices.AddRange([ vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 2, vertexIndex + 1, vertexIndex + 3 ]);
+							this.indices[indexPtr++] = vertexIndex + 0;
+							this.indices[indexPtr++] = vertexIndex + 1;
+							this.indices[indexPtr++] = vertexIndex + 2;
+							this.indices[indexPtr++] = vertexIndex + 2;
+							this.indices[indexPtr++] = vertexIndex + 1;
+							this.indices[indexPtr++] = vertexIndex + 3;
 						} else {
-							indices.AddRange([ vertexIndex + 0, vertexIndex + 1, vertexIndex + 3, vertexIndex + 3, vertexIndex + 2, vertexIndex + 0 ]);
+							this.indices[indexPtr++] = vertexIndex + 0;
+							this.indices[indexPtr++] = vertexIndex + 1;
+							this.indices[indexPtr++] = vertexIndex + 3;
+							this.indices[indexPtr++] = vertexIndex + 3;
+							this.indices[indexPtr++] = vertexIndex + 2;
+							this.indices[indexPtr++] = vertexIndex + 0;
 						}
 						Vector3 center = (quad.to + quad.from) / 16f / 2f;
 						Vector3 size = (quad.from - quad.to) / 16f / 2f;
@@ -172,21 +249,33 @@ public class Chunk : ChunkData {
 						size.z = Mathf.Abs(size.z);
 
 						Vector3 front = center + size * (Vector3) faceBasis.Front;
-						Vector3 v0 = front + size * (Vector3) (-faceBasis.Right + faceBasis.Up);
-						Vector3 v1 = front + size * (Vector3) (faceBasis.Right + faceBasis.Up);
-						Vector3 v2 = front + size * (Vector3) (-faceBasis.Right - faceBasis.Up);
-						Vector3 v3 = front + size * (Vector3) (faceBasis.Right - faceBasis.Up);
-
 						Vector3 modelPos = new Vector3(x, y, z);
 						Vector3 rotationOrigin = quad.rotationOrigin;
-						v0 = this.Rotate(v0 - rotationOrigin, quad.rotation) + rotationOrigin;
-						v1 = this.Rotate(v1 - rotationOrigin, quad.rotation) + rotationOrigin;
-						v2 = this.Rotate(v2 - rotationOrigin, quad.rotation) + rotationOrigin;
-						v3 = this.Rotate(v3 - rotationOrigin, quad.rotation) + rotationOrigin;
-						v0 = this.RotateModelPos(v0, model.rotationX, model.rotationY, model.rotationZ) + modelPos;
-						v1 = this.RotateModelPos(v1, model.rotationX, model.rotationY, model.rotationZ) + modelPos;
-						v2 = this.RotateModelPos(v2, model.rotationX, model.rotationY, model.rotationZ) + modelPos;
-						v3 = this.RotateModelPos(v3, model.rotationX, model.rotationY, model.rotationZ) + modelPos;
+
+						Vector3 v0 = this.RotateModelPos(
+							this.Rotate(front + size * (Vector3) (-faceBasis.Right + faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
+							model.rotationX,
+							model.rotationY,
+							model.rotationZ
+						) + modelPos;
+						Vector3 v1 = this.RotateModelPos(
+							this.Rotate(front + size * (Vector3) (faceBasis.Right + faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
+							model.rotationX,
+							model.rotationY,
+							model.rotationZ
+						) + modelPos;
+						Vector3 v2 = this.RotateModelPos(
+							this.Rotate(front + size * (Vector3) (-faceBasis.Right - faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
+							model.rotationX,
+							model.rotationY,
+							model.rotationZ
+						) + modelPos;
+						Vector3 v3 = this.RotateModelPos(
+							this.Rotate(front + size * (Vector3) (faceBasis.Right - faceBasis.Up) - rotationOrigin, quad.rotation) + rotationOrigin,
+							model.rotationX,
+							model.rotationY,
+							model.rotationZ
+						) + modelPos;
 
 						AddVertex(v0, new Vector2(quad.u1, quad.v0), (byte) (ao0 | PackedLight));
 						AddVertex(v1, new Vector2(quad.u0, quad.v0), (byte) (ao1 | PackedLight));
@@ -197,49 +286,34 @@ public class Chunk : ChunkData {
 			}
 		}
 
-		return (vertices, indices);
+		this.indexCount = indexPtr;
 	}
 
 	public unsafe void GenerateMesh() {
 		Program.gl.BindVertexArray(this._vao);
 
-		(List<Vertex> vertices, List<uint> indices) = this.MeshData();
+		this.MeshData();
 
 		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._vbo);
-		Span<Vertex> vertexSpan = CollectionsMarshal.AsSpan(vertices);
-		fixed (Vertex* buf = vertexSpan) {
-			Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (vertexSpan.Length * sizeof(Vertex)), buf, BufferUsageARB.StaticDraw);
+		fixed (Vertex* buf = CollectionsMarshal.AsSpan(this.vertices)) {
+			Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (this.vertices.Count * Unsafe.SizeOf<Vertex>()), buf, BufferUsageARB.StaticDraw);
 		}
 
 		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, this._ebo);
-		Span<uint> indexSpan = CollectionsMarshal.AsSpan(indices);
-		fixed (uint* buf = indexSpan) {
-			Program.gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint) (indexSpan.Length * sizeof(uint)), buf, BufferUsageARB.StaticDraw);
+		fixed (uint* buf = this.indices) {
+			Program.gl.BufferData(
+				BufferTargetARB.ElementArrayBuffer,
+				this.indexCount * sizeof(uint),
+				buf,
+				BufferUsageARB.StaticDraw
+			);
 		}
 
 		Program.gl.BindVertexArray(0);
 		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
 		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
 
-		this.indices = (uint) indexSpan.Length;
 		this.meshed = true;
-	}
-
-	public (byte, byte, byte, byte) GetAO(BlockPos pos, FaceBasis faceBasis) {
-		BlockPos front = pos + faceBasis.Front;
-
-		int mask = 0;
-
-		if (this.IsVisiblySolid(front + faceBasis.Up - faceBasis.Right)) mask |= 1;
-		if (this.IsVisiblySolid(front + faceBasis.Up)) mask |= 2;
-		if (this.IsVisiblySolid(front + faceBasis.Up + faceBasis.Right)) mask |= 4;
-		if (this.IsVisiblySolid(front + faceBasis.Right)) mask |= 8;
-		if (this.IsVisiblySolid(front - faceBasis.Up + faceBasis.Right)) mask |= 16;
-		if (this.IsVisiblySolid(front - faceBasis.Up)) mask |= 32;
-		if (this.IsVisiblySolid(front - faceBasis.Up - faceBasis.Right)) mask |= 64;
-		if (this.IsVisiblySolid(front - faceBasis.Right)) mask |= 128;
-
-		return Preload.AmbientOcclusionVertexLUT[mask];
 	}
 
 	public unsafe void Render() {
@@ -247,7 +321,7 @@ public class Chunk : ChunkData {
 
 		Preload.Basic.SetUniform("uChunkOffset", this.cx * 16f, this.cy * 16f, this.cz * 16f);
 		Program.gl.BindVertexArray(this._vao);
-		Program.gl.DrawElements(PrimitiveType.Triangles, this.indices, DrawElementsType.UnsignedInt, (void*) 0);
+		Program.gl.DrawElements(PrimitiveType.Triangles, this.indexCount, DrawElementsType.UnsignedInt, (void*) 0);
 	}
 
 	public void QueueRefresh() {
@@ -258,16 +332,4 @@ public class Chunk : ChunkData {
 		this.world.chunksToRemesh.Add(this);
 	}
 #endregion
-
-	const byte FACE_X_POS = 1;
-	const byte FACE_X_NEG = 2;
-	const byte FACE_Y_POS = 4;
-	const byte FACE_Y_NEG = 8;
-	const byte FACE_Z_POS = 16;
-	const byte FACE_Z_NEG = 32;
-	const byte FACE_X = 3;
-	const byte FACE_Y = 12;
-	const byte FACE_Z = 48;
-	const byte FACE_POS = 21;
-	const byte FACE_NEG = 42;
 }

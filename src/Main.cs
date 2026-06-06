@@ -131,59 +131,33 @@ public static class Main {
 		}
 		if (!chunk.CalculateLight()) {
 			chunk.QueueRefresh();
-			if (x == 0)
-				world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz)?.QueueRefresh();
-			if (x == 15)
-				world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz)?.QueueRefresh();
-			if (y == 0)
-				world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz)?.QueueRefresh();
-			if (y == 15)
-				world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.QueueRefresh();
-			if (z == 0)
-				world.GetChunk(chunk.cx, chunk.cy, chunk.cz - 1)?.QueueRefresh();
-			if (z == 15)
-				world.GetChunk(chunk.cx, chunk.cy, chunk.cz + 1)?.QueueRefresh();
+			if (x == 0) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz)?.QueueRefresh();
+			if (x == 15) world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz)?.QueueRefresh();
+			if (y == 0) world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz)?.QueueRefresh();
+			if (y == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz)?.QueueRefresh();
+			if (z == 0) world.GetChunk(chunk.cx, chunk.cy, chunk.cz - 1)?.QueueRefresh();
+			if (z == 15) world.GetChunk(chunk.cx, chunk.cy, chunk.cz + 1)?.QueueRefresh();
 
-			if (x == 0 && z == 0)
-				world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz - 1)?.QueueRefresh();
-			if (x == 0 && z == 15)
-				world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz + 1)?.QueueRefresh();
-			if (x == 15 && z == 0)
-				world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz - 1)?.QueueRefresh();
-			if (x == 15 && z == 15)
-				world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz + 1)?.QueueRefresh();
-			if (x == 0 && y == 0)
-				world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz)?.QueueRefresh();
-			if (x == 0 && y == 15)
-				world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz)?.QueueRefresh();
-			if (x == 15 && y == 0)
-				world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz)?.QueueRefresh();
-			if (x == 15 && y == 15)
-				world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz)?.QueueRefresh();
-			if (y == 0 && z == 0)
-				world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
-			if (y == 0 && z == 15)
-				world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
-			if (y == 15 && z == 0)
-				world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
-			if (y == 15 && z == 15)
-				world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
-			if (x == 0 && y == 0 && z == 0)
-				world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
-			if (x == 0 && y == 0 && z == 15)
-				world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
-			if (x == 0 && y == 15 && z == 0)
-				world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
-			if (x == 0 && y == 15 && z == 15)
-				world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
-			if (x == 15 && y == 0 && z == 0)
-				world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
-			if (x == 15 && y == 0 && z == 15)
-				world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
-			if (x == 15 && y == 15 && z == 0)
-				world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
-			if (x == 15 && y == 15 && z == 15)
-				world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
+			if (x == 0 && z == 0) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz - 1)?.QueueRefresh();
+			if (x == 0 && z == 15) world.GetChunk(chunk.cx - 1, chunk.cy, chunk.cz + 1)?.QueueRefresh();
+			if (x == 15 && z == 0) world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz - 1)?.QueueRefresh();
+			if (x == 15 && z == 15) world.GetChunk(chunk.cx + 1, chunk.cy, chunk.cz + 1)?.QueueRefresh();
+			if (x == 0 && y == 0) world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz)?.QueueRefresh();
+			if (x == 0 && y == 15) world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz)?.QueueRefresh();
+			if (x == 15 && y == 0) world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz)?.QueueRefresh();
+			if (x == 15 && y == 15) world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz)?.QueueRefresh();
+			if (y == 0 && z == 0) world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
+			if (y == 0 && z == 15) world.GetChunk(chunk.cx, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
+			if (y == 15 && z == 0) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
+			if (y == 15 && z == 15) world.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
+			if (x == 0 && y == 0 && z == 0) world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
+			if (x == 0 && y == 0 && z == 15) world.GetChunk(chunk.cx - 1, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
+			if (x == 0 && y == 15 && z == 0) world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
+			if (x == 0 && y == 15 && z == 15) world.GetChunk(chunk.cx - 1, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
+			if (x == 15 && y == 0 && z == 0) world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz - 1)?.QueueRefresh();
+			if (x == 15 && y == 0 && z == 15) world.GetChunk(chunk.cx + 1, chunk.cy - 1, chunk.cz + 1)?.QueueRefresh();
+			if (x == 15 && y == 15 && z == 0) world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz - 1)?.QueueRefresh();
+			if (x == 15 && y == 15 && z == 15) world.GetChunk(chunk.cx + 1, chunk.cy + 1, chunk.cz + 1)?.QueueRefresh();
 		}
 		else {
 			if (y == 15)
@@ -192,37 +166,25 @@ public static class Main {
 			Chunk? lightChunk = chunk;
 			while (true) {
 				lightChunk.QueueRefresh();
-				if (x == 0)
-					world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
-				if (x == 15)
-					world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
-				if (z == 0)
-					world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
-				if (z == 15)
-					world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
+				if (x == 0) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
+				if (x == 15) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
+				if (z == 0) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
+				if (z == 15) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
 
 				lightChunk = world.GetChunk(lightChunk.cx, lightChunk.cy - 1, lightChunk.cz);
 				if (lightChunk == null)
 					break;
 				if (!lightChunk.CalculateLight()) {
 					lightChunk.QueueRefresh();
-					if (x == 0)
-						world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
-					if (x == 15)
-						world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
-					if (z == 0)
-						world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
-					if (z == 15)
-						world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
+					if (x == 0) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
+					if (x == 15) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz)?.QueueRefresh();
+					if (z == 0) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
+					if (z == 15) world.GetChunk(lightChunk.cx, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
 
-					if (x == 0 && z == 0)
-						world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
-					if (x == 0 && z == 15)
-						world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
-					if (x == 15 && z == 0)
-						world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
-					if (x == 15 && z == 15)
-						world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
+					if (x == 0 && z == 0) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
+					if (x == 0 && z == 15) world.GetChunk(lightChunk.cx - 1, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
+					if (x == 15 && z == 0) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz - 1)?.QueueRefresh();
+					if (x == 15 && z == 15) world.GetChunk(lightChunk.cx + 1, lightChunk.cy, lightChunk.cz + 1)?.QueueRefresh();
 
 					break;
 				}

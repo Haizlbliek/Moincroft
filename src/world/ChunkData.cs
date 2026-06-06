@@ -56,6 +56,11 @@ public class ChunkData {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public bool IsVisiblySolid(BlockPos pos) {
 		BlockType type = this.GetBlockOutside(pos);
+		return this.IsVisiblySolid(type);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public bool IsVisiblySolid(BlockType type) {
 		return type.Type > 0; // && Blocks.Blocks.blocks[type].opaque;
 	}
 

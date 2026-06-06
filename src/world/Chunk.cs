@@ -43,13 +43,26 @@ public class Chunk : ChunkData {
 		public uint data;
 	}
 
-		public (List<Vertex>, List<uint>) MeshData() {
+	public Vector3 RotateAroundOrigin(Vector3 v, int rx, int ry, int rz) {
+		for (int i = 0; i < rx; i++) {
+			v = new Vector3(v.x, -v.z, v.y);
+		}
+		for (int i = 0; i < ry; i++) {
+			v = new Vector3(v.z, v.y, -v.x);
+		}
+		for (int i = 0; i < rz; i++) {
+			v = new Vector3(-v.y, v.x, v.z);
+		}
+		return v;
+	}
+
+	public (List<Vertex>, List<uint>) MeshData() {
 		List<Vertex> vertices = [];
 		List<uint> indices = [];
 		uint vertexIndex = 0;
 
-		void AddVertex(float x, float y, float z, float uvX, float uvY, byte ao) {
-			vertices.Add(new Vertex() { x=x, y=y, z=z, u=uvX, v=uvY, data=ao });
+		void AddVertex(float x, float y, float z, Vector2 uv, byte ao) {
+			vertices.Add(new Vertex() { x=x, y=y, z=z, u=uv.x, v=uv.y, data=ao });
 			vertexIndex++;
 		}
 
@@ -59,6 +72,8 @@ public class Chunk : ChunkData {
 		ChunkData neighbourPY = this.world.GetChunk(this.cx, this.cy + 1, this.cz) ?? World.emptyChunk;
 		ChunkData neighbourNZ = this.world.GetChunk(this.cx, this.cy, this.cz - 1) ?? World.emptyChunk;
 		ChunkData neighbourPZ = this.world.GetChunk(this.cx, this.cy, this.cz + 1) ?? World.emptyChunk;
+
+		// TODO: Rotate UV by transform
 
 		for (int z = 0; z < 16; z++) {
 			for (int x = 0; x < 16; x++) {
@@ -70,9 +85,14 @@ public class Chunk : ChunkData {
 					Block block = BlockRegistry.GetBlock(type.Type);
 					if (!block.data.Visible) continue;
 
-					foreach (Model.Quad quad in block.data.BlockStateData.GetModel(type, pos).model.quads) {
-						if (quad.cullFace != Direction.None) {
-							BlockType neighborBlock = quad.cullFace switch {
+					BlockStateItem model = block.data.BlockStateData.GetModel(type, pos);
+
+					foreach (Model.Quad quad in model.model.quads) {
+						Direction rotatedDirection = Preload.Rotate(quad.direction, model.rotationX, model.rotationY, model.rotationZ);
+						Direction rotatedCullFace = quad.cullFace == Direction.None ? Direction.None : Preload.Rotate(quad.cullFace, model.rotationX, model.rotationY, model.rotationZ);
+
+						if (rotatedCullFace != Direction.None) {
+							BlockType neighborBlock = rotatedCullFace switch {
 								Direction.West  => x > 0 ? this.GetBlock(pos.NX()) : neighbourNX.GetBlock(new BlockPos(15, y, z)),
 								Direction.East  => x < 15 ? this.GetBlock(pos.PX()) : neighbourPX.GetBlock(new BlockPos(0, y, z)),
 								Direction.Down  => y > 0 ? this.GetBlock(pos.NY()) : neighbourNY.GetBlock(new BlockPos(x, 15, z)),
@@ -87,14 +107,14 @@ public class Chunk : ChunkData {
 							}
 						}
 
-						byte aoDirIndex = quad.direction switch {
-							Direction.East  => 0, Direction.West  => 1,
-							Direction.Up    => 2, Direction.Down  => 3,
-							Direction.South => 4, Direction.North => 5,
-							_ => 2
-						};
+						// byte aoDirIndex = rotatedDirection switch {
+						// 	Direction.East  => 0, Direction.West  => 1,
+						// 	Direction.Up    => 2, Direction.Down  => 3,
+						// 	Direction.South => 4, Direction.North => 5,
+						// 	_ => 2
+						// };
 						
-						byte lightValue = quad.direction switch {
+						byte lightValue = rotatedDirection switch {
 							Direction.West  => (byte) (x > 0 ? this.GetBlockLight(x - 1, y, z) : neighbourNX.GetBlockLight(15, y, z)),
 							Direction.East  => (byte) (x < 15 ? this.GetBlockLight(x + 1, y, z) : neighbourPX.GetBlockLight(0, y, z)),
 							Direction.Down  => (byte) (y > 0 ? this.GetBlockLight(x, y - 1, z) : neighbourNY.GetBlockLight(x, 15, z)),
@@ -106,9 +126,15 @@ public class Chunk : ChunkData {
 						byte PackedLight = (byte)(lightValue << 4);
 
 						byte ao0, ao1, ao2, ao3;
-						float xmin = x + (quad.from.x / 16f); float xmax = x + (quad.to.x / 16f);
-						float ymin = y + (quad.from.y / 16f); float ymax = y + (quad.to.y / 16f);
-						float zmin = z + (quad.from.z / 16f); float zmax = z + (quad.to.z / 16f);
+						float xmin = quad.from.x / 16f - 0.5f; float xmax = quad.to.x / 16f - 0.5f;
+						float ymin = quad.from.y / 16f - 0.5f; float ymax = quad.to.y / 16f - 0.5f;
+						float zmin = quad.from.z / 16f - 0.5f; float zmax = quad.to.z / 16f - 0.5f;
+						Vector3 rotatedMin = this.RotateAroundOrigin(new Vector3(xmin, ymin, zmin), model.rotationX / 90, model.rotationY / 90, model.rotationZ / 90);
+						(xmin, ymin, zmin) = (x + rotatedMin.x + 0.5f, y + rotatedMin.y + 0.5f, z + rotatedMin.z + 0.5f);
+						Vector3 rotatedMax = this.RotateAroundOrigin(new Vector3(xmax, ymax, zmax), model.rotationX / 90, model.rotationY / 90, model.rotationZ / 90);
+						(xmax, ymax, zmax) = (x + rotatedMax.x + 0.5f, y + rotatedMax.y + 0.5f, z + rotatedMax.z + 0.5f);
+
+						Span<int> i = [0, 1, 2, 3];
 
 						switch (quad.direction) {
 							case Direction.NZ:
@@ -118,10 +144,16 @@ public class Chunk : ChunkData {
 								} else {
 									indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 								}
-								AddVertex(xmin, ymin, zmin, quad.u1, quad.v1, (byte) (ao0 | PackedLight));
-								AddVertex(xmax, ymin, zmin, quad.u0, quad.v1, (byte) (ao1 | PackedLight));
-								AddVertex(xmin, ymax, zmin, quad.u1, quad.v0, (byte) (ao2 | PackedLight));
-								AddVertex(xmax, ymax, zmin, quad.u0, quad.v0, (byte) (ao3 | PackedLight));
+								Vector2[] uvNZ = [
+									new Vector2(quad.u1, quad.v1),
+									new Vector2(quad.u0, quad.v1),
+									new Vector2(quad.u1, quad.v0),
+									new Vector2(quad.u0, quad.v0),
+								];
+								AddVertex(xmin, ymin, zmin, uvNZ[i[0]], (byte) (ao0 | PackedLight));
+								AddVertex(xmax, ymin, zmin, uvNZ[i[1]], (byte) (ao1 | PackedLight));
+								AddVertex(xmin, ymax, zmin, uvNZ[i[2]], (byte) (ao2 | PackedLight));
+								AddVertex(xmax, ymax, zmin, uvNZ[i[3]], (byte) (ao3 | PackedLight));
 								break;
 
 							case Direction.PZ:
@@ -131,10 +163,16 @@ public class Chunk : ChunkData {
 								} else {
 									indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 								}
-								AddVertex(xmax, ymin, zmax, quad.u1, quad.v1, (byte) (ao0 | PackedLight));
-								AddVertex(xmin, ymin, zmax, quad.u0, quad.v1, (byte) (ao1 | PackedLight));
-								AddVertex(xmax, ymax, zmax, quad.u1, quad.v0, (byte) (ao2 | PackedLight));
-								AddVertex(xmin, ymax, zmax, quad.u0, quad.v0, (byte) (ao3 | PackedLight));
+								Vector2[] uvPZ = [
+									new Vector2(quad.u1, quad.v1),
+									new Vector2(quad.u0, quad.v1),
+									new Vector2(quad.u1, quad.v0),
+									new Vector2(quad.u0, quad.v0),
+								];
+								AddVertex(xmax, ymin, zmax, uvPZ[i[0]], (byte) (ao0 | PackedLight));
+								AddVertex(xmin, ymin, zmax, uvPZ[i[1]], (byte) (ao1 | PackedLight));
+								AddVertex(xmax, ymax, zmax, uvPZ[i[2]], (byte) (ao2 | PackedLight));
+								AddVertex(xmin, ymax, zmax, uvPZ[i[3]], (byte) (ao3 | PackedLight));
 								break;
 
 							case Direction.NY:
@@ -144,10 +182,16 @@ public class Chunk : ChunkData {
 								} else {
 									indices.AddRange([ vertexIndex + 0, vertexIndex + 3, vertexIndex + 2, vertexIndex + 0, vertexIndex + 1, vertexIndex + 3 ]);
 								}
-								AddVertex(xmin, ymin, zmin, quad.u0, quad.v0, (byte) (ao0 | PackedLight));
-								AddVertex(xmax, ymin, zmin, quad.u1, quad.v0, (byte) (ao1 | PackedLight));
-								AddVertex(xmin, ymin, zmax, quad.u0, quad.v1, (byte) (ao2 | PackedLight));
-								AddVertex(xmax, ymin, zmax, quad.u1, quad.v1, (byte) (ao3 | PackedLight));
+								Vector2[] uvNY = [
+									new Vector2(quad.u0, quad.v0),
+									new Vector2(quad.u1, quad.v0),
+									new Vector2(quad.u0, quad.v1),
+									new Vector2(quad.u1, quad.v1),
+								];
+								AddVertex(xmin, ymin, zmin, uvNY[i[0]], (byte) (ao0 | PackedLight));
+								AddVertex(xmax, ymin, zmin, uvNY[i[1]], (byte) (ao1 | PackedLight));
+								AddVertex(xmin, ymin, zmax, uvNY[i[2]], (byte) (ao2 | PackedLight));
+								AddVertex(xmax, ymin, zmax, uvNY[i[3]], (byte) (ao3 | PackedLight));
 								break;
 
 							case Direction.PY:
@@ -157,10 +201,16 @@ public class Chunk : ChunkData {
 								} else {
 									indices.AddRange([ vertexIndex + 0, vertexIndex + 3, vertexIndex + 2, vertexIndex + 0, vertexIndex + 1, vertexIndex + 3 ]);
 								}
-								AddVertex(xmax, ymax, zmin, quad.u1, quad.v0, (byte) (ao0 | PackedLight));
-								AddVertex(xmin, ymax, zmin, quad.u0, quad.v0, (byte) (ao1 | PackedLight));
-								AddVertex(xmax, ymax, zmax, quad.u1, quad.v1, (byte) (ao2 | PackedLight));
-								AddVertex(xmin, ymax, zmax, quad.u0, quad.v1, (byte) (ao3 | PackedLight));
+								Vector2[] uvPY = [
+									new Vector2(quad.u1, quad.v0),
+									new Vector2(quad.u0, quad.v0),
+									new Vector2(quad.u1, quad.v1),
+									new Vector2(quad.u0, quad.v1),
+								];
+								AddVertex(xmax, ymax, zmin, uvPY[i[0]], (byte) (ao0 | PackedLight));
+								AddVertex(xmin, ymax, zmin, uvPY[i[1]], (byte) (ao1 | PackedLight));
+								AddVertex(xmax, ymax, zmax, uvPY[i[2]], (byte) (ao2 | PackedLight));
+								AddVertex(xmin, ymax, zmax, uvPY[i[3]], (byte) (ao3 | PackedLight));
 								break;
 
 							case Direction.NX:
@@ -170,10 +220,16 @@ public class Chunk : ChunkData {
 								} else {
 									indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 								}
-								AddVertex(xmin, ymin, zmin, quad.u0, quad.v1, (byte) (ao0 | PackedLight));
-								AddVertex(xmin, ymax, zmin, quad.u0, quad.v0, (byte) (ao1 | PackedLight));
-								AddVertex(xmin, ymin, zmax, quad.u1, quad.v1, (byte) (ao2 | PackedLight));
-								AddVertex(xmin, ymax, zmax, quad.u1, quad.v0, (byte) (ao3 | PackedLight));
+								Vector2[] uvNX = [
+									new Vector2(quad.u0, quad.v1),
+									new Vector2(quad.u0, quad.v0),
+									new Vector2(quad.u1, quad.v1),
+									new Vector2(quad.u1, quad.v0),
+								];
+								AddVertex(xmin, ymin, zmin, uvNX[i[0]], (byte) (ao0 | PackedLight));
+								AddVertex(xmin, ymax, zmin, uvNX[i[1]], (byte) (ao1 | PackedLight));
+								AddVertex(xmin, ymin, zmax, uvNX[i[2]], (byte) (ao2 | PackedLight));
+								AddVertex(xmin, ymax, zmax, uvNX[i[3]], (byte) (ao3 | PackedLight));
 								break;
 
 							case Direction.PX:
@@ -183,10 +239,16 @@ public class Chunk : ChunkData {
 								} else {
 									indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
 								}
-								AddVertex(xmax, ymax, zmin, quad.u1, quad.v0, (byte) (ao0 | PackedLight));
-								AddVertex(xmax, ymin, zmin, quad.u1, quad.v1, (byte) (ao1 | PackedLight));
-								AddVertex(xmax, ymax, zmax, quad.u0, quad.v0, (byte) (ao2 | PackedLight));
-								AddVertex(xmax, ymin, zmax, quad.u0, quad.v1, (byte) (ao3 | PackedLight));
+								Vector2[] uvPX = [
+									new Vector2(quad.u1, quad.v0),
+									new Vector2(quad.u1, quad.v1),
+									new Vector2(quad.u0, quad.v0),
+									new Vector2(quad.u0, quad.v1),
+								];
+								AddVertex(xmax, ymax, zmin, uvPX[i[0]], (byte) (ao0 | PackedLight));
+								AddVertex(xmax, ymin, zmin, uvPX[i[1]], (byte) (ao1 | PackedLight));
+								AddVertex(xmax, ymax, zmax, uvPX[i[2]], (byte) (ao2 | PackedLight));
+								AddVertex(xmax, ymin, zmax, uvPX[i[3]], (byte) (ao3 | PackedLight));
 								break;
 						}
 					}

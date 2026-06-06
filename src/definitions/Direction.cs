@@ -1,11 +1,11 @@
 namespace Moincroft.Definitions;
 
 public enum Direction {
-	None = 0,
-	North = 1, NZ = 1,
-	South = 2, PZ = 2,
-	East = 3, PX = 3,
-	West = 4, NX = 4,
-	Up = 5, PY = 5,
-	Down = 6, NY = 6,
+	North = 0, NZ = 0,
+	South = 1, PZ = 1,
+	East = 2, PX = 2,
+	West = 3, NX = 3,
+	Up = 4, PY = 4,
+	Down = 5, NY = 5,
+	None = 6,
 }

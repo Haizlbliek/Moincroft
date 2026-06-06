@@ -32,3 +32,8 @@ public class BooleanProperty : Property<bool> {
 	public BooleanProperty(string name) : base(name, [false, true]) {
 	}
 }
+
+public class EnumProperty<T> : Property<T> where T : struct, Enum {
+	public EnumProperty(string name) : base(name, Enum.GetValues<T>()) {
+	}
+}

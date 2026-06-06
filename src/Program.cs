@@ -50,7 +50,7 @@ public static class Program {
 
 	private static void OnLoad() {
 		gl = GL.GetApi(window);
-		gl.ClearColor(0f, 0f, 0f, 1f);
+		gl.ClearColor(0.5f, 1f, 1f, 1f);
 		Custom.Custom.Initialize(gl);
 
 		window.SetWindowIcon([ Texture.LoadRawImage("assets/icon.png") ]);

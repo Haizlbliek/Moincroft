@@ -30,7 +30,7 @@ public static class Main {
 		BlockStateLoader.Initialize();
 		Blocks.Initialize();
 
-		SelectedBlock = new BlockType(Blocks.DAYLIGHT_DETECTOR, 0);
+		SelectedBlock = new BlockType(Blocks.CARVED_PUMPKIN, 0);
 		// Entities.Initialize();
 
 		input = Program.window.CreateInput();
@@ -105,6 +105,11 @@ public static class Main {
 			BlockType block = chunk.GetBlock(pos);
 			if (block.Type == Blocks.DAYLIGHT_DETECTOR) {
 				chunk.SetBlock(pos, block.With(DaylightDetectorBlock.INVERTED, !block.Get(DaylightDetectorBlock.INVERTED)));
+			}
+			else if (block.Type == Blocks.CARVED_PUMPKIN) {
+				HorizontalDirection dir = block.Get(HorizontalDirectionBlock.DIRECTION);
+				HorizontalDirection next = (HorizontalDirection)(((int)dir + 1) & 3);
+				chunk.SetBlock(pos, block.With(HorizontalDirectionBlock.DIRECTION, next));
 			}
 		}
 		else {

@@ -1,3 +1,5 @@
+using Moincroft.Definitions;
+
 namespace Moincroft;
 
 public static class Preload {
@@ -6,6 +8,7 @@ public static class Preload {
 
 	public static (byte, byte, byte, byte)[] AmbientOcclusionVertexLUT = null!;
 	public static sbyte[][] FaceNeighboursLUT = null!;
+	public static Direction[,,,] RotationLUT = null!;
 
 	public static void Initialize() {
 		Basic = Shader.Load("assets/shaders/Basic.vert", "assets/shaders/Basic.frag");
@@ -24,6 +27,7 @@ public static class Preload {
 			[ 0, -1,  1,    0,  1,  1,   -1,  0,  1,    1,  0,  1,   -1, -1,  1,   -1,  1,  1,    1, -1,  1,    1,  1,  1],
 			[ 0, -1, -1,    0,  1, -1,   -1,  0, -1,    1,  0, -1,   -1, -1, -1,   -1,  1, -1,    1, -1, -1,    1,  1, -1]
 		];
+		RotationLUT = PrecomputeRotationLUT();
 	}
 
 	public static (byte, byte, byte, byte)[] PrecomputeAmbientOcclusionLUT() {
@@ -55,5 +59,78 @@ public static class Preload {
 		int s2 = side2 ? 1 : 0;
 		int c = corner ? 1 : 0;
 		return (byte)(3 - (s1 + s2 + c));
+	}
+
+	public static Direction Rotate(Direction direction, int x, int y, int z) {
+		return RotationLUT[(int) direction, (x / 90) & 3, (y / 90) & 3, (z / 90) & 3];
+	}
+
+	private static (int x, int y, int z) DirToVec(Direction d) {
+		return d switch {
+			Direction.NZ => (0, 0, -1),
+			Direction.PZ => (0, 0, 1),
+			Direction.PX => (1, 0, 0),
+			Direction.NX => (-1, 0, 0),
+			Direction.PY => (0, 1, 0),
+			Direction.NY => (0, -1, 0),
+			_ => (0, 0, 0)
+		};
+	}
+
+	private static Direction VecToDir((int x, int y, int z) v) {
+		if (v.x == 1) return Direction.PX;
+		if (v.x == -1) return Direction.NX;
+		if (v.y == 1) return Direction.PY;
+		if (v.y == -1) return Direction.NY;
+		if (v.z == 1) return Direction.PZ;
+		if (v.z == -1) return Direction.NZ;
+
+		return Direction.None;
+	}
+
+	private static (int x, int y, int z) RotateX((int x, int y, int z) v, int times) {
+		for (int i = 0; i < times; i++) {
+			v = (v.x, -v.z, v.y);
+		}
+		return v;
+	}
+
+	private static (int x, int y, int z) RotateY((int x, int y, int z) v, int times) {
+		for (int i = 0; i < times; i++) {
+			v = (v.z, v.y, -v.x);
+		}
+		return v;
+	}
+
+	private static (int x, int y, int z) RotateZ((int x, int y, int z) v, int times) {
+		for (int i = 0; i < times; i++) {
+			v = (-v.y, v.x, v.z);
+		}
+		return v;
+	}
+
+	public static Direction[,,,] PrecomputeRotationLUT() {
+		var table = new Direction[6, 4, 4, 4];
+
+		for (int d = 0; d < 6; d++) {
+			var v = DirToVec((Direction)d);
+
+			for (int x = 0; x < 4; x++) {
+				for (int y = 0; y < 4; y++) {
+					for (int z = 0; z < 4; z++) {
+
+						var r = v;
+
+						r = RotateX(r, x);
+						r = RotateY(r, y);
+						r = RotateZ(r, z);
+
+						table[d, x, y, z] = VecToDir(r);
+					}
+				}
+			}
+		}
+
+		return table;
 	}
 }

@@ -6,17 +6,21 @@ public static class Preload {
 	public static Shader Basic = null!;
 	public static Shader Selection = null!;
 
+	//  1   2   4 
+	//
+	// 128  -   8 
+	//
+	//  64  32  16
 	public static (byte, byte, byte, byte)[] AmbientOcclusionVertexLUT = null!;
-	public static sbyte[][] FaceNeighboursLUT = null!;
 	public static Direction[,,,] RotationLUT = null!;
 
-	public static readonly FaceBasis[] FaceBasis = [
-		new() { Normal = new( 1, 0, 0), Right = new( 0, 0,-1), Up = new(0,1,0) }, // PX
-		new() { Normal = new(-1, 0, 0), Right = new( 0, 0, 1), Up = new(0,1,0) }, // NX
-		new() { Normal = new( 0, 1, 0), Right = new( 1, 0, 0), Up = new(0,0,-1) }, // PY
-		new() { Normal = new( 0,-1, 0), Right = new( 1, 0, 0), Up = new(0,0, 1) }, // NY
-		new() { Normal = new( 0, 0, 1), Right = new(-1, 0, 0), Up = new(0,1,0) }, // PZ
-		new() { Normal = new( 0, 0,-1), Right = new( 1, 0, 0), Up = new(0,1,0) }, // NZ
+	public static readonly FaceBasis[] FaceBases = [
+		new() { Front = new( 0, 0,-1), Right = new( 1, 0, 0), Up = new( 0, 1, 0) }, // NZ
+		new() { Front = new( 0, 0, 1), Right = new(-1, 0, 0), Up = new( 0, 1, 0) }, // PZ
+		new() { Front = new( 1, 0, 0), Right = new( 0, 0, 1), Up = new( 0, 1, 0) }, // PX
+		new() { Front = new(-1, 0, 0), Right = new( 0, 0,-1), Up = new( 0, 1, 0) }, // NX
+		new() { Front = new( 0, 1, 0), Right = new( 1, 0, 0), Up = new( 0, 0, 1) }, // PY
+		new() { Front = new( 0,-1, 0), Right = new( 1, 0, 0), Up = new( 0, 0,-1) }, // NY
 	];
 
 	public static void Initialize() {
@@ -28,14 +32,6 @@ public static class Preload {
 		Program.gl.UseProgram(0);
 
 		AmbientOcclusionVertexLUT = PrecomputeAmbientOcclusionLUT();
-		FaceNeighboursLUT = [
-			[ 1, -1,  0,    1,  1,  0,    1,  0, -1,    1,  0,  1,    1, -1, -1,    1,  1, -1,    1, -1,  1,    1,  1,  1],
-			[-1, -1,  0,   -1,  1,  0,   -1,  0, -1,   -1,  0,  1,   -1, -1, -1,   -1,  1, -1,   -1, -1,  1,   -1,  1,  1],
-			[ 1,  1,  0,   -1,  1,  0,    0,  1,  1,    0,  1, -1,    1,  1,  1,   -1,  1,  1,    1,  1, -1,   -1,  1, -1],
-			[ 1, -1,  0,   -1, -1,  0,    0, -1,  1,    0, -1, -1,    1, -1,  1,   -1, -1,  1,    1, -1, -1,   -1, -1, -1],
-			[ 0, -1,  1,    0,  1,  1,   -1,  0,  1,    1,  0,  1,   -1, -1,  1,   -1,  1,  1,    1, -1,  1,    1,  1,  1],
-			[ 0, -1, -1,    0,  1, -1,   -1,  0, -1,    1,  0, -1,   -1, -1, -1,   -1,  1, -1,    1, -1, -1,    1,  1, -1]
-		];
 		RotationLUT = PrecomputeRotationLUT();
 	}
 
@@ -43,20 +39,20 @@ public static class Preload {
 		(byte, byte, byte, byte)[] table = new (byte, byte, byte, byte)[256];
 
 		for (int mask = 0; mask < 256; mask++) {
-			bool c0 = (mask & (1 << 0)) != 0;
-			bool s0 = (mask & (1 << 1)) != 0;
-			bool c1 = (mask & (1 << 2)) != 0;
-			bool s1 = (mask & (1 << 3)) != 0;
-			bool c2 = (mask & (1 << 4)) != 0;
-			bool s2 = (mask & (1 << 5)) != 0;
-			bool c3 = (mask & (1 << 6)) != 0;
-			bool s3 = (mask & (1 << 7)) != 0;
+			bool c0 = (mask & 1) != 0;
+			bool s0 = (mask & 2) != 0;
+			bool c1 = (mask & 4) != 0;
+			bool s1 = (mask & 8) != 0;
+			bool c2 = (mask & 16) != 0;
+			bool s2 = (mask & 32) != 0;
+			bool c3 = (mask & 64) != 0;
+			bool s3 = (mask & 128) != 0;
 
 			table[mask] = (
-				CalculateVertexAO(s0, s2, c0),
-				CalculateVertexAO(s0, s3, c2),
-				CalculateVertexAO(s1, s2, c1),
-				CalculateVertexAO(s1, s3, c3)
+				CalculateVertexAO(s3, s0, c0),
+				CalculateVertexAO(s0, s1, c1),
+				CalculateVertexAO(s2, s3, c3),
+				CalculateVertexAO(s1, s2, c2)
 			);
 		}
 		return table;

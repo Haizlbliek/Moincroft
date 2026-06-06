@@ -30,7 +30,7 @@ public static class Main {
 		BlockStateLoader.Initialize();
 		Blocks.Initialize();
 
-		SelectedBlock = new BlockType(Blocks.CARVED_PUMPKIN, 0);
+		SelectedBlock = new BlockType(Blocks.FLETCHING_TABLE, 0);
 		// Entities.Initialize();
 
 		input = Program.window.CreateInput();
@@ -209,7 +209,7 @@ public static class Main {
 		Vector3i offset = world.GetChunkPositionFromBlock((int) cameraPosition.x, (int) cameraPosition.y, (int) cameraPosition.z);
 		for (int x = -Config.RenderDistance; x <= Config.RenderDistance; x++) {
 			for (int z = -Config.RenderDistance; z <= Config.RenderDistance; z++) {
-				for (int y = 5; y >= 0; y--) {
+				for (int y = 2; y >= 0; y--) {
 					world.VisibleChunk(offset.x + x, y, offset.z + z);
 				}
 			}

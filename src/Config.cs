@@ -1,7 +1,7 @@
 namespace Moincroft;
 
 public static class Config {
-	public static int RenderDistance { get; private set; } = 3;
+	public static int RenderDistance { get; private set; } = 2;
 	public static int TicksPerSecond { get; private set; } = 20;
 	public static string JarPath { get; private set; } = "";
 

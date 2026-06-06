@@ -61,8 +61,8 @@ public class Chunk : ChunkData {
 		List<uint> indices = [];
 		uint vertexIndex = 0;
 
-		void AddVertex(float x, float y, float z, Vector2 uv, byte ao) {
-			vertices.Add(new Vertex() { x=x, y=y, z=z, u=uv.x, v=uv.y, data=ao });
+		void AddVertex(Vector3 pos, Vector2 uv, byte ao) {
+			vertices.Add(new Vertex() { x=pos.x, y=pos.y, z=pos.z, u=uv.x, v=uv.y, data=ao });
 			vertexIndex++;
 		}
 
@@ -127,123 +127,29 @@ public class Chunk : ChunkData {
 						float yMax = quad.to.y / 16f + y;
 						float zMin = quad.from.z / 16f + z;
 						float zMax = quad.to.z / 16f + z;
-						Span<int> i = [0, 1, 2, 3];
 
-						switch (quad.direction) {
-							case Direction.NZ:
-								(ao0, ao1, ao2, ao3) = this.GetAO(x, y, z, 5);
-								if (ao0 + ao3 < ao1 + ao2) {
-									indices.AddRange([ vertexIndex + 2, vertexIndex + 1, vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
-								} else {
-									indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
-								}
-								Vector2[] uvNZ = [
-									new Vector2(quad.u1, quad.v1),
-									new Vector2(quad.u0, quad.v1),
-									new Vector2(quad.u1, quad.v0),
-									new Vector2(quad.u0, quad.v0),
-								];
-								AddVertex(xMin, yMin, zMin, uvNZ[i[0]], (byte) (ao0 | PackedLight));
-								AddVertex(xMax, yMin, zMin, uvNZ[i[1]], (byte) (ao1 | PackedLight));
-								AddVertex(xMin, yMax, zMin, uvNZ[i[2]], (byte) (ao2 | PackedLight));
-								AddVertex(xMax, yMax, zMin, uvNZ[i[3]], (byte) (ao3 | PackedLight));
-								break;
-
-							case Direction.PZ:
-								(ao1, ao0, ao3, ao2) = this.GetAO(x, y, z, 4);
-								if (ao0 + ao3 < ao1 + ao2) {
-									indices.AddRange([ vertexIndex + 2, vertexIndex + 1, vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
-								} else {
-									indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
-								}
-								Vector2[] uvPZ = [
-									new Vector2(quad.u1, quad.v1),
-									new Vector2(quad.u0, quad.v1),
-									new Vector2(quad.u1, quad.v0),
-									new Vector2(quad.u0, quad.v0),
-								];
-								AddVertex(xMax, yMin, zMax, uvPZ[i[0]], (byte) (ao0 | PackedLight));
-								AddVertex(xMin, yMin, zMax, uvPZ[i[1]], (byte) (ao1 | PackedLight));
-								AddVertex(xMax, yMax, zMax, uvPZ[i[2]], (byte) (ao2 | PackedLight));
-								AddVertex(xMin, yMax, zMax, uvPZ[i[3]], (byte) (ao3 | PackedLight));
-								break;
-
-							case Direction.NY:
-								(ao3, ao1, ao2, ao0) = this.GetAO(x, y, z, 3);
-								if (ao0 + ao3 < ao1 + ao2) {
-									indices.AddRange([ vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 2, vertexIndex + 1, vertexIndex + 3 ]);
-								} else {
-									indices.AddRange([ vertexIndex + 0, vertexIndex + 3, vertexIndex + 2, vertexIndex + 0, vertexIndex + 1, vertexIndex + 3 ]);
-								}
-								Vector2[] uvNY = [
-									new Vector2(quad.u0, quad.v0),
-									new Vector2(quad.u1, quad.v0),
-									new Vector2(quad.u0, quad.v1),
-									new Vector2(quad.u1, quad.v1),
-								];
-								AddVertex(xMin, yMin, zMin, uvNY[i[0]], (byte) (ao0 | PackedLight));
-								AddVertex(xMax, yMin, zMin, uvNY[i[1]], (byte) (ao1 | PackedLight));
-								AddVertex(xMin, yMin, zMax, uvNY[i[2]], (byte) (ao2 | PackedLight));
-								AddVertex(xMax, yMin, zMax, uvNY[i[3]], (byte) (ao3 | PackedLight));
-								break;
-
-							case Direction.PY:
-								(ao2, ao0, ao3, ao1) = this.GetAO(x, y, z, 2);
-								if (ao0 + ao3 < ao1 + ao2) {
-									indices.AddRange([ vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 2, vertexIndex + 1, vertexIndex + 3 ]);
-								} else {
-									indices.AddRange([ vertexIndex + 0, vertexIndex + 3, vertexIndex + 2, vertexIndex + 0, vertexIndex + 1, vertexIndex + 3 ]);
-								}
-								Vector2[] uvPY = [
-									new Vector2(quad.u1, quad.v0),
-									new Vector2(quad.u0, quad.v0),
-									new Vector2(quad.u1, quad.v1),
-									new Vector2(quad.u0, quad.v1),
-								];
-								AddVertex(xMax, yMax, zMin, uvPY[i[0]], (byte) (ao0 | PackedLight));
-								AddVertex(xMin, yMax, zMin, uvPY[i[1]], (byte) (ao1 | PackedLight));
-								AddVertex(xMax, yMax, zMax, uvPY[i[2]], (byte) (ao2 | PackedLight));
-								AddVertex(xMin, yMax, zMax, uvPY[i[3]], (byte) (ao3 | PackedLight));
-								break;
-
-							case Direction.NX:
-								(ao0, ao2, ao1, ao3) = this.GetAO(x, y, z, 1);
-								if (ao0 + ao3 < ao1 + ao2) {
-									indices.AddRange([ vertexIndex + 2, vertexIndex + 1, vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
-								} else {
-									indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
-								}
-								Vector2[] uvNX = [
-									new Vector2(quad.u0, quad.v1),
-									new Vector2(quad.u0, quad.v0),
-									new Vector2(quad.u1, quad.v1),
-									new Vector2(quad.u1, quad.v0),
-								];
-								AddVertex(xMin, yMin, zMin, uvNX[i[0]], (byte) (ao0 | PackedLight));
-								AddVertex(xMin, yMax, zMin, uvNX[i[1]], (byte) (ao1 | PackedLight));
-								AddVertex(xMin, yMin, zMax, uvNX[i[2]], (byte) (ao2 | PackedLight));
-								AddVertex(xMin, yMax, zMax, uvNX[i[3]], (byte) (ao3 | PackedLight));
-								break;
-
-							case Direction.PX:
-								(ao1, ao3, ao0, ao2) = this.GetAO(x, y, z, 0);
-								if (ao0 + ao3 < ao1 + ao2) {
-									indices.AddRange([ vertexIndex + 2, vertexIndex + 1, vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 3 ]);
-								} else {
-									indices.AddRange([ vertexIndex + 0, vertexIndex + 2, vertexIndex + 3, vertexIndex + 3, vertexIndex + 1, vertexIndex + 0 ]);
-								}
-								Vector2[] uvPX = [
-									new Vector2(quad.u1, quad.v0),
-									new Vector2(quad.u1, quad.v1),
-									new Vector2(quad.u0, quad.v0),
-									new Vector2(quad.u0, quad.v1),
-								];
-								AddVertex(xMax, yMax, zMin, uvPX[i[0]], (byte) (ao0 | PackedLight));
-								AddVertex(xMax, yMin, zMin, uvPX[i[1]], (byte) (ao1 | PackedLight));
-								AddVertex(xMax, yMax, zMax, uvPX[i[2]], (byte) (ao2 | PackedLight));
-								AddVertex(xMax, yMin, zMax, uvPX[i[3]], (byte) (ao3 | PackedLight));
-								break;
+						FaceBasis face = Preload.FaceBases[(int) quad.direction];
+						(ao0, ao1, ao2, ao3) = this.GetAO(pos, quad.direction);
+						if (ao0 + ao3 < ao1 + ao2) {
+							indices.AddRange([ vertexIndex + 0, vertexIndex + 1, vertexIndex + 2, vertexIndex + 2, vertexIndex + 1, vertexIndex + 3 ]);
+						} else {
+							indices.AddRange([ vertexIndex + 0, vertexIndex + 1, vertexIndex + 3, vertexIndex + 3, vertexIndex + 2, vertexIndex + 0 ]);
 						}
+						Vector3 center = (quad.to + quad.from) / 32f + new Vector3(x, y, z);
+						Vector3 size = (quad.from - quad.to) / 32f;
+						size.x = Mathf.Abs(size.x);
+						size.y = Mathf.Abs(size.y);
+						size.z = Mathf.Abs(size.z);
+
+						Vector3 front = center + size * (Vector3) face.Front;
+						Vector3 v0 = front + size * (Vector3) (-face.Right + face.Up);
+						Vector3 v1 = front + size * (Vector3) (face.Right + face.Up);
+						Vector3 v2 = front + size * (Vector3) (-face.Right - face.Up);
+						Vector3 v3 = front + size * (Vector3) (face.Right - face.Up);
+						AddVertex(v0, new Vector2(quad.u1, quad.v0), (byte) (ao0 | PackedLight));
+						AddVertex(v1, new Vector2(quad.u0, quad.v0), (byte) (ao1 | PackedLight));
+						AddVertex(v2, new Vector2(quad.u1, quad.v1), (byte) (ao2 | PackedLight));
+						AddVertex(v3, new Vector2(quad.u0, quad.v1), (byte) (ao3 | PackedLight));
 					}
 				}
 			}
@@ -277,18 +183,20 @@ public class Chunk : ChunkData {
 		this.meshed = true;
 	}
 
-	public (byte, byte, byte, byte) GetAO(int x, int y, int z, int faceIndex) {
-		sbyte[] offsets = Preload.FaceNeighboursLUT[faceIndex];
+	public (byte, byte, byte, byte) GetAO(BlockPos pos, Direction direction) {
+		FaceBasis face = Preload.FaceBases[(int) direction];
+		BlockPos front = pos + face.Front;
 
 		int mask = 0;
-		if (this.IsVisiblySolid(new BlockPos(x + offsets[0], y + offsets[1], z + offsets[2]))) mask |= 2;
-		if (this.IsVisiblySolid(new BlockPos(x + offsets[3], y + offsets[4], z + offsets[5]))) mask |= 8;
-		if (this.IsVisiblySolid(new BlockPos(x + offsets[6], y + offsets[7], z + offsets[8]))) mask |= 32;
-		if (this.IsVisiblySolid(new BlockPos(x + offsets[9], y + offsets[10], z + offsets[11]))) mask |= 128;
-		if (this.IsVisiblySolid(new BlockPos(x + offsets[12], y + offsets[13], z + offsets[14]))) mask |= 1;
-		if (this.IsVisiblySolid(new BlockPos(x + offsets[15], y + offsets[16], z + offsets[17]))) mask |= 4;
-		if (this.IsVisiblySolid(new BlockPos(x + offsets[18], y + offsets[19], z + offsets[20]))) mask |= 16;
-		if (this.IsVisiblySolid(new BlockPos(x + offsets[21], y + offsets[22], z + offsets[23]))) mask |= 64;
+
+		if (this.IsVisiblySolid(front + face.Up - face.Right)) mask |= 1;
+		if (this.IsVisiblySolid(front + face.Up)) mask |= 2;
+		if (this.IsVisiblySolid(front + face.Up + face.Right)) mask |= 4;
+		if (this.IsVisiblySolid(front + face.Right)) mask |= 8;
+		if (this.IsVisiblySolid(front - face.Up + face.Right)) mask |= 16;
+		if (this.IsVisiblySolid(front - face.Up)) mask |= 32;
+		if (this.IsVisiblySolid(front - face.Up - face.Right)) mask |= 64;
+		if (this.IsVisiblySolid(front - face.Right)) mask |= 128;
 
 		return Preload.AmbientOcclusionVertexLUT[mask];
 	}

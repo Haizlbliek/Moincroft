@@ -55,6 +55,35 @@ public readonly struct PropertyStateKey : IEquatable<PropertyStateKey> {
 		this._hashCode = hash.ToHashCode();
 	}
 
+	public bool Matches(PropertyStateKey targetState) {
+		if (this._keys == null || this._keys.Length == 0) return true;
+		if (targetState._keys == null || targetState._keys.Length == 0) return false;
+
+		int thisIdx = 0;
+		int targetIdx = 0;
+
+		while (thisIdx < this._keys.Length && targetIdx < targetState._keys.Length) {
+			int comparison = string.CompareOrdinal(this._keys[thisIdx], targetState._keys[targetIdx]);
+
+			if (comparison == 0) {
+				if (this._values[thisIdx] != targetState._values[targetIdx]) {
+					return false;
+				}
+
+				thisIdx++;
+				targetIdx++;
+			}
+			else if (comparison > 0) {
+				targetIdx++;
+			}
+			else {
+				return false;
+			}
+		}
+
+		return thisIdx == this._keys.Length;
+	}
+
 	public bool Equals(PropertyStateKey other) {
 		if (this._hashCode != other._hashCode) return false;
 		if (this._keys.Length != other._keys.Length) return false;

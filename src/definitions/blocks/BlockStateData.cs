@@ -1,6 +1,4 @@
-using System.Security.Cryptography;
 using Moincroft.Definitions.Models;
-using Silk.NET.SDL;
 using Stride.Core;
 
 namespace Moincroft.Definitions;
@@ -48,8 +46,11 @@ public class VariantBlockStateData : BlockStateData {
 		Block block = BlockRegistry.GetBlock(type.Type);
 		PropertyStateKey key = type.State.PropertyKey;
 
-		if (this.Variants.TryGetValue(key, out BlockStateItem[]? items))
-			return [ this.FetchFrom(items, pos) ];
+		var matchingVariant = this.Variants
+			.FirstOrDefault(kvp => kvp.Key.Matches(type.State.PropertyKey));
+
+		if (matchingVariant.Value != null)
+			return [ this.FetchFrom(matchingVariant.Value, pos) ];
 
 		if (this.DefaultVariant != null)
 			return [ this.FetchFrom(this.DefaultVariant, pos) ];

@@ -1,5 +1,6 @@
 global using BlockStateId = ushort;
 using System.Collections.Immutable;
+using System.ComponentModel;
 
 namespace Moincroft.Definitions.Blocks;
 
@@ -38,6 +39,37 @@ public abstract class Property<T> : Property where T : notnull {
 
 public class BooleanProperty : Property<bool> {
 	public BooleanProperty(string name) : base(name, [false, true]) {
+	}
+}
+
+public class IntegerProperty : Property {
+	public override string Name { get; }
+
+	private readonly int min;
+	private readonly int max;
+
+	public IntegerProperty(string name, int min, int max) {
+		this.Name = name;
+		this.min = min;
+		this.max = max;
+	}
+
+	public override int ValueCount => this.max - this.min + 1;
+
+	public override object GetValueAt(int index) {
+		if (index >= this.ValueCount)
+			throw new ArgumentOutOfRangeException(nameof(index));
+
+		return index + this.min;
+	}
+
+	public override int GetIndexOf(object value) {
+		int v = (int)value;
+
+		if (v < this.min || v > this.max)
+			throw new ArgumentOutOfRangeException(nameof(value));
+
+		return v - this.min;
 	}
 }
 

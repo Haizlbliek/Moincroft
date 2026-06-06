@@ -18,6 +18,7 @@ public abstract class BlockStateData {
 
 public class VariantBlockStateData : BlockStateData {
 	public Dictionary<PropertyStateKey, BlockStateItem[]> Variants { get; } = [];
+	public BlockStateItem[]? DefaultVariant;
 
 	private BlockStateItem FetchFrom(BlockStateItem[] items, BlockPos pos) {
 		if (items.Length == 1) return items[0];
@@ -47,6 +48,9 @@ public class VariantBlockStateData : BlockStateData {
 
 		if (this.Variants.TryGetValue(key, out BlockStateItem[]? items))
 			return this.FetchFrom(items, pos);
+
+		if (this.DefaultVariant != null)
+			return this.FetchFrom(this.DefaultVariant, pos);
 
 		Console.WriteLine($"[\n{string.Join(",\n", this.Variants.Select(kvp => $"\t\"{kvp.Key}\": {kvp.Value}    (== {kvp.Key == key})"))}\n]");
 		throw new Exception($"Missing blockstate model variant for {block.data.Id} at \"{key}\"");

@@ -67,7 +67,12 @@ public static class BlockStateLoader {
 					items = singleItem != null ? [singleItem] : [];
 				}
 
-				variant.Variants[new PropertyStateKey(variantKey)] = items;
+				if (string.IsNullOrWhiteSpace(variantKey)) {
+					variant.DefaultVariant = items;
+				}
+				else {
+					variant.Variants[new PropertyStateKey(variantKey)] = items;
+				}
 			}
 		}
 

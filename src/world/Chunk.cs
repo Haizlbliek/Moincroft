@@ -208,7 +208,7 @@ public class Chunk : ChunkData {
 								_ => default
 							};
 
-							if (neighborBlock.Type != 0 && BlockRegistry.GetBlock(neighborBlock.Type).data.Opaque) {
+							if (this.IsVisiblySolid(neighborBlock)) {
 								continue;
 							}
 						}

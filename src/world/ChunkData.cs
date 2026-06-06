@@ -61,7 +61,9 @@ public class ChunkData {
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public bool IsVisiblySolid(BlockType type) {
-		return type.Type > 0; // && Blocks.Blocks.blocks[type].opaque;
+		if (type.Type == 0) return false;
+		BlockData data = BlockRegistry.GetBlock(type.Type).data;
+		return data.OccludesFullFace && data.Opaque;
 	}
 
 #region Lighting

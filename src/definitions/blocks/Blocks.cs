@@ -9,18 +9,29 @@ public class Properties {
 	private bool opaque = true;
 	private BlockStateData blockStateData = null!;
 	private string Id = "";
+	private bool occludesFullFace = true;
 
 	private Properties() {}
 
 	public static Properties Of() => new Properties();
 
 	public BlockData Compress() {
-		return new BlockData(visible: this.visible, opaque: this.opaque, blockStateData: this.blockStateData, id: this.Id);
+		return new BlockData(visible: this.visible, opaque: this.opaque, blockStateData: this.blockStateData, id: this.Id, occludesFullFace: this.occludesFullFace);
 	}
 
 	public Properties Air() {
 		this.visible = false;
 		this.opaque = false;
+		return this;
+	}
+
+	public Properties Transparent() {
+		this.opaque = false;
+		return this;
+	}
+
+	public Properties NonOccluding() {
+		this.occludesFullFace = false;
 		return this;
 	}
 
@@ -38,12 +49,14 @@ public class Properties {
 public readonly struct BlockData {
 	public readonly bool Visible;
 	public readonly bool Opaque;
+	public readonly bool OccludesFullFace;
 	public readonly BlockStateData BlockStateData;
 	public readonly string Id;
 
-	public BlockData(bool visible, bool opaque, BlockStateData blockStateData, string id) {
+	public BlockData(bool visible, bool opaque, bool occludesFullFace, BlockStateData blockStateData, string id) {
 		this.Visible = visible;
 		this.Opaque = opaque;
+		this.OccludesFullFace = occludesFullFace;
 		this.BlockStateData = blockStateData;
 		this.Id = id;
 	}
@@ -82,14 +95,15 @@ public static class Blocks {
 	public static readonly BlockId DIRT = BlockRegistry.Register("dirt", d => new Block(d), Properties.Of());
 	public static readonly BlockId REDSTONE_BLOCK = BlockRegistry.Register("redstone_block", d => new Block(d), Properties.Of());
 	public static readonly BlockId DRAGON_EGG = BlockRegistry.Register("dragon_egg", d => new Block(d), Properties.Of());
-	public static readonly BlockId SLIME_BLOCK = BlockRegistry.Register("slime_block", d => new Block(d), Properties.Of());
-	public static readonly BlockId DAYLIGHT_DETECTOR = BlockRegistry.Register("daylight_detector", d => new DaylightDetectorBlock(d), Properties.Of());
+	public static readonly BlockId SLIME_BLOCK = BlockRegistry.Register("slime_block", d => new Block(d), Properties.Of().Transparent());
+	public static readonly BlockId DAYLIGHT_DETECTOR = BlockRegistry.Register("daylight_detector", d => new DaylightDetectorBlock(d), Properties.Of().NonOccluding());
 	public static readonly BlockId CARVED_PUMPKIN = BlockRegistry.Register("carved_pumpkin", d => new HorizontalDirectionalBlock(d), Properties.Of());
 	public static readonly BlockId FLETCHING_TABLE = BlockRegistry.Register("fletching_table", d => new Block(d), Properties.Of());
 	public static readonly BlockId DROPPER = BlockRegistry.Register("dropper", d => new DirectionalBlock(d), Properties.Of());
-	public static readonly BlockId STONE_BUTTON = BlockRegistry.Register("stone_button", d => new ButtonBlock(d), Properties.Of());
-	public static readonly BlockId LEVER = BlockRegistry.Register("lever", d => new LeverBlock(d), Properties.Of());
+	public static readonly BlockId STONE_BUTTON = BlockRegistry.Register("stone_button", d => new ButtonBlock(d), Properties.Of().NonOccluding());
+	public static readonly BlockId LEVER = BlockRegistry.Register("lever", d => new LeverBlock(d), Properties.Of().NonOccluding());
 	public static readonly BlockId OBSERVER = BlockRegistry.Register("observer", d => new ObserverBlock(d), Properties.Of());
+	public static readonly BlockId STONE_PRESSURE_PLATE = BlockRegistry.Register("stone_pressure_plate", d => new PressurePlateBlock(d), Properties.Of().NonOccluding());
 
 	public static void Initialize() {}
 }

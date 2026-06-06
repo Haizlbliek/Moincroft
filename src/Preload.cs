@@ -15,12 +15,12 @@ public static class Preload {
 	public static Direction[,,,] RotationLUT = null!;
 
 	public static readonly FaceBasis[] FaceBases = [
-		new() { Front = new( 0, 0,-1), Right = new( 1, 0, 0), Up = new( 0, 1, 0) }, // NZ
-		new() { Front = new( 0, 0, 1), Right = new(-1, 0, 0), Up = new( 0, 1, 0) }, // PZ
-		new() { Front = new( 1, 0, 0), Right = new( 0, 0, 1), Up = new( 0, 1, 0) }, // PX
-		new() { Front = new(-1, 0, 0), Right = new( 0, 0,-1), Up = new( 0, 1, 0) }, // NX
-		new() { Front = new( 0, 1, 0), Right = new( 1, 0, 0), Up = new( 0, 0, 1) }, // PY
-		new() { Front = new( 0,-1, 0), Right = new( 1, 0, 0), Up = new( 0, 0,-1) }, // NY
+		new FaceBasis(new( 0, 0,-1), new( 1, 0, 0), new( 0, 1, 0)), // NZ
+		new FaceBasis(new( 0, 0, 1), new(-1, 0, 0), new( 0, 1, 0)), // PZ
+		new FaceBasis(new( 1, 0, 0), new( 0, 0, 1), new( 0, 1, 0)), // PX
+		new FaceBasis(new(-1, 0, 0), new( 0, 0,-1), new( 0, 1, 0)), // NX
+		new FaceBasis(new( 0, 1, 0), new( 1, 0, 0), new( 0, 0, 1)), // PY
+		new FaceBasis(new( 0,-1, 0), new( 1, 0, 0), new( 0, 0,-1)), // NY
 	];
 
 	public static void Initialize() {
@@ -70,7 +70,7 @@ public static class Preload {
 	}
 
 	public static Direction Rotate(Direction direction, int x, int y, int z) {
-		return RotationLUT[(int) direction, (x / 90) & 3, (y / 90) & 3, (z / 90) & 3];
+		return RotationLUT[(int) direction, x & 3, y & 3, z & 3];
 	}
 
 	private static (int x, int y, int z) DirToVec(Direction d) {
@@ -98,6 +98,7 @@ public static class Preload {
 
 	private static (int x, int y, int z) RotateX((int x, int y, int z) v, int times) {
 		for (int i = 0; i < times; i++) {
+			// REVIEW
 			v = (v.x, -v.z, v.y);
 		}
 		return v;
@@ -105,13 +106,14 @@ public static class Preload {
 
 	private static (int x, int y, int z) RotateY((int x, int y, int z) v, int times) {
 		for (int i = 0; i < times; i++) {
-			v = (v.z, v.y, -v.x);
+			v = (-v.z, v.y, v.x);
 		}
 		return v;
 	}
 
 	private static (int x, int y, int z) RotateZ((int x, int y, int z) v, int times) {
 		for (int i = 0; i < times; i++) {
+			// REVIEW
 			v = (-v.y, v.x, v.z);
 		}
 		return v;

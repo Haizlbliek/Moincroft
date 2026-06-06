@@ -8,9 +8,9 @@ public enum HorizontalDirection {
 }
 
 public class HorizontalDirectionBlock : Block {
-	public static readonly EnumProperty<HorizontalDirection> DIRECTION = new EnumProperty<HorizontalDirection>("facing");
+	public static readonly EnumProperty<HorizontalDirection> FACING = new EnumProperty<HorizontalDirection>("facing");
 
-	public override IProperty[] Properties => [ DIRECTION ];
+	public override IProperty[] Properties => [ FACING ];
 
 	public HorizontalDirectionBlock(BlockData data) : base(data) {}
 }

@@ -22,13 +22,13 @@ public static class BlockStateLoader {
 		BlockStateItem item = new BlockStateItem() { model = ModelLoader.GetModel(modelKey) };
 
 		if (obj.TryGetPropertyValue("x", out JsonNode? xNode) && xNode is JsonValue xValue) {
-			item.rotationX = xValue.GetValue<int>();
+			item.rotationX = xValue.GetValue<int>() / 90;
 		}
 		if (obj.TryGetPropertyValue("y", out JsonNode? yNode) && yNode is JsonValue yValue) {
-			item.rotationY = yValue.GetValue<int>();
+			item.rotationY = yValue.GetValue<int>() / 90;
 		}
 		if (obj.TryGetPropertyValue("z", out JsonNode? zNode) && zNode is JsonValue zValue) {
-			item.rotationZ = zValue.GetValue<int>();
+			item.rotationZ = zValue.GetValue<int>() / 90;
 		}
 		if (obj.TryGetPropertyValue("weight", out JsonNode? weightNode) && weightNode is JsonValue weightValue) {
 			item.weight = weightValue.GetValue<int>();

@@ -1,3 +1,5 @@
+using Moincroft.Definitions;
+
 namespace Moincroft.Utils;
 
 public class WorldRay {
@@ -47,7 +49,7 @@ public class WorldRay {
 			}
 
 			if (world.GetBlock(x, y, z).Type != 0) {
-				result.blockPosition = new Vector3i(x, y, z);
+				result.blockPosition = new BlockPos(x, y, z);
 				return true;
 			}
 		}
@@ -57,6 +59,6 @@ public class WorldRay {
 }
 
 public struct WorldRayResult {
-	public Vector3i blockPosition;
+	public BlockPos blockPosition;
 	public Vector3i normal;
 }

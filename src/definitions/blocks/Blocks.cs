@@ -86,6 +86,7 @@ public static class Blocks {
 	public static readonly BlockId DAYLIGHT_DETECTOR = BlockRegistry.Register("daylight_detector", d => new DaylightDetectorBlock(d), Properties.Of());
 	public static readonly BlockId CARVED_PUMPKIN = BlockRegistry.Register("carved_pumpkin", d => new HorizontalDirectionBlock(d), Properties.Of());
 	public static readonly BlockId FLETCHING_TABLE = BlockRegistry.Register("fletching_table", d => new Block(d), Properties.Of());
+	public static readonly BlockId DROPPER = BlockRegistry.Register("dropper", d => new DirectionalBlock(d), Properties.Of());
 
 	public static void Initialize() {}
 }

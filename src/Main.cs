@@ -30,7 +30,7 @@ public static class Main {
 		BlockStateLoader.Initialize();
 		Blocks.Initialize();
 
-		SelectedBlock = new BlockType(Blocks.FLETCHING_TABLE, 0);
+		SelectedBlock = new BlockType(Blocks.DROPPER, 0);
 		// Entities.Initialize();
 
 		input = Program.window.CreateInput();
@@ -107,9 +107,14 @@ public static class Main {
 				chunk.SetBlock(pos, block.With(DaylightDetectorBlock.INVERTED, !block.Get(DaylightDetectorBlock.INVERTED)));
 			}
 			else if (block.Type == Blocks.CARVED_PUMPKIN) {
-				HorizontalDirection dir = block.Get(HorizontalDirectionBlock.DIRECTION);
+				HorizontalDirection dir = block.Get(HorizontalDirectionBlock.FACING);
 				HorizontalDirection next = (HorizontalDirection)(((int)dir + 1) & 3);
-				chunk.SetBlock(pos, block.With(HorizontalDirectionBlock.DIRECTION, next));
+				chunk.SetBlock(pos, block.With(HorizontalDirectionBlock.FACING, next));
+			}
+			else if (block.Type == Blocks.DROPPER) {
+				Directional dir = block.Get(DirectionalBlock.FACING);
+				Directional next = (Directional)(((int)dir + 1) % Enum.GetValues<Directional>().Length);
+				chunk.SetBlock(pos, block.With(DirectionalBlock.FACING, next));
 			}
 		}
 		else {
@@ -205,6 +210,9 @@ public static class Main {
 		cameraPosition.z += -Mathf.Sin(-cameraRotation.y) * movement.x + Mathf.Cos(-cameraRotation.y) * movement.y;
 
 		rayCollides = WorldRay.Cast(world, cameraPosition, cameraRotation.AngleToDirection, Config.MaxInteractionDistance, out rayResult);
+		BlockType type = world.GetBlock(rayResult.blockPosition.x, rayResult.blockPosition.y, rayResult.blockPosition.z);
+		Block block = BlockRegistry.GetBlock(type.Type);
+		Program.data = $"{block.data.Id} {type.State.PropertyKey}";
 
 		Vector3i offset = world.GetChunkPositionFromBlock((int) cameraPosition.x, (int) cameraPosition.y, (int) cameraPosition.z);
 		for (int x = -Config.RenderDistance; x <= Config.RenderDistance; x++) {

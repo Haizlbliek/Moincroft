@@ -61,10 +61,11 @@ public static class Program {
 	}
 
 	public static double time = 0;
+	public static string data = "";
 	private static void OnUpdate(double delta) {
 		time += delta;
 		if (time >= 1.0 / Config.TicksPerSecond) {
-			window.Title = $"Moincroft {Mathf.FloorToInt(Moincroft.Main.cameraPosition.x)} {Mathf.FloorToInt(Moincroft.Main.cameraPosition.y)} {Mathf.FloorToInt(Moincroft.Main.cameraPosition.z)} {Math.Round(1.0 / delta)}";
+			window.Title = $"Moincroft {data} {Mathf.FloorToInt(Moincroft.Main.cameraPosition.x)} {Mathf.FloorToInt(Moincroft.Main.cameraPosition.y)} {Mathf.FloorToInt(Moincroft.Main.cameraPosition.z)} {Math.Round(1.0 / delta)}";
 			Moincroft.Main.Update();
 			time -= 1.0 / Config.TicksPerSecond;
 		}

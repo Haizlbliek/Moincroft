@@ -2,7 +2,7 @@ namespace Moincroft.Definitions;
 
 
 public class ObserverBlock : DirectionalBlock {
-	public static readonly BooleanProperty POWERED = new("powered");
+	public static readonly BooleanProperty POWERED = BlockStateProperties.POWERED;
 
 	public override Property[] Properties => [ ..base.Properties, POWERED ];
 

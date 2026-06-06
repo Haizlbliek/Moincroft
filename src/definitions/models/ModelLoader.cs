@@ -160,7 +160,6 @@ public static class ModelLoader {
 						rotation = element.rotation,
 						rotationOrigin = element.rotationOrigin,
 						rotationRescale = element.rotationRescale,
-						faceRotation = face.Value.rotation,
 					};
 					string texturePath = face.Value.texture.RemoveStart('#');
 					while (middleModel.textures.TryGetValue(texturePath, out string? resolved)) {
@@ -191,10 +190,42 @@ public static class ModelLoader {
 							_       => [0, 0, 16, 16]
 						};
 					}
-					quad.u0 = uv[0] / Atlas.AtlasWidth + faceUv.X;
-					quad.v0 = uv[1] / Atlas.AtlasHeight + faceUv.Y;
-					quad.u1 = uv[2] / Atlas.AtlasWidth + faceUv.X;
-					quad.v1 = uv[3] / Atlas.AtlasHeight + faceUv.Y;
+
+					float u0 = uv[0] / Atlas.AtlasWidth + faceUv.X;
+					float v0 = uv[1] / Atlas.AtlasHeight + faceUv.Y;
+					float u1 = uv[2] / Atlas.AtlasWidth + faceUv.X;
+					float v1 = uv[3] / Atlas.AtlasHeight + faceUv.Y;
+
+					switch (face.Value.rotation) {
+						case 3:
+							quad.uv0 = new Vector2(u1, v1);
+							quad.uv1 = new Vector2(u1, v0);
+							quad.uv2 = new Vector2(u0, v1);
+							quad.uv3 = new Vector2(u0, v0);
+							break;
+
+						case 2:
+							quad.uv0 = new Vector2(u0, v1);
+							quad.uv1 = new Vector2(u1, v1);
+							quad.uv2 = new Vector2(u0, v0);
+							quad.uv3 = new Vector2(u1, v0);
+							break;
+
+						case 1:
+							quad.uv0 = new Vector2(u0, v0);
+							quad.uv1 = new Vector2(u0, v1);
+							quad.uv2 = new Vector2(u1, v0);
+							quad.uv3 = new Vector2(u1, v1);
+							break;
+
+						default:
+							quad.uv0 = new Vector2(u1, v0);
+							quad.uv1 = new Vector2(u0, v0);
+							quad.uv2 = new Vector2(u1, v1);
+							quad.uv3 = new Vector2(u0, v1);
+							break;
+					}
+
 					quads.Add(quad);
 				}
 

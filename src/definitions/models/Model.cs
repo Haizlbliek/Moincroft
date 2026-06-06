@@ -6,10 +6,9 @@ public class Model {
 
 	public struct Quad {
 		public Vector3 from, to;
-		public float u0, v0, u1, v1;
+		public Vector2 uv0, uv1, uv2, uv3;
 		public Direction direction;
 		public Direction cullFace;
-		public int faceRotation;
 
 		public Vector3 rotation;
 		public Vector3 rotationOrigin;
@@ -18,5 +17,6 @@ public class Model {
 		// LATER: shade
 		// LATER: lightEmission
 		// LATER REVIEW: tintIndex
+		// NOTE: tintIndex is required for quad to be tinted.
 	}
 }

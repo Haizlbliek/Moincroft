@@ -1,10 +1,10 @@
 namespace Moincroft.Definitions.Blocks;
 
-public class PressurePlateBlock : BasePressurePlateBlock {
+public abstract class DiodeBlock : HorizontalDirectionalBlock {
 	public static readonly BooleanProperty POWERED = BlockStateProperties.POWERED;
 
 	public override Property[] Properties => [ ..base.Properties, POWERED ];
 
-	public PressurePlateBlock(BlockData data) : base(data) {
+	public DiodeBlock(BlockData data) : base(data) {
 	}
 }

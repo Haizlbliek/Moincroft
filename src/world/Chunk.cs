@@ -324,10 +324,10 @@ public class Chunk : ChunkData {
 							model.rotationZ
 						) + modelPos;
 
-						AddVertex(v0, new Vector2(quad.u1, quad.v0), (byte) (ao0 | PackedLight), color);
-						AddVertex(v1, new Vector2(quad.u0, quad.v0), (byte) (ao1 | PackedLight), color);
-						AddVertex(v2, new Vector2(quad.u1, quad.v1), (byte) (ao2 | PackedLight), color);
-						AddVertex(v3, new Vector2(quad.u0, quad.v1), (byte) (ao3 | PackedLight), color);
+						AddVertex(v0, quad.uv0, (byte) (ao0 | PackedLight), color);
+						AddVertex(v1, quad.uv1, (byte) (ao1 | PackedLight), color);
+						AddVertex(v2, quad.uv2, (byte) (ao2 | PackedLight), color);
+						AddVertex(v3, quad.uv3, (byte) (ao3 | PackedLight), color);
 					}
 				}
 			}

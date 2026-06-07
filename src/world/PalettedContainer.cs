@@ -4,8 +4,9 @@ using Moincroft.Definitions;
 
 namespace Moincroft.World;
 
-public class PalettedContainer<T> where T : IEquatable<T> {
+public class PalettedContainer<T> where T : notnull {
 	private T[] palette = [];
+	private readonly Dictionary<T, int> paletteLookup = new Dictionary<T, int>(32);
 	private ulong[] data = [];
 
 	private int bitsPerItem = 0;
@@ -14,14 +15,15 @@ public class PalettedContainer<T> where T : IEquatable<T> {
 
 	public PalettedContainer(T fill) {
 		this.palette = [ fill ];
+		this.paletteLookup.Add(fill, 0);
 		this.SetupBits();
 	}
 
 	private void SetupBits() {
-		this.bitsPerItem = Math.Max(BitOperations.Log2((uint) this.palette.Length - 1) + 1, 4);
+		this.bitsPerItem = this.palette.Length <= 16 ? 4 : (BitOperations.Log2((uint) this.palette.Length - 1) + 1);
 		this.valuesPerDatum = 64 / this.bitsPerItem;
-		this.itemMask = (1ul << this.bitsPerItem) - 1;
-		this.data = new ulong[(4095 + this.valuesPerDatum) / this.valuesPerDatum];
+		this.itemMask = this.bitsPerItem == 64 ? ulong.MaxValue : ((1ul << this.bitsPerItem) - 1);
+		this.data = new ulong[(4096 + this.valuesPerDatum - 1) / this.valuesPerDatum];
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,12 +71,11 @@ public class PalettedContainer<T> where T : IEquatable<T> {
 	}
 
 	public void Set(BlockPos pos, T value) {
-		int paletteIndex = Array.IndexOf(this.palette, value);
-
-		if (paletteIndex == -1) {
+		if (!this.paletteLookup.TryGetValue(value, out int paletteIndex)) {
 			int oldLength = this.palette.Length;
 			Array.Resize(ref this.palette, oldLength + 1);
 			this.palette[oldLength] = value;
+			this.paletteLookup.Add(value, oldLength);
 			paletteIndex = oldLength;
 
 			if ((ulong) paletteIndex > this.itemMask) {

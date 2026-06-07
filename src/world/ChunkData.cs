@@ -63,7 +63,7 @@ public class ChunkData {
 	public bool IsVisiblySolid(BlockType type) {
 		if (type.Type == 0) return false;
 		BlockData data = BlockRegistry.GetBlock(type.Type).data;
-		return data.Occludes; // TODO: Render layer
+		return data.Occludes;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

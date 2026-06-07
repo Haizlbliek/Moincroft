@@ -76,4 +76,11 @@ public class IntegerProperty : Property {
 public class EnumProperty<T> : Property<T> where T : struct, Enum {
 	public EnumProperty(string name) : base(name, Enum.GetValues<T>()) {
 	}
+
+	private EnumProperty(string name, T[] values) : base(name, values) {
+	}
+
+	public static EnumProperty<T> Create(string name, params T[] values) {
+		return new EnumProperty<T>(name, values);
+	}
 }

@@ -1,16 +1,9 @@
 namespace Moincroft.Definitions;
 
-public enum HorizontalFacing {
-	North,
-	East,
-	South,
-	West,
-}
-
 public class HorizontalDirectionalBlock : Block {
-	public static readonly EnumProperty<HorizontalFacing> FACING = new("facing");
+	public static readonly EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
 
-	public override Property[] Properties => [ FACING ];
+	public override Property[] Properties => [ ..base.Properties, FACING ];
 
 	public HorizontalDirectionalBlock(BlockData data) : base(data) {}
 }

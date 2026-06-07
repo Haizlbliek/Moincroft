@@ -4,6 +4,8 @@ public static class BlockStateProperties {
 	public static readonly BooleanProperty WATERLOGGED = new("waterlogged");
 
 	public static readonly BooleanProperty POWERED = new("powered");
+	public static readonly BooleanProperty INVERTED = new("inverted");
+	public static readonly BooleanProperty LIT = new("lit");
 	public static readonly IntegerProperty POWER = new("power", 0, 15);
 	public static readonly EnumProperty<RedstoneSide> EAST_REDSTONE = new("east");
 	public static readonly EnumProperty<RedstoneSide> NORTH_REDSTONE = new("north");
@@ -13,6 +15,9 @@ public static class BlockStateProperties {
 	public static readonly IntegerProperty DELAY = new("delay", 1, 4);
 	public static readonly EnumProperty<ComparatorMode> MODE_COMPARATOR = new("mode");
 	public static readonly EnumProperty<RailShape> RAIL_SHAPE = new("shape");
+	public static readonly EnumProperty<Direction> FACING = EnumProperty<Direction>.Create("facing", Direction.North, Direction.East, Direction.South, Direction.West, Direction.Up, Direction.Down);
+	public static readonly EnumProperty<Direction> HORIZONTAL_FACING = EnumProperty<Direction>.Create("facing", Plane.Horizontal);
+	public static readonly EnumProperty<AttachFace> ATTACH_FACE = new("face");
 
 	public enum RedstoneSide {
 		Up,

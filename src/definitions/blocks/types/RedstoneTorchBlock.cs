@@ -1,7 +1,7 @@
 namespace Moincroft.Definitions.Blocks;
 
 public class RedstoneTorchBlock : BaseTorchBlock {
-	public static readonly BooleanProperty LIT = new("lit");
+	public static readonly BooleanProperty LIT = BlockStateProperties.LIT;
 
 	public override Property[] Properties => [ ..base.Properties, LIT ];
 

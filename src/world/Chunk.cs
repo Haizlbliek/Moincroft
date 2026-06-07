@@ -238,7 +238,7 @@ public class Chunk : ChunkData {
 						if (quad.lightEmisson >= 0)
 							lightValue = (byte) quad.lightEmisson;
 
-						byte PackedLight = (byte)(lightValue << 4);
+						byte PackedLight = (byte)((lightValue << 4) | ((quad.shade ? Preload.ShadeDirection[(int) quad.direction] : 0) << 8));
 
 						FaceBasis faceBasis = Preload.FaceBases[(int) quad.direction];
 						(byte ao0, byte ao1, byte ao2, byte ao3) = GetAO(pos, faceBasis.Rotated(model.rotationX, model.rotationY, model.rotationZ));

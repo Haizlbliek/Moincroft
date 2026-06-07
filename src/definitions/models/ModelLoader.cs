@@ -113,6 +113,7 @@ public static class ModelLoader {
 							cullface = faceObj.TryGetPropertyValue("cullface", out JsonNode? cullNode) ? cullNode!.ToString() : null,
 							rotation = faceObj.TryGetPropertyValue("rotation", out JsonNode? faceRotationNode) && faceRotationNode != null ? (int) faceRotationNode / 90 : 0,
 							tintIndex = faceObj.TryGetPropertyValue("tintindex", out JsonNode? tintIndexNode) && tintIndexNode != null ? (int) tintIndexNode : -1,
+							shade = faceObj.TryGetPropertyValue("shade", out JsonNode? shadeNode) && shadeNode != null ? (bool) shadeNode : true,
 						};
 
 						if (faceObj.TryGetPropertyValue("uv", out JsonNode? uvNode) && uvNode != null) {
@@ -195,6 +196,7 @@ public static class ModelLoader {
 						cullFace = face.Value.cullface == null ? Direction.None : DirectionFromFace(face.Value.cullface),
 						tintIndex = face.Value.tintIndex,
 						lightEmisson = element.lightEmisson,
+						shade = face.Value.shade,
 					};
 
 					FaceBasis faceBasis = Preload.FaceBases[(int) quad.direction];
@@ -356,6 +358,7 @@ public static class ModelLoader {
 						cullface = faceKvp.Value.cullface,
 						rotation = faceKvp.Value.rotation,
 						tintIndex = faceKvp.Value.tintIndex,
+						shade = faceKvp.Value.shade,
 					};
 				}
 				this.elements.Add(clonedElement);
@@ -377,6 +380,7 @@ public static class ModelLoader {
 				public string? cullface;
 				public int rotation;
 				public int tintIndex;
+				public bool shade;
 			}
 		}
 	}

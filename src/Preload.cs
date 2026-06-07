@@ -23,6 +23,8 @@ public static class Preload {
 		new FaceBasis(new( 0,-1, 0), new(-1, 0, 0), new( 0, 0, 1)), // NY
 	];
 
+	public static readonly byte[] ShadeDirection = [ 1, 1, 2, 2, 0, 3 ];
+
 	public static void Initialize() {
 		Basic = Shader.Load("assets/shaders/Basic.vert", "assets/shaders/Basic.frag");
 		Selection = Shader.Load("assets/shaders/Selection.vert", "assets/shaders/Selection.frag");

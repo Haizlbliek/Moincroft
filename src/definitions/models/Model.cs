@@ -11,7 +11,6 @@ public class Model {
 		public Direction cullFace;
 		public int tintIndex;
 		public int lightEmisson;
-
-		// LATER: shade
+		public bool shade;
 	}
 }

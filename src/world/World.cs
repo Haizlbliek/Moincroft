@@ -59,6 +59,7 @@ public class World {
 				}
 			}
 		}
+		chunk.loadState = Chunk.LoadState.Data;
 		chunk.CalculateLight();
 
 		return chunk;
@@ -153,5 +154,40 @@ public class World {
 		}
 
 		this.chunksToRemesh.Clear();
+	}
+
+	public void Load() {
+		if (!Directory.Exists("chunks"))
+			return;
+
+		foreach (string path in Directory.GetFiles("chunks")) {
+			if (Path.GetFileName(path) == ".gitignore")
+				continue;
+
+			ChunkSerializer.LoadChunk(this, path);
+		}
+
+		Queue<Chunk> chunksToLight = [];
+		foreach (Chunk chunk in this.chunks.Values) {
+			chunksToLight.Enqueue(chunk);
+		}
+
+		while (chunksToLight.Count > 0) {
+			Chunk chunk = chunksToLight.Dequeue();
+			if (this.GetChunk(chunk.cx, chunk.cy + 1, chunk.cz) is Chunk above && above.loadState < Chunk.LoadState.Lit) {
+				chunksToLight.Enqueue(chunk);
+				continue;
+			}
+
+			chunk.CalculateLight();
+		}
+	}
+
+	public void Save() {
+		Directory.CreateDirectory("chunks");
+
+		foreach (Chunk chunk in this.chunks.Values) {
+			ChunkSerializer.SaveChunk(chunk, $"chunks/{chunk.cx}-{chunk.cy}-{chunk.cz}");
+		}
 	}
 }

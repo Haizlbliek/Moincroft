@@ -62,6 +62,7 @@ public readonly struct BlockData {
 
 public static class BlockRegistry {
 	private static Block[] _blocks = new Block[256];
+	private static Dictionary<string, BlockId> _blockIds = new Dictionary<string, BlockId>(256);
 	public static int Count { get; private set; }
 
 	public static BlockId Register(string id, Func<BlockData, Block> factory, Properties properties, BlockId? forcedId = null) {
@@ -77,6 +78,7 @@ public static class BlockRegistry {
 		Block block = factory(data);
 
 		_blocks[index] = block;
+		_blockIds.Add(block.data.Id, index);
 
 		if (index >= Count) Count = index + 1;
 		return index;
@@ -84,6 +86,9 @@ public static class BlockRegistry {
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Block GetBlock(BlockId id) => _blocks[id];
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static BlockId GetBlockId(string id) => _blockIds[id];
 }
 
 public static class Blocks {

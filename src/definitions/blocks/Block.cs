@@ -7,6 +7,8 @@ public class PropertyState {
 	private readonly IProperty[] _properties;
 	public PropertyStateKey PropertyKey { get; }
 
+	public bool Empty => this._valueIndices.Length == 0;
+
 	public PropertyState(IProperty[] properties, int[] valueIndices, PropertyStateKey key) {
 		this._properties = properties;
 		this._valueIndices = valueIndices;

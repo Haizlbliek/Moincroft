@@ -2,7 +2,6 @@ using Moincroft.Definitions;
 using Moincroft.Definitions.BlockColors;
 using Moincroft.Definitions.Models;
 using Silk.NET.Input;
-using Silk.NET.SDL;
 using StbImageWriteSharp;
 
 namespace Moincroft;
@@ -58,6 +57,8 @@ public static class Main {
 		ViewMatrix = Matrix4X4.CreateTranslation(0f, 0f, 0f);
 		float fov = 100f * (Mathf.PI / 180f);
 		ProjectionMatrix = Matrix4X4.CreatePerspectiveFieldOfView(fov, Program.defaultSize.X / (float) Program.defaultSize.Y, 0.1f, 1000f);
+
+		world.Load();
 	}
 
 	public static void Resize(int width, int height) {
@@ -224,7 +225,9 @@ public static class Main {
 		}
 		if (Keys.JustPressed(Key.E)) {
 			SelectedBlockId++;
-			;
+		}
+		if (Keys.JustPressed(Key.P)) {
+			world.Save();
 		}
 		SelectedBlockId = (BlockId) (SelectedBlockId % BlockRegistry.Count);
 		cameraPosition.x += Mathf.Cos(-cameraRotation.y) * movement.x + Mathf.Sin(-cameraRotation.y) * movement.y;
@@ -309,8 +312,8 @@ public static class Main {
 			takeScreenshot = false;
 
 			Program.gl.Flush();
-			int width = Program.window.Size.X;
-			int height = Program.window.Size.Y;
+			int width = Program.window.FramebufferSize.X;
+			int height = Program.window.FramebufferSize.Y;
 			byte[] pixels = new byte[width * height * 4];
 
 			unsafe {

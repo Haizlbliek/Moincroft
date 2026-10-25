@@ -1,5 +1,4 @@
 using System.Text.Json.Nodes;
-using Silk.NET.Input;
 
 namespace Moincroft.Definitions.Models;
 
@@ -195,7 +194,7 @@ public static class ModelLoader {
 						direction = DirectionFromFace(face.Key),
 						cullFace = face.Value.cullface == null ? Direction.None : DirectionFromFace(face.Value.cullface),
 						tintIndex = face.Value.tintIndex,
-						lightEmisson = element.lightEmisson,
+						lightEmission = element.lightEmisson,
 						shade = face.Value.shade,
 					};
 

@@ -5,9 +5,9 @@ using Moincroft.Definitions;
 namespace Moincroft.World;
 
 public class PalettedContainer<T> where T : notnull {
-	private T[] palette = [];
+	public T[] palette = [];
 	private readonly Dictionary<T, int> paletteLookup = new Dictionary<T, int>(32);
-	private ulong[] data = [];
+	public ulong[] data = [];
 
 	private int bitsPerItem = 0;
 	private int valuesPerDatum = 0;
@@ -17,6 +17,15 @@ public class PalettedContainer<T> where T : notnull {
 		this.palette = [ fill ];
 		this.paletteLookup.Add(fill, 0);
 		this.SetupBits();
+	}
+
+	public PalettedContainer(T[] palette, ulong[] data) {
+		this.palette = palette;
+		for (int i = 0; i < this.palette.Length; i++)
+			this.paletteLookup.Add(this.palette[i], i);
+
+		this.SetupBits();
+		Array.Copy(data, this.data, data.Length);
 	}
 
 	private void SetupBits() {

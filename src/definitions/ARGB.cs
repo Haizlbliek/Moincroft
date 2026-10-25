@@ -1,3 +1,5 @@
+namespace Moincroft.Definitions;
+
 public static class ARGB {
 	public static int ColorFromFloat(float a, float r, float g, float b) {
 		return Color(As8BitChannel(a), As8BitChannel(r), As8BitChannel(g), As8BitChannel(b));

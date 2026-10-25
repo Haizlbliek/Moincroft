@@ -41,7 +41,7 @@ public static class Program {
 		window.Load += OnLoad;
 		window.Update += OnUpdate;
 		window.Render += OnRender;
-		window.Resize += Resize;
+		window.FramebufferResize += Resize;
 
 		window.Run();
 
@@ -58,6 +58,8 @@ public static class Program {
 		_anyVao = gl.CreateVertexArray();
 
 		Moincroft.Main.Initialize();
+
+		Resize(window.FramebufferSize);
 	}
 
 	public static double time = 0;

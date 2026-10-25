@@ -1,6 +1,5 @@
 using System.Text.Json.Nodes;
 using Moincroft.Definitions.Models;
-using Silk.NET.SDL;
 
 namespace Moincroft.Definitions;
 

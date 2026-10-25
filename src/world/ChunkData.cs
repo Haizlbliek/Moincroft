@@ -105,6 +105,10 @@ public class ChunkData {
 
 	public bool CalculateLight() {
 		ChunkData? chunkAbove = this.world.GetChunk(this.cx, this.cy + 1, this.cz);
+		if (chunkAbove is Chunk chunk && chunk.loadState < Chunk.LoadState.Lit) {
+			throw new NotImplementedException("Unlit chunk above!");
+		}
+
 		ref byte lightBase = ref MemoryMarshal.GetArrayDataReference(this.light);
 
 		bool recalculateBelow = false;
@@ -134,6 +138,9 @@ public class ChunkData {
 					currentLight = lightLevel;
 				}
 			}
+		}
+		if (this is Chunk self) {
+			self.loadState = Chunk.LoadState.Lit;
 		}
 
 		return recalculateBelow;

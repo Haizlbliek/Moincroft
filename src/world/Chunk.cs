@@ -6,6 +6,14 @@ using Moincroft.Definitions.Models;
 namespace Moincroft.World;
 
 public class Chunk : ChunkData {
+	public enum LoadState {
+		Empty,
+		Data,
+		Lit,
+		Finished,
+	}
+
+	public LoadState loadState = LoadState.Empty;
 	public bool meshNeedsRefresh = false;
 
 	public unsafe Chunk(World world, int cx, int cy, int cz) : base(world, cx, cy, cz) {
@@ -262,8 +270,8 @@ public class Chunk : ChunkData {
 							Direction.South => (byte) (z < 15 ? this.GetBlockLight(x, y, z + 1) : neighbourPZ.GetBlockLight(x, y, 0)),
 							_ => (byte) this.GetBlockLight(x, y, z)
 						};
-						if (quad.lightEmisson >= 0)
-							lightValue = (byte) quad.lightEmisson;
+						if (quad.lightEmission >= 0)
+							lightValue = (byte) quad.lightEmission;
 
 						byte PackedLight = (byte)((lightValue << 4) | ((quad.shade ? Preload.ShadeDirection[(int) quad.direction] : 0) << 8));
 

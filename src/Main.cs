@@ -343,7 +343,7 @@ public static class Main {
 			}
 
 			string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-			string path = "screenshots/screenshot_{timestamp}.png";
+			string path = $"screenshots/screenshot_{timestamp}.png";
 			Directory.CreateDirectory("screenshots");
 			ImageWriter writer = new ImageWriter();
 

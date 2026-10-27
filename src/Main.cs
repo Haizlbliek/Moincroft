@@ -275,6 +275,7 @@ public static class Main {
 		Preload.Basic.SetUniform("projection", Main.ProjectionMatrix, transpose: false);
 		Program.gl.Enable(EnableCap.DepthTest);
 		Program.gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+		Program.gl.DepthFunc(DepthFunction.Lequal);
 		Program.gl.Enable(EnableCap.CullFace);
 		Program.gl.CullFace(GLEnum.Back);
 		Program.gl.ActiveTexture(Silk.NET.OpenGL.TextureUnit.Texture0);
@@ -292,7 +293,6 @@ public static class Main {
 		}
 		Program.gl.DepthMask(true);
 
-		Program.gl.Disable(EnableCap.CullFace);
 		Program.gl.BindVertexArray(0);
 
 
@@ -302,7 +302,7 @@ public static class Main {
 			Preload.Selection.SetUniform("view", Main.ViewMatrix, transpose: false);
 			Preload.Selection.SetUniform("projection", Main.ProjectionMatrix, transpose: false);
 			Program.gl.BindVertexArray(Program._anyVao);
-			Program.gl.DrawArrays(PrimitiveType.Lines, 0, 24);
+			Program.gl.DrawArrays(PrimitiveType.Triangles, 0, 432);
 			Program.gl.BindVertexArray(0);
 		}
 

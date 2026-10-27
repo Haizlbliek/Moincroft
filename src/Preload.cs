@@ -100,7 +100,6 @@ public static class Preload {
 
 	private static (int x, int y, int z) RotateX((int x, int y, int z) v, int times) {
 		for (int i = 0; i < times; i++) {
-			// REVIEW
 			v = (v.x, -v.z, v.y);
 		}
 		return v;
@@ -108,14 +107,13 @@ public static class Preload {
 
 	private static (int x, int y, int z) RotateY((int x, int y, int z) v, int times) {
 		for (int i = 0; i < times; i++) {
-			v = (-v.z, v.y, v.x);
+			v = (v.z, v.y, -v.x);
 		}
 		return v;
 	}
 
 	private static (int x, int y, int z) RotateZ((int x, int y, int z) v, int times) {
 		for (int i = 0; i < times; i++) {
-			// REVIEW
 			v = (-v.y, v.x, v.z);
 		}
 		return v;

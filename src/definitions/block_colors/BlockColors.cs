@@ -7,6 +7,7 @@ public static class BlockColors {
 	private static readonly Dictionary<BlockId, List<IBlockTintSource>> sources = [];
 
 	public static void Initialize() {
+		Register([BlockTintSources.GrassBlock()], Blocks.GRASS_BLOCK);
 		Register([BlockTintSources.Redstone()], Blocks.REDSTONE_WIRE);
 	}
 

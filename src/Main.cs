@@ -13,7 +13,7 @@ public static class Main {
 	public static Matrix4X4<float> ProjectionMatrix;
 
 	public static Vector3 lastCameraPosition;
-	public static Vector3 cameraPosition = new Vector3(0f, 10.5f, 0f);
+	public static Vector3 cameraPosition = new Vector3(0f, 24f, 0f);
 	public static Vector3 cameraRotation;
 
 	public static IInputContext input = null!;
@@ -55,7 +55,7 @@ public static class Main {
 		// Audio.Audio.Initialize();
 
 		ViewMatrix = Matrix4X4.CreateTranslation(0f, 0f, 0f);
-		float fov = 100f * (Mathf.PI / 180f);
+		float fov = 70f * (Mathf.PI / 180f);
 		ProjectionMatrix = Matrix4X4.CreatePerspectiveFieldOfView(fov, Program.defaultSize.X / (float) Program.defaultSize.Y, 0.1f, 1000f);
 
 		world.Load();

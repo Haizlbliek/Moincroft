@@ -8,4 +8,10 @@ public static class BlockTintSources {
 			state => RedstoneWireBlock.GetColorForPower(state.Get(RedstoneWireBlock.POWER))
 		);
 	}
+
+	public static IBlockTintSource GrassBlock() {
+		return new FunctionalTintSource(
+			state => ARGB.ColorFromFloat(1f, 0.56863f, 0.74118f, 0.34902f)
+		);
+	}
 }

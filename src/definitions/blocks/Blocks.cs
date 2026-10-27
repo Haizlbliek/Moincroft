@@ -96,6 +96,10 @@ public static class Blocks {
 	public static readonly BlockId COBBLESTONE = BlockRegistry.Register("cobblestone", d => new Block(d), Properties.Of());
 	public static readonly BlockId STONE = BlockRegistry.Register("stone", d => new Block(d), Properties.Of());
 	public static readonly BlockId DIRT = BlockRegistry.Register("dirt", d => new Block(d), Properties.Of());
+	public static readonly BlockId GRASS_BLOCK = BlockRegistry.Register("grass_block", d => new GrassBlock(d), Properties.Of());
+	public static readonly BlockId OAK_PLANKS = BlockRegistry.Register("oak_planks", d => new Block(d), Properties.Of());
+	public static readonly BlockId OAK_LOG = BlockRegistry.Register("oak_log", d => new RotatedPillarBlock(d), Properties.Of());
+	public static readonly BlockId CRAFTING_TABLE = BlockRegistry.Register("crafting_table", d => new CraftingTableBlock(d), Properties.Of());
 	public static readonly BlockId REDSTONE_BLOCK = BlockRegistry.Register("redstone_block", d => new Block(d), Properties.Of());
 	public static readonly BlockId DRAGON_EGG = BlockRegistry.Register("dragon_egg", d => new Block(d), Properties.Of().NonOccluding());
 	public static readonly BlockId SLIME_BLOCK = BlockRegistry.Register("slime_block", d => new Block(d), Properties.Of().Transparent().NonOccluding());

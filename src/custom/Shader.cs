@@ -12,13 +12,13 @@ public class Shader {
 	private Shader(uint shader, string path) {
 		this.shader = shader;
 		this.path = path;
-		this.PopuplateCachedLocations();
+		this.PopulateCachedLocations();
 	}
 
 	public void Use() => Custom.gl.UseProgram(this.shader);
 	public void Dispose() => Custom.gl.DeleteProgram(this.shader);
 
-	private void PopuplateCachedLocations() {
+	private void PopulateCachedLocations() {
 		Custom.gl.GetProgram(this.shader, ProgramPropertyARB.ActiveUniforms, out int uniformCount);
 
 		for (uint i = 0; i < uniformCount; i++) {

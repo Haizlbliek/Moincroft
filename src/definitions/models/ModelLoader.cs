@@ -46,7 +46,7 @@ public static class ModelLoader {
 
 				MiddleModel.Element element = new MiddleModel.Element {
 					faces = [],
-					lightEmisson = -1,
+					lightEmission = -1,
 				};
 
 				if (elementObj.TryGetPropertyValue("from", out JsonNode? fromNode) && fromNode != null) {
@@ -67,8 +67,8 @@ public static class ModelLoader {
 					);
 				}
 
-				if (elementObj.TryGetPropertyValue("light_emission", out JsonNode? lightEmissonNode) && lightEmissonNode != null) {
-					element.lightEmisson = (int) lightEmissonNode;
+				if (elementObj.TryGetPropertyValue("light_emission", out JsonNode? lightEmissionNode) && lightEmissionNode != null) {
+					element.lightEmission = (int) lightEmissionNode;
 				}
 
 				if (elementObj.TryGetPropertyValue("rotation", out JsonNode? rotationNode) && rotationNode is JsonObject rotationObj) {
@@ -109,7 +109,7 @@ public static class ModelLoader {
 
 						MiddleModel.Element.Face face = new MiddleModel.Element.Face() {
 							texture = faceObj.TryGetPropertyValue("texture", out JsonNode? texNode) ? texNode!.ToString() : "",
-							cullface = faceObj.TryGetPropertyValue("cullface", out JsonNode? cullNode) ? cullNode!.ToString() : null,
+							cullFace = faceObj.TryGetPropertyValue("cullface", out JsonNode? cullNode) ? cullNode!.ToString() : null,
 							rotation = faceObj.TryGetPropertyValue("rotation", out JsonNode? faceRotationNode) && faceRotationNode != null ? (int) faceRotationNode / 90 : 0,
 							tintIndex = faceObj.TryGetPropertyValue("tintindex", out JsonNode? tintIndexNode) && tintIndexNode != null ? (int) tintIndexNode : -1,
 							shade = faceObj.TryGetPropertyValue("shade", out JsonNode? shadeNode) && shadeNode != null ? (bool) shadeNode : true,
@@ -192,9 +192,9 @@ public static class ModelLoader {
 				foreach (KeyValuePair<string, MiddleModel.Element.Face> face in element.faces) {
 					Model.Quad quad = new Model.Quad() {
 						direction = DirectionFromFace(face.Key),
-						cullFace = face.Value.cullface == null ? Direction.None : DirectionFromFace(face.Value.cullface),
+						cullFace = face.Value.cullFace == null ? Direction.None : DirectionFromFace(face.Value.cullFace),
 						tintIndex = face.Value.tintIndex,
-						lightEmission = element.lightEmisson,
+						lightEmission = element.lightEmission,
 						shade = face.Value.shade,
 					};
 
@@ -346,7 +346,7 @@ public static class ModelLoader {
 					rotation = element.rotation,
 					rotationOrigin = element.rotationOrigin,
 					rotationRescale = element.rotationRescale,
-					lightEmisson = element.lightEmisson,
+					lightEmission = element.lightEmission,
 					faces = [],
 				};
 
@@ -354,7 +354,7 @@ public static class ModelLoader {
 					clonedElement.faces[faceKvp.Key] = new Element.Face {
 						uv = faceKvp.Value.uv == null ? null : (float[])faceKvp.Value.uv.Clone(),
 						texture = faceKvp.Value.texture,
-						cullface = faceKvp.Value.cullface,
+						cullFace = faceKvp.Value.cullFace,
 						rotation = faceKvp.Value.rotation,
 						tintIndex = faceKvp.Value.tintIndex,
 						shade = faceKvp.Value.shade,
@@ -370,13 +370,13 @@ public static class ModelLoader {
 			public Vector3 rotation;
 			public Vector3 rotationOrigin;
 			public bool rotationRescale;
-			public int lightEmisson;
+			public int lightEmission;
 			public Dictionary<string, Face> faces;
 
 			public struct Face {
 				public float[]? uv;
 				public string texture;
-				public string? cullface;
+				public string? cullFace;
 				public int rotation;
 				public int tintIndex;
 				public bool shade;

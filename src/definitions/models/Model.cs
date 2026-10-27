@@ -2,7 +2,7 @@ namespace Moincroft.Definitions.Models;
 
 public class Model {
 	public Quad[] quads = [];
-	// LATER: ambientocclusion
+	// LATER: ambientOcclusion
 
 	public struct Quad {
 		public Vector3 v0, v1, v2, v3;

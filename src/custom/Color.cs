@@ -54,19 +54,19 @@ public struct Color : IParsable<Color> {
 	}
 
 	public static void ToHSV(Color color, out float h, out float s, out float v) {
-		float cmax = Math.Max(color.r, Math.Max(color.g, color.b));
-		float cmin = Math.Min(color.r, Math.Min(color.g, color.b));
-		float delta = cmax - cmin;
+		float cMax = Math.Max(color.r, Math.Max(color.g, color.b));
+		float cMin = Math.Min(color.r, Math.Min(color.g, color.b));
+		float delta = cMax - cMin;
 
 		h = 0.0f;
 		s = 0.0f;
-		v = cmax;
+		v = cMax;
 
 		if (delta > 0.0f) {
-			if (cmax == color.r) {
+			if (cMax == color.r) {
 				h = 60.0f * Mathf.Mod((color.g - color.b) / delta, 6.0f);
 			}
-			else if (cmax == color.g) {
+			else if (cMax == color.g) {
 				h = 60.0f * (((color.b - color.r) / delta) + 2.0f);
 			}
 			else {
@@ -75,8 +75,8 @@ public struct Color : IParsable<Color> {
 			if (h < 0.0f) h += 360.0f;
 		}
 
-		if (cmax > 0.0f) {
-			s = delta / cmax;
+		if (cMax > 0.0f) {
+			s = delta / cMax;
 		}
 	}
 
